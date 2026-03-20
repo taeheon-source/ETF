@@ -1,52 +1,33 @@
+const TARGET_ETF_NAMES = [
+  "1Q 종합채권(AA-이상)액티브",
+  "ACE 종합채권(AA-이상)KIS액티브"
+];
+
 const sampleDataset = [
-  { BAS_DD: "2025-12-31", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "42.10" },
-  { BAS_DD: "2026-01-02", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "42.55" },
-  { BAS_DD: "2026-02-02", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "44.10" },
-  { BAS_DD: "2026-03-02", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "45.35" },
-  { BAS_DD: "2026-03-11", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "45.82" },
-  { BAS_DD: "2026-03-12", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "45.95" },
-  { BAS_DD: "2026-03-13", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "46.05" },
-  { BAS_DD: "2026-03-16", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "46.22" },
-  { BAS_DD: "2026-03-17", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "46.48" },
-  { BAS_DD: "2026-03-18", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "46.74" },
-  { BAS_DD: "2026-03-19", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "46.88" },
-  { BAS_DD: "2026-03-20", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "47.20" },
-  { BAS_DD: "2025-12-31", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "21.90" },
-  { BAS_DD: "2026-01-02", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "22.15" },
-  { BAS_DD: "2026-02-02", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "22.88" },
-  { BAS_DD: "2026-03-02", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "23.35" },
-  { BAS_DD: "2026-03-11", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "23.64" },
-  { BAS_DD: "2026-03-12", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "23.72" },
-  { BAS_DD: "2026-03-13", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "23.81" },
-  { BAS_DD: "2026-03-16", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "23.95" },
-  { BAS_DD: "2026-03-17", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "24.04" },
-  { BAS_DD: "2026-03-18", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "24.11" },
-  { BAS_DD: "2026-03-19", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "24.22" },
-  { BAS_DD: "2026-03-20", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "24.36" },
-  { BAS_DD: "2025-12-31", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.20" },
-  { BAS_DD: "2026-01-02", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.08" },
-  { BAS_DD: "2026-02-02", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "16.52" },
-  { BAS_DD: "2026-03-02", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "16.88" },
-  { BAS_DD: "2026-03-11", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.02" },
-  { BAS_DD: "2026-03-12", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.18" },
-  { BAS_DD: "2026-03-13", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.30" },
-  { BAS_DD: "2026-03-16", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.56" },
-  { BAS_DD: "2026-03-17", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.74" },
-  { BAS_DD: "2026-03-18", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.93" },
-  { BAS_DD: "2026-03-19", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "18.10" },
-  { BAS_DD: "2026-03-20", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "18.24" },
-  { BAS_DD: "2025-12-31", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "15.80" },
-  { BAS_DD: "2026-01-02", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "15.88" },
-  { BAS_DD: "2026-02-02", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "16.45" },
-  { BAS_DD: "2026-03-02", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.12" },
-  { BAS_DD: "2026-03-11", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.20" },
-  { BAS_DD: "2026-03-12", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.27" },
-  { BAS_DD: "2026-03-13", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.35" },
-  { BAS_DD: "2026-03-16", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.42" },
-  { BAS_DD: "2026-03-17", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.48" },
-  { BAS_DD: "2026-03-18", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.56" },
-  { BAS_DD: "2026-03-19", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.66" },
-  { BAS_DD: "2026-03-20", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.74" }
+  { BAS_DD: "2025-12-31", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.12" },
+  { BAS_DD: "2026-01-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.55" },
+  { BAS_DD: "2026-02-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1037.48" },
+  { BAS_DD: "2026-03-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1041.34" },
+  { BAS_DD: "2026-03-11", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1042.18" },
+  { BAS_DD: "2026-03-12", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1042.44" },
+  { BAS_DD: "2026-03-13", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1042.71" },
+  { BAS_DD: "2026-03-16", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.10" },
+  { BAS_DD: "2026-03-17", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.39" },
+  { BAS_DD: "2026-03-18", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.68" },
+  { BAS_DD: "2026-03-19", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.92" },
+  { BAS_DD: "2026-03-20", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1044.21" },
+  { BAS_DD: "2025-12-31", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.42" },
+  { BAS_DD: "2026-01-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.66" },
+  { BAS_DD: "2026-02-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1020.94" },
+  { BAS_DD: "2026-03-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1023.62" },
+  { BAS_DD: "2026-03-11", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.11" },
+  { BAS_DD: "2026-03-12", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.25" },
+  { BAS_DD: "2026-03-13", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.41" },
+  { BAS_DD: "2026-03-16", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.73" },
+  { BAS_DD: "2026-03-17", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.96" },
+  { BAS_DD: "2026-03-18", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.20" },
+  { BAS_DD: "2026-03-19", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.36" },
+  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61" }
 ];
 
 const state = {
@@ -212,6 +193,7 @@ function normalizeRows(rows) {
       ISU_NM: String(row.ISU_NM || "").trim(),
       NAV: String(row.NAV || "").replaceAll(",", "")
     }))
+    .filter((row) => TARGET_ETF_NAMES.includes(row.ISU_NM))
     .filter((row) => row.BAS_DD && row.ISU_CD && row.ISU_NM && row.NAV && row.NAV !== "-")
     .sort((a, b) => a.BAS_DD.localeCompare(b.BAS_DD) || a.ISU_CD.localeCompare(b.ISU_CD));
 }

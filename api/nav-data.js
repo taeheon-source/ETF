@@ -1,13 +1,17 @@
 const MAX_BUSINESS_DAYS = 70;
 const CONCURRENCY = 5;
+const TARGET_ETF_NAMES = [
+  "1Q 종합채권(AA-이상)액티브",
+  "ACE 종합채권(AA-이상)KIS액티브"
+];
 
 const SAMPLE_ROWS = [
-  { BAS_DD: "2025-12-31", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "42.10" },
-  { BAS_DD: "2026-01-02", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "42.55" },
-  { BAS_DD: "2026-03-20", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "47.20" },
-  { BAS_DD: "2025-12-31", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "21.90" },
-  { BAS_DD: "2026-01-02", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "22.15" },
-  { BAS_DD: "2026-03-20", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "24.36" }
+  { BAS_DD: "2025-12-31", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.12" },
+  { BAS_DD: "2026-01-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.55" },
+  { BAS_DD: "2026-03-20", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1044.21" },
+  { BAS_DD: "2025-12-31", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.42" },
+  { BAS_DD: "2026-01-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.66" },
+  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61" }
 ];
 
 module.exports = async function handler(req, res) {
@@ -107,6 +111,7 @@ async function fetchForDate({ upstreamUrl, authKey, authHeaderName, date }) {
       ISU_NM: String(row.ISU_NM || "").trim(),
       NAV: String(row.NAV || "").replaceAll(",", "")
     }))
+    .filter((row) => TARGET_ETF_NAMES.includes(row.ISU_NM))
     .filter((row) => row.BAS_DD && row.ISU_CD && row.ISU_NM && row.NAV && row.NAV !== "-");
 }
 
