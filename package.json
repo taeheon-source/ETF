@@ -1,0 +1,9 @@
+{
+  "name": "krx-etf-nav-dashboard",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  }
+}

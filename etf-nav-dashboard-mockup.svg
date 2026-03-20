@@ -1,0 +1,179 @@
+<svg width="1440" height="1800" viewBox="0 0 1440 1800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1440" y2="1800" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6F1E8"/>
+      <stop offset="1" stop-color="#E7EEF4"/>
+    </linearGradient>
+    <linearGradient id="hero" x1="160" y1="90" x2="1280" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#103B36"/>
+      <stop offset="1" stop-color="#1F5E53"/>
+    </linearGradient>
+    <linearGradient id="chart" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F0B35A"/>
+      <stop offset="1" stop-color="#D87932"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#26403A" flood-opacity="0.12"/>
+    </filter>
+    <style>
+      .title { font: 700 42px 'Segoe UI', sans-serif; fill: #F7F2EA; }
+      .subtitle { font: 400 18px 'Segoe UI', sans-serif; fill: #D8E5DF; }
+      .section { font: 700 24px 'Segoe UI', sans-serif; fill: #183A36; }
+      .label { font: 600 14px 'Segoe UI', sans-serif; fill: #5D6E68; letter-spacing: 0.04em; text-transform: uppercase; }
+      .value { font: 700 30px 'Segoe UI', sans-serif; fill: #183A36; }
+      .small { font: 500 15px 'Segoe UI', sans-serif; fill: #647771; }
+      .nav { font: 600 16px 'Segoe UI', sans-serif; fill: #EAF3EF; }
+      .chip { font: 600 14px 'Segoe UI', sans-serif; fill: #204740; }
+      .tableHead { font: 700 14px 'Segoe UI', sans-serif; fill: #667670; }
+      .tableCell { font: 600 16px 'Segoe UI', sans-serif; fill: #183A36; }
+      .tableSub { font: 400 13px 'Segoe UI', sans-serif; fill: #6E7F7A; }
+      .pos { fill: #0E8A61; font: 700 16px 'Segoe UI', sans-serif; }
+      .neg { fill: #C24E43; font: 700 16px 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+
+  <rect width="1440" height="1800" fill="url(#bg)"/>
+  <circle cx="1280" cy="160" r="220" fill="#D9E7DD" fill-opacity="0.8"/>
+  <circle cx="180" cy="1540" r="280" fill="#EADDCF" fill-opacity="0.65"/>
+
+  <rect x="80" y="40" width="1280" height="420" rx="34" fill="url(#hero)" filter="url(#shadow)"/>
+  <text x="130" y="105" class="nav">NAV ETF LAB</text>
+  <text x="450" y="105" class="nav">대시보드</text>
+  <text x="560" y="105" class="nav">랭킹</text>
+  <text x="640" y="105" class="nav">비교분석</text>
+  <text x="760" y="105" class="nav">상세보기</text>
+
+  <text x="130" y="190" class="title">ETF NAV 수익률 대시보드</text>
+  <text x="130" y="228" class="subtitle">시장가격이 아니라 실제 순자산가치 기준으로 ETF 성과를 읽어주는 리서치형 서비스</text>
+
+  <rect x="130" y="280" width="430" height="68" rx="20" fill="#F4EFE7"/>
+  <text x="160" y="323" class="small">ETF명 또는 종목코드 검색</text>
+
+  <rect x="580" y="280" width="130" height="68" rx="20" fill="#DDEADE"/>
+  <text x="620" y="323" class="chip">국내</text>
+
+  <rect x="722" y="280" width="130" height="68" rx="20" fill="#DDEADE"/>
+  <text x="757" y="323" class="chip">해외</text>
+
+  <rect x="864" y="280" width="150" height="68" rx="20" fill="#DDEADE"/>
+  <text x="905" y="323" class="chip">레버리지</text>
+
+  <rect x="1026" y="280" width="174" height="68" rx="20" fill="#F0B35A"/>
+  <text x="1063" y="323" class="chip" fill="#173A35">오늘 강한 ETF</text>
+
+  <rect x="950" y="120" width="300" height="220" rx="28" fill="#F7F1E9" fill-opacity="0.1" stroke="#C8DED7" stroke-opacity="0.28"/>
+  <path d="M980 285C1025 275 1045 235 1085 218C1128 199 1160 225 1197 184C1210 170 1225 146 1240 128" stroke="url(#chart)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M980 305C1020 300 1048 282 1080 260C1118 234 1150 244 1188 221C1210 208 1228 192 1240 174" stroke="#9FD5C7" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 10"/>
+  <text x="980" y="145" class="small" fill="#EAF3EF">NAV vs 시장가격 누적 비교</text>
+
+  <text x="100" y="530" class="section">오늘의 핵심 지표</text>
+
+  <rect x="100" y="570" width="290" height="170" rx="26" fill="#FFFDF8" filter="url(#shadow)"/>
+  <text x="130" y="620" class="label">NAV 1일 상승률 1위</text>
+  <text x="130" y="668" class="value">+3.42%</text>
+  <text x="130" y="705" class="small">KODEX 2차전지산업</text>
+
+  <rect x="410" y="570" width="290" height="170" rx="26" fill="#FFFDF8" filter="url(#shadow)"/>
+  <text x="440" y="620" class="label">괴리율 경고</text>
+  <text x="440" y="668" class="value">+1.87%</text>
+  <text x="440" y="705" class="small">시장가격이 NAV보다 높음</text>
+
+  <rect x="720" y="570" width="290" height="170" rx="26" fill="#FFFDF8" filter="url(#shadow)"/>
+  <text x="750" y="620" class="label">거래 활발 ETF</text>
+  <text x="750" y="668" class="value">₩842억</text>
+  <text x="750" y="705" class="small">KODEX 코스닥150레버리지</text>
+
+  <rect x="1030" y="570" width="290" height="170" rx="26" fill="#FFFDF8" filter="url(#shadow)"/>
+  <text x="1060" y="620" class="label">추적 안정성</text>
+  <text x="1060" y="668" class="value">우수</text>
+  <text x="1060" y="705" class="small">NAV-가격 괴리 낮은 구간</text>
+
+  <text x="100" y="820" class="section">ETF 리스트</text>
+
+  <rect x="100" y="860" width="1240" height="510" rx="30" fill="#FFFDF8" filter="url(#shadow)"/>
+
+  <rect x="130" y="900" width="1180" height="52" rx="14" fill="#F2EEE4"/>
+  <text x="160" y="933" class="tableHead">ETF명</text>
+  <text x="470" y="933" class="tableHead">현재가</text>
+  <text x="590" y="933" class="tableHead">NAV</text>
+  <text x="705" y="933" class="tableHead">괴리율</text>
+  <text x="825" y="933" class="tableHead">1일</text>
+  <text x="930" y="933" class="tableHead">1개월</text>
+  <text x="1055" y="933" class="tableHead">YTD</text>
+  <text x="1175" y="933" class="tableHead">거래대금</text>
+
+  <g>
+    <rect x="130" y="974" width="1180" height="78" rx="18" fill="#FCFAF4"/>
+    <text x="160" y="1005" class="tableCell">KODEX 200</text>
+    <text x="160" y="1027" class="tableSub">069500 · 삼성자산운용</text>
+    <text x="470" y="1018" class="tableCell">36,540</text>
+    <text x="590" y="1018" class="tableCell">36,482</text>
+    <text x="705" y="1018" class="pos">+0.16%</text>
+    <text x="825" y="1018" class="pos">+0.92%</text>
+    <text x="930" y="1018" class="pos">+5.41%</text>
+    <text x="1055" y="1018" class="pos">+8.84%</text>
+    <text x="1175" y="1018" class="tableCell">₩311억</text>
+  </g>
+
+  <g>
+    <rect x="130" y="1064" width="1180" height="78" rx="18" fill="#FCFAF4"/>
+    <text x="160" y="1095" class="tableCell">TIGER 미국S&amp;P500</text>
+    <text x="160" y="1117" class="tableSub">360750 · 미래에셋자산운용</text>
+    <text x="470" y="1108" class="tableCell">18,240</text>
+    <text x="590" y="1108" class="tableCell">18,198</text>
+    <text x="705" y="1108" class="pos">+0.23%</text>
+    <text x="825" y="1108" class="pos">+0.74%</text>
+    <text x="930" y="1108" class="pos">+3.18%</text>
+    <text x="1055" y="1108" class="pos">+11.26%</text>
+    <text x="1175" y="1108" class="tableCell">₩188억</text>
+  </g>
+
+  <g>
+    <rect x="130" y="1154" width="1180" height="78" rx="18" fill="#FCFAF4"/>
+    <text x="160" y="1185" class="tableCell">KODEX 2차전지산업</text>
+    <text x="160" y="1207" class="tableSub">305720 · 삼성자산운용</text>
+    <text x="470" y="1198" class="tableCell">21,810</text>
+    <text x="590" y="1198" class="tableCell">21,404</text>
+    <text x="705" y="1198" class="neg">+1.90%</text>
+    <text x="825" y="1198" class="pos">+3.42%</text>
+    <text x="930" y="1198" class="neg">-4.85%</text>
+    <text x="1055" y="1198" class="neg">-7.22%</text>
+    <text x="1175" y="1198" class="tableCell">₩267억</text>
+  </g>
+
+  <g>
+    <rect x="130" y="1244" width="1180" height="78" rx="18" fill="#FCFAF4"/>
+    <text x="160" y="1275" class="tableCell">ACE KRX금현물</text>
+    <text x="160" y="1297" class="tableSub">411060 · 한국투자신탁운용</text>
+    <text x="470" y="1288" class="tableCell">18,905</text>
+    <text x="590" y="1288" class="tableCell">18,921</text>
+    <text x="705" y="1288" class="neg">-0.08%</text>
+    <text x="825" y="1288" class="pos">+0.11%</text>
+    <text x="930" y="1288" class="pos">+6.20%</text>
+    <text x="1055" y="1288" class="pos">+14.01%</text>
+    <text x="1175" y="1288" class="tableCell">₩54억</text>
+  </g>
+
+  <text x="100" y="1460" class="section">상세 페이지 미리보기</text>
+
+  <rect x="100" y="1500" width="1240" height="240" rx="30" fill="#FFFDF8" filter="url(#shadow)"/>
+  <text x="140" y="1560" class="value" font-size="34">TIGER 미국S&amp;P500</text>
+  <text x="140" y="1590" class="small">상세 페이지에서는 NAV 기준 누적수익률과 시장가격 수익률을 겹쳐서 보여줍니다.</text>
+
+  <rect x="140" y="1630" width="200" height="72" rx="20" fill="#F3EEE4"/>
+  <text x="165" y="1660" class="label">현재가</text>
+  <text x="165" y="1690" class="tableCell">18,240원</text>
+
+  <rect x="360" y="1630" width="200" height="72" rx="20" fill="#F3EEE4"/>
+  <text x="385" y="1660" class="label">NAV</text>
+  <text x="385" y="1690" class="tableCell">18,198원</text>
+
+  <rect x="580" y="1630" width="200" height="72" rx="20" fill="#F3EEE4"/>
+  <text x="605" y="1660" class="label">괴리율</text>
+  <text x="605" y="1690" class="pos">+0.23%</text>
+
+  <rect x="840" y="1545" width="440" height="140" rx="24" fill="#F7F2E9"/>
+  <path d="M875 1642C925 1620 970 1605 1018 1598C1070 1590 1120 1600 1170 1574C1215 1551 1240 1532 1260 1520" stroke="#DC8440" stroke-width="5" stroke-linecap="round"/>
+  <path d="M875 1660C930 1658 965 1648 1012 1635C1056 1624 1110 1622 1165 1608C1208 1598 1238 1578 1260 1560" stroke="#2E7A68" stroke-width="5" stroke-linecap="round"/>
+  <text x="875" y="1570" class="small">주황: NAV 기준 누적수익률 / 초록: 시장가격 기준</text>
+</svg>

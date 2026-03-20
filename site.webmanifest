@@ -1,0 +1,16 @@
+{
+  "name": "ETF NAV Dashboard",
+  "short_name": "NAV ETF",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1016",
+  "theme_color": "#0d1016",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "256x256",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

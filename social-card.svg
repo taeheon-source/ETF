@@ -1,0 +1,22 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#0B0F14"/>
+  <circle cx="1100" cy="80" r="220" fill="#183D91" fill-opacity="0.45"/>
+  <circle cx="130" cy="580" r="260" fill="#9B5E17" fill-opacity="0.25"/>
+  <rect x="52" y="52" width="1096" height="526" rx="36" fill="#111722" stroke="#263246" stroke-width="2"/>
+  <text x="92" y="138" fill="#F4B860" font-family="Segoe UI, sans-serif" font-size="24" font-weight="700" letter-spacing="4">KRX ETF NAV DASHBOARD</text>
+  <text x="92" y="230" fill="#F2F5FA" font-family="Segoe UI, sans-serif" font-size="64" font-weight="800">ETF NAV 수익률 대시보드</text>
+  <text x="92" y="286" fill="#B9C3D2" font-family="Segoe UI, sans-serif" font-size="28">한국 영업일 기준 1D, 7D, MTD, QTD, YTD, 사용자 지정 날짜 비교</text>
+  <rect x="92" y="346" width="300" height="150" rx="24" fill="#182131" stroke="#2A3B52"/>
+  <text x="122" y="392" fill="#97A6BA" font-family="Segoe UI, sans-serif" font-size="18">TOP YTD ETF</text>
+  <text x="122" y="445" fill="#F2F5FA" font-family="Segoe UI, sans-serif" font-size="36" font-weight="700">TIGER 미국S&amp;P500</text>
+  <text x="122" y="484" fill="#58D88F" font-family="Segoe UI, sans-serif" font-size="32" font-weight="800">+11.26%</text>
+  <rect x="422" y="346" width="300" height="150" rx="24" fill="#182131" stroke="#2A3B52"/>
+  <text x="452" y="392" fill="#97A6BA" font-family="Segoe UI, sans-serif" font-size="18">BEST DAILY</text>
+  <text x="452" y="445" fill="#F2F5FA" font-family="Segoe UI, sans-serif" font-size="36" font-weight="700">KODEX 200</text>
+  <text x="452" y="484" fill="#58D88F" font-family="Segoe UI, sans-serif" font-size="32" font-weight="800">+0.68%</text>
+  <rect x="752" y="346" width="316" height="150" rx="24" fill="#182131" stroke="#2A3B52"/>
+  <path d="M788 466C824 448 854 414 890 402C926 390 964 412 1008 372C1022 359 1036 341 1044 328" stroke="#F4B860" stroke-width="8" stroke-linecap="round"/>
+  <path d="M788 486H1044" stroke="#314055" stroke-width="4" stroke-linecap="round"/>
+  <text x="788" y="392" fill="#97A6BA" font-family="Segoe UI, sans-serif" font-size="18">NAV TREND</text>
+  <text x="788" y="440" fill="#F2F5FA" font-family="Segoe UI, sans-serif" font-size="34" font-weight="700">누적 수익률 추이</text>
+</svg>

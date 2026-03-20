@@ -1,0 +1,651 @@
+const sampleDataset = [
+  { BAS_DD: "2025-12-31", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "42.10" },
+  { BAS_DD: "2026-01-02", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "42.55" },
+  { BAS_DD: "2026-02-02", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "44.10" },
+  { BAS_DD: "2026-03-02", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "45.35" },
+  { BAS_DD: "2026-03-11", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "45.82" },
+  { BAS_DD: "2026-03-12", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "45.95" },
+  { BAS_DD: "2026-03-13", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "46.05" },
+  { BAS_DD: "2026-03-16", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "46.22" },
+  { BAS_DD: "2026-03-17", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "46.48" },
+  { BAS_DD: "2026-03-18", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "46.74" },
+  { BAS_DD: "2026-03-19", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "46.88" },
+  { BAS_DD: "2026-03-20", ISU_CD: "069500", ISU_NM: "KODEX 200", NAV: "47.20" },
+  { BAS_DD: "2025-12-31", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "21.90" },
+  { BAS_DD: "2026-01-02", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "22.15" },
+  { BAS_DD: "2026-02-02", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "22.88" },
+  { BAS_DD: "2026-03-02", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "23.35" },
+  { BAS_DD: "2026-03-11", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "23.64" },
+  { BAS_DD: "2026-03-12", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "23.72" },
+  { BAS_DD: "2026-03-13", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "23.81" },
+  { BAS_DD: "2026-03-16", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "23.95" },
+  { BAS_DD: "2026-03-17", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "24.04" },
+  { BAS_DD: "2026-03-18", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "24.11" },
+  { BAS_DD: "2026-03-19", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "24.22" },
+  { BAS_DD: "2026-03-20", ISU_CD: "360750", ISU_NM: "TIGER 미국S&P500", NAV: "24.36" },
+  { BAS_DD: "2025-12-31", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.20" },
+  { BAS_DD: "2026-01-02", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.08" },
+  { BAS_DD: "2026-02-02", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "16.52" },
+  { BAS_DD: "2026-03-02", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "16.88" },
+  { BAS_DD: "2026-03-11", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.02" },
+  { BAS_DD: "2026-03-12", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.18" },
+  { BAS_DD: "2026-03-13", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.30" },
+  { BAS_DD: "2026-03-16", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.56" },
+  { BAS_DD: "2026-03-17", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.74" },
+  { BAS_DD: "2026-03-18", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "17.93" },
+  { BAS_DD: "2026-03-19", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "18.10" },
+  { BAS_DD: "2026-03-20", ISU_CD: "305720", ISU_NM: "KODEX 2차전지산업", NAV: "18.24" },
+  { BAS_DD: "2025-12-31", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "15.80" },
+  { BAS_DD: "2026-01-02", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "15.88" },
+  { BAS_DD: "2026-02-02", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "16.45" },
+  { BAS_DD: "2026-03-02", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.12" },
+  { BAS_DD: "2026-03-11", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.20" },
+  { BAS_DD: "2026-03-12", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.27" },
+  { BAS_DD: "2026-03-13", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.35" },
+  { BAS_DD: "2026-03-16", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.42" },
+  { BAS_DD: "2026-03-17", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.48" },
+  { BAS_DD: "2026-03-18", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.56" },
+  { BAS_DD: "2026-03-19", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.66" },
+  { BAS_DD: "2026-03-20", ISU_CD: "411060", ISU_NM: "ACE KRX금현물", NAV: "17.74" }
+];
+
+const state = {
+  baseDate: "",
+  compareDate: "",
+  search: "",
+  rankingMetric: "YTD",
+  sortMetric: "YTD",
+  selectedEtf: "",
+  dataset: [],
+  grouped: {},
+  etfs: [],
+  availableDates: [],
+  failures: [],
+  source: "sample"
+};
+
+const els = {
+  baseDateSelect: document.querySelector("#baseDateSelect"),
+  compareDateSelect: document.querySelector("#compareDateSelect"),
+  searchInput: document.querySelector("#searchInput"),
+  rankingMetricSelect: document.querySelector("#rankingMetricSelect"),
+  sortMetricSelect: document.querySelector("#sortMetricSelect"),
+  returnsTableBody: document.querySelector("#returnsTableBody"),
+  rankingList: document.querySelector("#rankingList"),
+  compareHeader: document.querySelector("#compareHeader"),
+  navTableHead: document.querySelector("#navTableHead"),
+  navTableBody: document.querySelector("#navTableBody"),
+  chartTitle: document.querySelector("#chartTitle"),
+  chartMeta: document.querySelector("#chartMeta"),
+  trendChart: document.querySelector("#trendChart"),
+  rangeStartInput: document.querySelector("#rangeStartInput"),
+  rangeEndInput: document.querySelector("#rangeEndInput"),
+  refreshButton: document.querySelector("#refreshButton"),
+  sourceBadge: document.querySelector("#sourceBadge"),
+  statusText: document.querySelector("#statusText"),
+  rangeSummary: document.querySelector("#rangeSummary"),
+  summaryGrid: document.querySelector("#summaryGrid"),
+  detailMetrics: document.querySelector("#detailMetrics"),
+  failureBadge: document.querySelector("#failureBadge"),
+  presetButtons: [...document.querySelectorAll(".preset-button")]
+};
+
+init();
+
+async function init() {
+  bindEvents();
+  applyPreset("1M");
+  await loadDataset();
+}
+
+function bindEvents() {
+  els.baseDateSelect.addEventListener("change", (event) => {
+    state.baseDate = event.target.value;
+    if (state.compareDate >= state.baseDate) {
+      state.compareDate = getFallbackCompareDate(state.baseDate);
+    }
+    render();
+  });
+
+  els.compareDateSelect.addEventListener("change", (event) => {
+    state.compareDate = event.target.value;
+    render();
+  });
+
+  els.searchInput.addEventListener("input", (event) => {
+    state.search = event.target.value.trim().toLowerCase();
+    render();
+  });
+
+  els.rankingMetricSelect.addEventListener("change", (event) => {
+    state.rankingMetric = event.target.value;
+    renderRanking();
+  });
+
+  els.sortMetricSelect.addEventListener("change", (event) => {
+    state.sortMetric = event.target.value;
+    renderOverviewTable();
+  });
+
+  els.refreshButton.addEventListener("click", async () => {
+    await loadDataset();
+  });
+
+  els.presetButtons.forEach((button) => {
+    button.addEventListener("click", async () => {
+      applyPreset(button.dataset.preset);
+      await loadDataset();
+    });
+  });
+}
+
+function applyPreset(preset) {
+  const today = new Date();
+  const endDate = toDateInput(today);
+  let start = new Date(today);
+
+  if (preset === "1M") {
+    start.setMonth(start.getMonth() - 1);
+  } else if (preset === "3M") {
+    start.setMonth(start.getMonth() - 3);
+  } else if (preset === "6M") {
+    start.setMonth(start.getMonth() - 6);
+  } else if (preset === "YTD") {
+    start = new Date(today.getFullYear(), 0, 1);
+  }
+
+  els.rangeStartInput.value = toDateInput(start);
+  els.rangeEndInput.value = endDate;
+  els.presetButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.preset === preset);
+  });
+}
+
+async function loadDataset() {
+  setLoading(true, "KRX NAV 데이터를 불러오는 중입니다.");
+  try {
+    const from = els.rangeStartInput.value;
+    const to = els.rangeEndInput.value;
+    els.rangeSummary.textContent = `${from} ~ ${to}`;
+
+    const response = await fetch(`/api/nav-data?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload.error || `요청 실패 (${response.status})`);
+    }
+
+    state.failures = Array.isArray(payload.failures) ? payload.failures : [];
+    state.source = payload.source || "sample";
+    applyDataset(Array.isArray(payload.rows) && payload.rows.length ? payload.rows : sampleDataset);
+    els.sourceBadge.textContent = state.source === "upstream" ? "KRX API" : "샘플 데이터";
+    els.statusText.textContent = payload.message || `${state.dataset.length}건의 NAV 데이터를 불러왔습니다.`;
+  } catch (error) {
+    state.failures = [];
+    state.source = "sample";
+    applyDataset(sampleDataset);
+    els.sourceBadge.textContent = "샘플 데이터";
+    els.statusText.textContent = `실데이터 조회에 실패해 샘플 데이터를 표시합니다. ${error.message}`;
+  } finally {
+    updateFailureBadge();
+    setLoading(false);
+  }
+}
+
+function applyDataset(rows) {
+  state.dataset = normalizeRows(rows);
+  state.grouped = buildGroupedData(state.dataset);
+  state.etfs = Object.values(state.grouped).sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  state.availableDates = [...new Set(state.dataset.map((row) => row.BAS_DD))].sort();
+  state.baseDate = state.availableDates[state.availableDates.length - 1] || "";
+  state.compareDate = state.availableDates.find((date) => date < state.baseDate) || "";
+  state.selectedEtf = state.selectedEtf && state.grouped[state.selectedEtf] ? state.selectedEtf : state.etfs[0]?.code || "";
+  renderDateOptions();
+  render();
+}
+
+function normalizeRows(rows) {
+  return rows
+    .map((row) => ({
+      BAS_DD: normalizeDate(row.BAS_DD),
+      ISU_CD: String(row.ISU_CD || "").trim(),
+      ISU_NM: String(row.ISU_NM || "").trim(),
+      NAV: String(row.NAV || "").replaceAll(",", "")
+    }))
+    .filter((row) => row.BAS_DD && row.ISU_CD && row.ISU_NM && row.NAV && row.NAV !== "-")
+    .sort((a, b) => a.BAS_DD.localeCompare(b.BAS_DD) || a.ISU_CD.localeCompare(b.ISU_CD));
+}
+
+function buildGroupedData(rows) {
+  return rows.reduce((acc, row) => {
+    if (!acc[row.ISU_CD]) {
+      acc[row.ISU_CD] = {
+        code: row.ISU_CD,
+        name: row.ISU_NM,
+        series: []
+      };
+    }
+    acc[row.ISU_CD].series.push({ date: row.BAS_DD, nav: parseNumber(row.NAV) });
+    return acc;
+  }, {});
+}
+
+function renderDateOptions() {
+  els.baseDateSelect.innerHTML = state.availableDates.map((date) => `<option value="${date}">${date}</option>`).join("");
+  els.baseDateSelect.value = state.baseDate;
+  renderCompareDateOptions();
+}
+
+function renderCompareDateOptions() {
+  const compareDates = state.availableDates.filter((date) => date < state.baseDate);
+  if (!compareDates.includes(state.compareDate)) {
+    state.compareDate = compareDates[compareDates.length - 1] || "";
+  }
+  els.compareDateSelect.innerHTML = compareDates.map((date) => `<option value="${date}">${date}</option>`).join("");
+  els.compareDateSelect.value = state.compareDate;
+}
+
+function render() {
+  renderCompareDateOptions();
+  renderSummaryCards();
+  renderOverviewTable();
+  renderRanking();
+  renderDetailMetrics();
+  renderNavTable();
+  renderChart();
+  els.compareHeader.textContent = state.compareDate ? `${state.compareDate} 대비` : "사용자 지정";
+}
+
+function renderSummaryCards() {
+  const visibleEtfs = getVisibleEtfs();
+  const items = visibleEtfs.map((etf) => ({ etf, metrics: calculateMetrics(etf, state.baseDate, state.compareDate) }));
+  const topYtd = [...items].sort((a, b) => safeMetricValue(b.metrics.YTD) - safeMetricValue(a.metrics.YTD))[0];
+  const topDaily = [...items].sort((a, b) => safeMetricValue(b.metrics["1D"]) - safeMetricValue(a.metrics["1D"]))[0];
+  const avgYtd = averageOf(items.map((item) => item.metrics.YTD));
+  const selected = state.grouped[state.selectedEtf];
+  const selectedLatest = selected?.series.find((point) => point.date === state.baseDate);
+
+  const cards = [
+    {
+      label: "조회 ETF 수",
+      value: `${visibleEtfs.length}개`,
+      meta: `${state.baseDate || "-"} 기준`
+    },
+    {
+      label: "YTD 상위 ETF",
+      value: topYtd ? topYtd.etf.name : "-",
+      meta: topYtd ? toPercent(topYtd.metrics.YTD) : "-"
+    },
+    {
+      label: "1D 상위 ETF",
+      value: topDaily ? topDaily.etf.name : "-",
+      meta: topDaily ? toPercent(topDaily.metrics["1D"]) : "-"
+    },
+    {
+      label: "평균 YTD",
+      value: avgYtd === null ? "-" : toPercent(avgYtd),
+      meta: "필터된 ETF 평균"
+    },
+    {
+      label: "선택 ETF 현재 NAV",
+      value: selectedLatest ? selectedLatest.nav.toFixed(2) : "-",
+      meta: selected ? selected.name : "ETF 선택 필요"
+    }
+  ];
+
+  els.summaryGrid.innerHTML = cards
+    .map(
+      (card) => `
+        <article class="summary-card">
+          <span class="summary-label">${escapeHtml(card.label)}</span>
+          <strong class="summary-value">${escapeHtml(card.value)}</strong>
+          <p class="summary-meta">${escapeHtml(card.meta)}</p>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function getVisibleEtfs() {
+  return state.etfs.filter((etf) => {
+    if (!state.search) {
+      return true;
+    }
+    return etf.name.toLowerCase().includes(state.search) || etf.code.toLowerCase().includes(state.search);
+  });
+}
+
+function renderOverviewTable() {
+  const rows = getVisibleEtfs()
+    .map((etf) => ({ etf, metrics: calculateMetrics(etf, state.baseDate, state.compareDate) }))
+    .sort((a, b) => safeMetricValue(b.metrics[state.sortMetric]) - safeMetricValue(a.metrics[state.sortMetric]));
+
+  if (!rows.length) {
+    els.returnsTableBody.innerHTML = `<tr><td colspan="7" class="empty-state">검색 조건에 맞는 ETF가 없습니다.</td></tr>`;
+    return;
+  }
+
+  if (!rows.some((row) => row.etf.code === state.selectedEtf)) {
+    state.selectedEtf = rows[0].etf.code;
+  }
+
+  els.returnsTableBody.innerHTML = rows
+    .map(({ etf, metrics }) => {
+      const selectedClass = etf.code === state.selectedEtf ? "is-selected" : "";
+      return `
+        <tr class="${selectedClass}" data-code="${etf.code}">
+          <td>
+            <div class="etf-name">
+              <strong>${escapeHtml(etf.name)}</strong>
+              <span class="etf-code">${escapeHtml(etf.code)}</span>
+            </div>
+          </td>
+          <td>${formatMetric(metrics["1D"])}</td>
+          <td>${formatMetric(metrics["7D"])}</td>
+          <td>${formatMetric(metrics.MTD)}</td>
+          <td>${formatMetric(metrics.QTD)}</td>
+          <td>${formatMetric(metrics.YTD)}</td>
+          <td>${formatMetric(metrics.CUSTOM)}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  els.returnsTableBody.querySelectorAll("tr[data-code]").forEach((row) => {
+    row.addEventListener("click", () => {
+      state.selectedEtf = row.dataset.code;
+      render();
+    });
+  });
+}
+
+function renderRanking() {
+  const ranking = getVisibleEtfs()
+    .map((etf) => ({ etf, value: calculateMetrics(etf, state.baseDate, state.compareDate)[state.rankingMetric] }))
+    .filter((item) => item.value !== null)
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
+
+  if (!ranking.length) {
+    els.rankingList.innerHTML = `<div class="empty-state">랭킹을 계산할 수 있는 데이터가 부족합니다.</div>`;
+    return;
+  }
+
+  els.rankingList.innerHTML = ranking
+    .map((item, index) => {
+      const cls = item.value >= 0 ? "positive" : "negative";
+      return `
+        <div class="ranking-item">
+          <div class="rank">${index + 1}</div>
+          <div>
+            <div class="rank-name">${escapeHtml(item.etf.name)}</div>
+            <div class="rank-code">${escapeHtml(item.etf.code)}</div>
+          </div>
+          <div class="metric ${cls}">${toPercent(item.value)}</div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function renderDetailMetrics() {
+  const etf = state.grouped[state.selectedEtf];
+  if (!etf) {
+    els.detailMetrics.innerHTML = "";
+    return;
+  }
+
+  const metrics = calculateMetrics(etf, state.baseDate, state.compareDate);
+  const latest = etf.series.find((point) => point.date === state.baseDate);
+  const cards = [
+    { label: "ETF", value: etf.name, meta: etf.code },
+    { label: "기준일 NAV", value: latest ? latest.nav.toFixed(2) : "-", meta: state.baseDate || "-" },
+    { label: "YTD", value: metrics.YTD === null ? "-" : toPercent(metrics.YTD), meta: "연초 이후" },
+    { label: "사용자 지정", value: metrics.CUSTOM === null ? "-" : toPercent(metrics.CUSTOM), meta: state.compareDate || "-" }
+  ];
+
+  els.detailMetrics.innerHTML = cards
+    .map(
+      (card) => `
+        <div class="detail-card">
+          <span class="detail-label">${escapeHtml(card.label)}</span>
+          <strong class="detail-value">${escapeHtml(card.value)}</strong>
+          <span class="detail-meta">${escapeHtml(card.meta)}</span>
+        </div>
+      `
+    )
+    .join("");
+}
+
+function renderNavTable() {
+  const visibleEtfs = getVisibleEtfs().slice(0, 4);
+  els.navTableHead.innerHTML = `<tr><th>날짜</th>${visibleEtfs.map((etf) => `<th>${escapeHtml(etf.name)}</th>`).join("")}</tr>`;
+
+  const datesDesc = [...state.availableDates].sort((a, b) => b.localeCompare(a));
+  els.navTableBody.innerHTML = datesDesc
+    .map((date) => {
+      const cells = visibleEtfs
+        .map((etf) => {
+          const point = state.grouped[etf.code]?.series.find((item) => item.date === date);
+          return `<td>${point ? point.nav.toFixed(2) : "-"}</td>`;
+        })
+        .join("");
+      return `<tr><td>${date}</td>${cells}</tr>`;
+    })
+    .join("");
+}
+
+function renderChart() {
+  const etf = state.grouped[state.selectedEtf];
+  if (!etf || !etf.series.length) {
+    els.chartTitle.textContent = "선택 ETF NAV 추이";
+    els.chartMeta.textContent = "";
+    els.trendChart.innerHTML = "";
+    return;
+  }
+
+  const series = etf.series.filter((point) => point.date <= state.baseDate);
+  const basePoint = series[0];
+  const values = series.map((point) => ((point.nav / basePoint.nav) - 1) * 100);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const width = 640;
+  const height = 280;
+  const padding = 26;
+  const chartWidth = width - padding * 2;
+  const chartHeight = height - padding * 2 - 18;
+  const span = max - min || 1;
+
+  const points = values.map((value, index) => {
+    const x = padding + (chartWidth * index) / Math.max(values.length - 1, 1);
+    const y = height - padding - ((value - min) / span) * chartHeight;
+    return `${x},${y}`;
+  });
+
+  const lastValue = values[values.length - 1];
+  const [lastX, lastY] = points[points.length - 1].split(",").map(Number);
+
+  els.chartTitle.textContent = `${etf.name} NAV 누적수익률 추이`;
+  els.chartMeta.textContent = `${series[0].date} ~ ${state.baseDate}`;
+  els.trendChart.innerHTML = `
+    <defs>
+      <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(244,184,96,0.40)"></stop>
+        <stop offset="100%" stop-color="rgba(244,184,96,0.00)"></stop>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="${width}" height="${height}" rx="18" fill="#111317"></rect>
+    ${buildGridLines(min, max, padding, width, height, chartHeight, span)}
+    <polygon fill="url(#chartFill)" points="${buildAreaPoints(points, width, height, padding)}"></polygon>
+    <polyline fill="none" stroke="#f4b860" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" points="${points.join(" ")}"></polyline>
+    <circle cx="${lastX}" cy="${lastY}" r="6" fill="#ffffff"></circle>
+    <g>
+      <rect x="${Math.max(lastX - 36, 16)}" y="${lastY - 46}" width="82" height="34" rx="10" fill="#242933"></rect>
+      <text x="${Math.max(lastX + 4, 24)}" y="${lastY - 23}" fill="#ffffff" font-size="18" font-weight="700">${lastValue.toFixed(1)}%</text>
+    </g>
+    ${buildXAxisLabels(series, padding, chartWidth, height)}
+  `;
+}
+
+function calculateMetrics(etf, baseDate, compareDate) {
+  const baseIndex = etf.series.findIndex((point) => point.date === baseDate);
+  if (baseIndex === -1) {
+    return makeEmptyMetrics();
+  }
+
+  const basePoint = etf.series[baseIndex];
+  const previousPoint = etf.series[baseIndex - 1];
+  const point7D = etf.series[baseIndex - 7];
+  const monthReference = getMonthReference(etf.series, baseDate);
+  const quarterReference = getQuarterReference(etf.series, baseDate);
+  const yearReference = getYearReference(etf.series, baseDate);
+  const customReference = etf.series.find((point) => point.date === compareDate);
+
+  return {
+    "1D": computeReturn(basePoint, previousPoint),
+    "7D": computeReturn(basePoint, point7D),
+    MTD: computeReturn(basePoint, monthReference),
+    QTD: computeReturn(basePoint, quarterReference),
+    YTD: computeReturn(basePoint, yearReference),
+    CUSTOM: computeReturn(basePoint, customReference)
+  };
+}
+
+function getMonthReference(series, baseDate) {
+  const prefix = baseDate.slice(0, 7);
+  const firstInMonth = series.find((point) => point.date.startsWith(prefix));
+  const index = series.findIndex((point) => point.date === firstInMonth?.date);
+  return index > 0 ? series[index - 1] : null;
+}
+
+function getQuarterReference(series, baseDate) {
+  const [year, month] = baseDate.split("-").map(Number);
+  const quarterStartMonth = Math.floor((month - 1) / 3) * 3 + 1;
+  const prefix = `${year}-${String(quarterStartMonth).padStart(2, "0")}`;
+  const firstInQuarter = series.find((point) => point.date.startsWith(prefix));
+  const index = series.findIndex((point) => point.date === firstInQuarter?.date);
+  return index > 0 ? series[index - 1] : null;
+}
+
+function getYearReference(series, baseDate) {
+  const prefix = baseDate.slice(0, 4);
+  const firstInYear = series.find((point) => point.date.startsWith(prefix));
+  const index = series.findIndex((point) => point.date === firstInYear?.date);
+  return index > 0 ? series[index - 1] : null;
+}
+
+function computeReturn(basePoint, referencePoint) {
+  if (!basePoint || !referencePoint || referencePoint.nav === 0) {
+    return null;
+  }
+  return basePoint.nav / referencePoint.nav - 1;
+}
+
+function buildGridLines(min, max, padding, width, height, chartHeight, span) {
+  let output = "";
+  for (let i = 0; i <= 4; i += 1) {
+    const ratio = i / 4;
+    const y = height - padding - ratio * chartHeight;
+    const value = min + ratio * span;
+    output += `<line x1="${padding}" y1="${y}" x2="${width - padding}" y2="${y}" stroke="rgba(255,255,255,0.12)" stroke-dasharray="4 6"></line>`;
+    output += `<text x="8" y="${y + 5}" fill="#aeb7c4" font-size="13">${value.toFixed(1)}%</text>`;
+  }
+  return output;
+}
+
+function buildAreaPoints(points, width, height, padding) {
+  const first = points[0];
+  const last = points[points.length - 1];
+  return `${first} ${points.join(" ")} ${last.split(",")[0]},${height - padding} ${first.split(",")[0]},${height - padding}`;
+}
+
+function buildXAxisLabels(series, padding, chartWidth, height) {
+  let output = "";
+  const steps = Math.min(4, Math.max(series.length - 1, 1));
+  for (let i = 0; i <= steps; i += 1) {
+    const pointIndex = Math.round((series.length - 1) * (i / Math.max(steps, 1)));
+    const x = padding + (chartWidth * pointIndex) / Math.max(series.length - 1, 1);
+    output += `<text x="${x - 18}" y="${height - 8}" fill="#aeb7c4" font-size="13">${series[pointIndex].date.slice(5)}</text>`;
+  }
+  return output;
+}
+
+function makeEmptyMetrics() {
+  return { "1D": null, "7D": null, MTD: null, QTD: null, YTD: null, CUSTOM: null };
+}
+
+function formatMetric(value) {
+  if (value === null) {
+    return `<span class="metric empty">-</span>`;
+  }
+  return `<span class="metric ${value >= 0 ? "positive" : "negative"}">${toPercent(value)}</span>`;
+}
+
+function toPercent(value) {
+  return `${value >= 0 ? "+" : ""}${(value * 100).toFixed(2)}%`;
+}
+
+function safeMetricValue(value) {
+  return value === null ? Number.NEGATIVE_INFINITY : value;
+}
+
+function averageOf(values) {
+  const valid = values.filter((value) => value !== null);
+  if (!valid.length) {
+    return null;
+  }
+  return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+}
+
+function parseNumber(value) {
+  return Number(String(value).replaceAll(",", ""));
+}
+
+function normalizeDate(value) {
+  const raw = String(value || "").trim();
+  if (/^\d{8}$/.test(raw)) {
+    return `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    return raw;
+  }
+  return "";
+}
+
+function getFallbackCompareDate(baseDate) {
+  const candidates = state.availableDates.filter((date) => date < baseDate);
+  return candidates[candidates.length - 1] || "";
+}
+
+function updateFailureBadge() {
+  if (!state.failures.length) {
+    els.failureBadge.textContent = "실패한 호출 없음";
+    return;
+  }
+  els.failureBadge.textContent = `실패한 영업일 ${state.failures.length}건`;
+}
+
+function setLoading(loading, message) {
+  els.refreshButton.disabled = loading;
+  els.refreshButton.textContent = loading ? "불러오는 중..." : "KRX 데이터 새로고침";
+  if (message) {
+    els.statusText.textContent = message;
+  }
+}
+
+function toDateInput(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
