@@ -1,7 +1,17 @@
 const TARGET_ETF_NAMES = [
   "1Q 종합채권(AA-이상)액티브",
-  "ACE 종합채권(AA-이상)KIS액티브"
+  "ACE 종합채권(AA-이상)KIS액티브",
+  "PLUS 종합채권(AA-이상)액티브",
+  "RISE 종합채권(A-이상)액티브",
+  "KODEX 종합채권(AA-이상)액티브",
+  "SOL 종합채권(AA-이상)액티브",
+  "TIGER 종합채권(AA-이상)액티브",
+  "HK 종합채권(AA-이상)액티브",
+  "히어로즈 종합채권(AA-이상)액티브",
+  "파워 종합채권(AA-이상)액티브"
 ];
+
+const TARGET_ETF_ORDER = Object.fromEntries(TARGET_ETF_NAMES.map((name, index) => [name, index]));
 
 const sampleDataset = [
   { BAS_DD: "2025-12-31", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.12" },
@@ -27,7 +37,15 @@ const sampleDataset = [
   { BAS_DD: "2026-03-17", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.96" },
   { BAS_DD: "2026-03-18", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.20" },
   { BAS_DD: "2026-03-19", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.36" },
-  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61" }
+  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61" },
+  { BAS_DD: "2026-03-20", ISU_CD: "PLUS_BOND", ISU_NM: "PLUS 종합채권(AA-이상)액티브", NAV: "1032.44" },
+  { BAS_DD: "2026-03-20", ISU_CD: "RISE_BOND", ISU_NM: "RISE 종합채권(A-이상)액티브", NAV: "1019.82" },
+  { BAS_DD: "2026-03-20", ISU_CD: "KODEX_BOND", ISU_NM: "KODEX 종합채권(AA-이상)액티브", NAV: "1038.15" },
+  { BAS_DD: "2026-03-20", ISU_CD: "SOL_BOND", ISU_NM: "SOL 종합채권(AA-이상)액티브", NAV: "1030.77" },
+  { BAS_DD: "2026-03-20", ISU_CD: "TIGER_BOND", ISU_NM: "TIGER 종합채권(AA-이상)액티브", NAV: "1031.24" },
+  { BAS_DD: "2026-03-20", ISU_CD: "HK_BOND", ISU_NM: "HK 종합채권(AA-이상)액티브", NAV: "1028.64" },
+  { BAS_DD: "2026-03-20", ISU_CD: "HERO_BOND", ISU_NM: "히어로즈 종합채권(AA-이상)액티브", NAV: "1027.58" },
+  { BAS_DD: "2026-03-20", ISU_CD: "POWER_BOND", ISU_NM: "파워 종합채권(AA-이상)액티브", NAV: "1026.91" }
 ];
 
 const state = {
@@ -176,7 +194,9 @@ async function loadDataset() {
 function applyDataset(rows) {
   state.dataset = normalizeRows(rows);
   state.grouped = buildGroupedData(state.dataset);
-  state.etfs = Object.values(state.grouped).sort((a, b) => a.name.localeCompare(b.name, "ko"));
+  state.etfs = Object.values(state.grouped).sort((a, b) => {
+    return (TARGET_ETF_ORDER[a.name] ?? Number.MAX_SAFE_INTEGER) - (TARGET_ETF_ORDER[b.name] ?? Number.MAX_SAFE_INTEGER);
+  });
   state.availableDates = [...new Set(state.dataset.map((row) => row.BAS_DD))].sort();
   state.baseDate = state.availableDates[state.availableDates.length - 1] || "";
   state.compareDate = state.availableDates.find((date) => date < state.baseDate) || "";
