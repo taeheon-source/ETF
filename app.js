@@ -337,7 +337,7 @@ function renderPeerRankingTable() {
 
   const featuredEtf = getFeaturedEtf();
   if (!featuredEtf) {
-    els.peerRankTableBody.innerHTML = `<tr><td colspan="7" class="empty-state">표시할 ETF 데이터가 없습니다.</td></tr>`;
+    els.peerRankTableBody.innerHTML = `<tr><td colspan="8" class="empty-state">표시할 ETF 데이터가 없습니다.</td></tr>`;
     return;
   }
 
@@ -364,6 +364,7 @@ function renderPeerRankingTable() {
       <td>${formatRankCell(rankRow.QTD)}</td>
       <td>${formatRankCell(rankRow.YTD)}</td>
       <td>${formatRankCell(rankRow.CUSTOM)}</td>
+      <td>${formatAssetTotalInEok(getAssetTotalAtOrBefore(featuredEtf, state.baseDate))}</td>
     </tr>
   `;
 }
