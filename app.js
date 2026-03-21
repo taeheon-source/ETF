@@ -88,6 +88,8 @@ const els = {
   overviewReturnsButton: document.querySelector("#overviewReturnsButton"),
   overviewAssetButton: document.querySelector("#overviewAssetButton"),
   returnsTableBody: document.querySelector("#returnsTableBody"),
+  peerRankingSection: document.querySelector("#peerRankingSection"),
+  peerRankTableBody: document.querySelector("#peerRankTableBody"),
   rankingList: document.querySelector("#rankingList"),
   compareHeader: document.querySelector("#compareHeader"),
   rawDataTitle: document.querySelector("#rawDataTitle"),
@@ -250,6 +252,7 @@ function render() {
   renderCompareDateOptions();
   renderOverviewControls();
   renderOverviewTable();
+  renderPeerRankingTable();
   renderRanking();
   renderDetailMetrics();
   renderRawMetricControls();
@@ -267,6 +270,7 @@ function renderOverviewControls() {
   els.overviewReturnsButton.classList.toggle("is-active", isReturns);
   els.overviewAssetButton.classList.toggle("is-active", !isReturns);
   els.overviewTitle.textContent = isReturns ? "ETF 수익률 현황" : "순자산총액";
+  els.peerRankingSection.classList.toggle("is-hidden", !isReturns);
 }
 
 function renderOverviewTable() {
@@ -323,6 +327,45 @@ function renderOverviewTable() {
       render();
     });
     });
+}
+
+function renderPeerRankingTable() {
+  if (state.overviewMode !== "RETURNS") {
+    els.peerRankTableBody.innerHTML = "";
+    return;
+  }
+
+  const featuredEtf = getFeaturedEtf();
+  if (!featuredEtf) {
+    els.peerRankTableBody.innerHTML = `<tr><td colspan="7" class="empty-state">표시할 ETF 데이터가 없습니다.</td></tr>`;
+    return;
+  }
+
+  const peers = getVisibleEtfs().map((etf) => ({
+    etf,
+    metrics: calculateMetrics(etf, state.baseDate, state.compareDate)
+  }));
+
+  const rankRow = {
+    "1D": getMetricRank(peers, featuredEtf.code, "1D"),
+    "7D": getMetricRank(peers, featuredEtf.code, "7D"),
+    MTD: getMetricRank(peers, featuredEtf.code, "MTD"),
+    QTD: getMetricRank(peers, featuredEtf.code, "QTD"),
+    YTD: getMetricRank(peers, featuredEtf.code, "YTD"),
+    CUSTOM: getMetricRank(peers, featuredEtf.code, "CUSTOM")
+  };
+
+  els.peerRankTableBody.innerHTML = `
+    <tr>
+      <td>${escapeHtml(featuredEtf.name)}</td>
+      <td>${formatRankCell(rankRow["1D"])}</td>
+      <td>${formatRankCell(rankRow["7D"])}</td>
+      <td>${formatRankCell(rankRow.MTD)}</td>
+      <td>${formatRankCell(rankRow.QTD)}</td>
+      <td>${formatRankCell(rankRow.YTD)}</td>
+      <td>${formatRankCell(rankRow.CUSTOM)}</td>
+    </tr>
+  `;
 }
 
 function renderRawMetricControls() {
@@ -727,6 +770,13 @@ function formatSignedAssetDeltaInEok(value) {
   return `${sign}${converted.toFixed(1)}`;
 }
 
+function formatRankCell(rank) {
+  if (!Number.isFinite(rank)) {
+    return `<span class="metric empty">-</span>`;
+  }
+  return `<span class="metric">${rank}위</span>`;
+}
+
 function toPercent(value) {
   return `${value >= 0 ? "+" : ""}${(value * 100).toFixed(2)}%`;
 }
@@ -808,6 +858,19 @@ function getEffectiveAssetReference(series, referenceDate) {
     return null;
   }
   return getEffectiveAssetPoint(series, referenceDate);
+}
+
+function getMetricRank(peers, targetCode, metricKey) {
+  const ranked = peers
+    .map((item) => ({
+      code: item.etf.code,
+      value: item.metrics[metricKey]
+    }))
+    .filter((item) => item.value !== null)
+    .sort((a, b) => b.value - a.value);
+
+  const index = ranked.findIndex((item) => item.code === targetCode);
+  return index === -1 ? null : index + 1;
 }
 
 function normalizeDate(value) {
