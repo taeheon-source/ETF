@@ -1,9 +1,5 @@
-const { list, put } = require("@vercel/blob");
-
-const CACHE_PATH = "cache/nav-data.json";
-const CACHE_START_DATE = "2025-01-02";
-const CONCURRENCY = 8;
-
+const MAX_BUSINESS_DAYS = 70;
+const CONCURRENCY = 5;
 const TARGET_ETF_NAMES = [
   "1Q 종합채권(AA-이상)액티브",
   "ACE 종합채권(AA-이상)KIS액티브",
@@ -19,9 +15,19 @@ const TARGET_ETF_NAMES = [
 
 const SAMPLE_ROWS = [
   { BAS_DD: "2025-12-31", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.12" },
+  { BAS_DD: "2026-01-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.55" },
   { BAS_DD: "2026-03-20", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1044.21" },
   { BAS_DD: "2025-12-31", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.42" },
-  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61" }
+  { BAS_DD: "2026-01-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.66" },
+  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61" },
+  { BAS_DD: "2026-03-20", ISU_CD: "PLUS_BOND", ISU_NM: "PLUS 종합채권(AA-이상)액티브", NAV: "1032.44" },
+  { BAS_DD: "2026-03-20", ISU_CD: "RISE_BOND", ISU_NM: "RISE 종합채권(A-이상)액티브", NAV: "1019.82" },
+  { BAS_DD: "2026-03-20", ISU_CD: "KODEX_BOND", ISU_NM: "KODEX 종합채권(AA-이상)액티브", NAV: "1038.15" },
+  { BAS_DD: "2026-03-20", ISU_CD: "SOL_BOND", ISU_NM: "SOL 종합채권(AA-이상)액티브", NAV: "1030.77" },
+  { BAS_DD: "2026-03-20", ISU_CD: "TIGER_BOND", ISU_NM: "TIGER 종합채권(AA-이상)액티브", NAV: "1031.24" },
+  { BAS_DD: "2026-03-20", ISU_CD: "HK_BOND", ISU_NM: "HK 종합채권(AA-이상)액티브", NAV: "1028.64" },
+  { BAS_DD: "2026-03-20", ISU_CD: "HERO_BOND", ISU_NM: "히어로즈 종합채권(AA-이상)액티브", NAV: "1027.58" },
+  { BAS_DD: "2026-03-20", ISU_CD: "POWER_BOND", ISU_NM: "파워 종합채권(AA-이상)액티브", NAV: "1026.91" }
 ];
 
 module.exports = async function handler(req, res) {
@@ -38,10 +44,17 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  const dates = buildWeekdayRange(from, to);
+  if (dates.length > MAX_BUSINESS_DAYS) {
+    res.status(400).json({
+      error: `Requested range is too large. Please keep it within ${MAX_BUSINESS_DAYS} business days.`
+    });
+    return;
+  }
+
   const upstreamUrl = process.env.KRX_UPSTREAM_URL;
   const authKey = process.env.KRX_AUTH_KEY;
   const authHeaderName = process.env.KRX_AUTH_HEADER || "AUTH_KEY";
-  const hasBlob = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 
   if (!upstreamUrl || !authKey) {
     res.status(200).json({
@@ -53,64 +66,8 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  try {
-    const cache = hasBlob ? await readCache() : emptyCache();
-    const syncTarget = maxDate(to, CACHE_START_DATE);
-    const syncStart = getNextBusinessDay(cache.lastSyncedDate || dateBefore(CACHE_START_DATE));
-    const missingDates = syncStart <= syncTarget ? buildWeekdayRange(syncStart, syncTarget) : [];
-
-    const failures = [];
-    if (missingDates.length) {
-      const appendedRows = await fetchMissingRows({
-        upstreamUrl,
-        authKey,
-        authHeaderName,
-        dates: missingDates,
-        failures
-      });
-
-      if (appendedRows.length) {
-        const mergedRows = dedupeRows([...cache.rows, ...appendedRows]);
-        cache.rows = mergedRows;
-      }
-
-      cache.lastSyncedDate = syncTarget;
-
-      if (hasBlob) {
-        await writeCache(cache);
-      }
-    }
-
-    const rows = cache.rows.filter((row) => row.BAS_DD >= from && row.BAS_DD <= to);
-    if (!rows.length) {
-      res.status(200).json({
-        source: hasBlob ? "blob-cache" : "live",
-        message: "저장된 범위 안에 표시할 데이터가 없어 샘플 데이터를 반환합니다.",
-        rows: SAMPLE_ROWS,
-        failures
-      });
-      return;
-    }
-
-    res.status(200).json({
-      source: hasBlob ? "blob-cache" : "live",
-      message: `총 ${cache.rows.length}건 저장, 이번 요청에서 ${rows.length}건 조회`,
-      rows,
-      failures,
-      lastSyncedDate: cache.lastSyncedDate
-    });
-  } catch (error) {
-    res.status(200).json({
-      source: "sample",
-      message: `캐시 처리 중 문제가 있어 샘플 데이터를 표시합니다. ${error.message}`,
-      rows: SAMPLE_ROWS,
-      failures: []
-    });
-  }
-};
-
-async function fetchMissingRows({ upstreamUrl, authKey, authHeaderName, dates, failures }) {
   const rows = [];
+  const failures = [];
 
   for (let index = 0; index < dates.length; index += CONCURRENCY) {
     const chunk = dates.slice(index, index + CONCURRENCY);
@@ -128,8 +85,23 @@ async function fetchMissingRows({ upstreamUrl, authKey, authHeaderName, dates, f
     });
   }
 
-  return rows;
-}
+  if (!rows.length) {
+    res.status(200).json({
+      source: "sample",
+      message: "KRX 응답이 비어 있어 샘플 데이터를 표시합니다.",
+      rows: SAMPLE_ROWS,
+      failures
+    });
+    return;
+  }
+
+  res.status(200).json({
+    source: "upstream",
+    message: `${rows.length}건의 NAV 데이터를 KRX에서 불러왔습니다.`,
+    rows,
+    failures
+  });
+};
 
 async function fetchForDate({ upstreamUrl, authKey, authHeaderName, date }) {
   const response = await fetch(upstreamUrl, {
@@ -159,61 +131,6 @@ async function fetchForDate({ upstreamUrl, authKey, authHeaderName, date }) {
     .filter((row) => row.BAS_DD && row.ISU_CD && row.ISU_NM && row.NAV && row.NAV !== "-");
 }
 
-async function readCache() {
-  const { blobs } = await list({ prefix: CACHE_PATH, limit: 10 });
-  const match = blobs.find((blob) => blob.pathname === CACHE_PATH);
-  if (!match) {
-    return emptyCache();
-  }
-
-  const response = await fetch(match.url);
-  if (!response.ok) {
-    return emptyCache();
-  }
-
-  const payload = await response.json();
-  return {
-    lastSyncedDate: normalizeDate(payload.lastSyncedDate) || "",
-    rows: Array.isArray(payload.rows) ? dedupeRows(payload.rows.map(normalizeRow)) : []
-  };
-}
-
-async function writeCache(cache) {
-  await put(CACHE_PATH, JSON.stringify(cache), {
-    access: "public",
-    addRandomSuffix: false,
-    contentType: "application/json"
-  });
-}
-
-function emptyCache() {
-  return {
-    lastSyncedDate: "",
-    rows: []
-  };
-}
-
-function dedupeRows(rows) {
-  const map = new Map();
-  rows.forEach((row) => {
-    const normalized = normalizeRow(row);
-    if (!normalized.BAS_DD || !normalized.ISU_CD) {
-      return;
-    }
-    map.set(`${normalized.BAS_DD}:${normalized.ISU_CD}`, normalized);
-  });
-  return [...map.values()].sort((a, b) => a.BAS_DD.localeCompare(b.BAS_DD) || a.ISU_CD.localeCompare(b.ISU_CD));
-}
-
-function normalizeRow(row) {
-  return {
-    BAS_DD: normalizeDate(row.BAS_DD),
-    ISU_CD: String(row.ISU_CD || "").trim(),
-    ISU_NM: String(row.ISU_NM || "").trim(),
-    NAV: String(row.NAV || "").replaceAll(",", "")
-  };
-}
-
 function buildWeekdayRange(from, to) {
   const dates = [];
   const cursor = new Date(`${from}T00:00:00`);
@@ -228,25 +145,6 @@ function buildWeekdayRange(from, to) {
   }
 
   return dates;
-}
-
-function getNextBusinessDay(dateString) {
-  const cursor = new Date(`${dateString}T00:00:00`);
-  cursor.setDate(cursor.getDate() + 1);
-  while (cursor.getDay() === 0 || cursor.getDay() === 6) {
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return formatDate(cursor);
-}
-
-function dateBefore(dateString) {
-  const cursor = new Date(`${dateString}T00:00:00`);
-  cursor.setDate(cursor.getDate() - 1);
-  return formatDate(cursor);
-}
-
-function maxDate(a, b) {
-  return a >= b ? a : b;
 }
 
 function normalizeDate(value) {
