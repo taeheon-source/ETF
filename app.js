@@ -68,6 +68,7 @@ const sampleDataset = [
 const state = {
   baseDate: "",
   compareDate: "",
+  overviewMode: "RETURNS",
   rankingMetric: "YTD",
   sortMetric: "YTD",
   rawMetric: "NAV",
@@ -83,6 +84,9 @@ const els = {
   compareDateSelect: document.querySelector("#compareDateSelect"),
   rankingMetricSelect: document.querySelector("#rankingMetricSelect"),
   sortMetricSelect: document.querySelector("#sortMetricSelect"),
+  overviewTitle: document.querySelector("#overviewTitle"),
+  overviewReturnsButton: document.querySelector("#overviewReturnsButton"),
+  overviewAssetButton: document.querySelector("#overviewAssetButton"),
   returnsTableBody: document.querySelector("#returnsTableBody"),
   rankingList: document.querySelector("#rankingList"),
   compareHeader: document.querySelector("#compareHeader"),
@@ -127,6 +131,18 @@ function bindEvents() {
 
   els.sortMetricSelect.addEventListener("change", (event) => {
     state.sortMetric = event.target.value;
+    renderOverviewTable();
+  });
+
+  els.overviewReturnsButton.addEventListener("click", () => {
+    state.overviewMode = "RETURNS";
+    renderOverviewControls();
+    renderOverviewTable();
+  });
+
+  els.overviewAssetButton.addEventListener("click", () => {
+    state.overviewMode = "ASSET";
+    renderOverviewControls();
     renderOverviewTable();
   });
 
@@ -232,6 +248,7 @@ function renderCompareDateOptions() {
 
 function render() {
   renderCompareDateOptions();
+  renderOverviewControls();
   renderOverviewTable();
   renderRanking();
   renderDetailMetrics();
@@ -245,13 +262,26 @@ function getVisibleEtfs() {
   return state.etfs;
 }
 
+function renderOverviewControls() {
+  const isReturns = state.overviewMode === "RETURNS";
+  els.overviewReturnsButton.classList.toggle("is-active", isReturns);
+  els.overviewAssetButton.classList.toggle("is-active", !isReturns);
+  els.overviewTitle.textContent = isReturns ? "ETF 수익률 현황" : "순자산총액";
+}
+
 function renderOverviewTable() {
   const rows = getVisibleEtfs()
-    .map((etf) => ({ etf, metrics: calculateMetrics(etf, state.baseDate, state.compareDate) }))
+    .map((etf) => ({
+      etf,
+      metrics:
+        state.overviewMode === "ASSET"
+          ? calculateAssetMetrics(etf, state.baseDate, state.compareDate)
+          : calculateMetrics(etf, state.baseDate, state.compareDate)
+    }))
     .sort((a, b) => safeMetricValue(b.metrics[state.sortMetric]) - safeMetricValue(a.metrics[state.sortMetric]));
 
   if (!rows.length) {
-    els.returnsTableBody.innerHTML = `<tr><td colspan="7" class="empty-state">표시할 ETF 데이터가 없습니다.</td></tr>`;
+    els.returnsTableBody.innerHTML = `<tr><td colspan="8" class="empty-state">표시할 ETF 데이터가 없습니다.</td></tr>`;
     return;
   }
 
@@ -536,11 +566,42 @@ function calculateMetrics(etf, baseDate, compareDate) {
   };
 }
 
+function calculateAssetMetrics(etf, baseDate, compareDate) {
+  const series = state.grouped[etf.code]?.series || [];
+  const basePoint = getEffectiveAssetPoint(series, baseDate);
+  if (!basePoint) {
+    return makeEmptyMetrics();
+  }
+
+  const previousPoint = getPreviousEffectiveAssetPoint(series, basePoint.date);
+  const point7D = getNthPreviousEffectiveAssetPoint(series, basePoint.date, 7);
+  const monthReference = getEffectiveAssetReference(series, getMonthReferenceDate(series, baseDate));
+  const quarterReference = getEffectiveAssetReference(series, getQuarterReferenceDate(series, baseDate));
+  const yearReference = getEffectiveAssetReference(series, getYearReferenceDate(series, baseDate));
+  const customReference = getEffectiveAssetReference(series, compareDate);
+
+  return {
+    "1D": computeAssetReturn(basePoint, previousPoint),
+    "7D": computeAssetReturn(basePoint, point7D),
+    MTD: computeAssetReturn(basePoint, monthReference),
+    QTD: computeAssetReturn(basePoint, quarterReference),
+    YTD: computeAssetReturn(basePoint, yearReference),
+    CUSTOM: computeAssetReturn(basePoint, customReference)
+  };
+}
+
 function getMonthReference(series, baseDate) {
   const prefix = baseDate.slice(0, 7);
   const firstInMonth = series.find((point) => point.date.startsWith(prefix));
   const index = series.findIndex((point) => point.date === firstInMonth?.date);
   return index > 0 ? series[index - 1] : null;
+}
+
+function getMonthReferenceDate(series, baseDate) {
+  const prefix = baseDate.slice(0, 7);
+  const firstInMonth = series.find((point) => point.date.startsWith(prefix));
+  const index = series.findIndex((point) => point.date === firstInMonth?.date);
+  return index > 0 ? series[index - 1]?.date ?? null : null;
 }
 
 function getQuarterReference(series, baseDate) {
@@ -552,6 +613,15 @@ function getQuarterReference(series, baseDate) {
   return index > 0 ? series[index - 1] : null;
 }
 
+function getQuarterReferenceDate(series, baseDate) {
+  const [year, month] = baseDate.split("-").map(Number);
+  const quarterStartMonth = Math.floor((month - 1) / 3) * 3 + 1;
+  const prefix = `${year}-${String(quarterStartMonth).padStart(2, "0")}`;
+  const firstInQuarter = series.find((point) => point.date.startsWith(prefix));
+  const index = series.findIndex((point) => point.date === firstInQuarter?.date);
+  return index > 0 ? series[index - 1]?.date ?? null : null;
+}
+
 function getYearReference(series, baseDate) {
   const prefix = baseDate.slice(0, 4);
   const firstInYear = series.find((point) => point.date.startsWith(prefix));
@@ -559,11 +629,25 @@ function getYearReference(series, baseDate) {
   return index > 0 ? series[index - 1] : null;
 }
 
+function getYearReferenceDate(series, baseDate) {
+  const prefix = baseDate.slice(0, 4);
+  const firstInYear = series.find((point) => point.date.startsWith(prefix));
+  const index = series.findIndex((point) => point.date === firstInYear?.date);
+  return index > 0 ? series[index - 1]?.date ?? null : null;
+}
+
 function computeReturn(basePoint, referencePoint) {
   if (!basePoint || !referencePoint || referencePoint.nav === 0) {
     return null;
   }
   return basePoint.nav / referencePoint.nav - 1;
+}
+
+function computeAssetReturn(basePoint, referencePoint) {
+  if (!basePoint || !referencePoint || !Number.isFinite(referencePoint.assetTotal) || referencePoint.assetTotal === 0) {
+    return null;
+  }
+  return basePoint.assetTotal / referencePoint.assetTotal - 1;
 }
 
 function buildGridLines(min, max, xStart, xEnd, height, paddingTop, paddingBottom, chartHeight, span) {
@@ -618,9 +702,7 @@ function formatAssetTotalInEok(value, withGrouping = true) {
     return "-";
   }
   const converted = value / 100000000;
-  const formatted = Number.isInteger(converted)
-    ? converted.toFixed(0)
-    : converted.toFixed(2).replace(/\.?0+$/, "");
+  const formatted = converted.toFixed(1);
   return withGrouping ? Number(formatted).toLocaleString("ko-KR") : formatted;
 }
 
@@ -659,6 +741,52 @@ function getAssetTotalAtOrBefore(etf, date) {
   }
 
   return null;
+}
+
+function getEffectiveAssetPoint(series, date) {
+  for (let index = series.length - 1; index >= 0; index -= 1) {
+    const point = series[index];
+    if (point.date > date) {
+      continue;
+    }
+    if (Number.isFinite(point.assetTotal) && point.assetTotal !== 0) {
+      return point;
+    }
+  }
+  return null;
+}
+
+function getPreviousEffectiveAssetPoint(series, date) {
+  for (let index = series.length - 1; index >= 0; index -= 1) {
+    const point = series[index];
+    if (point.date >= date) {
+      continue;
+    }
+    if (Number.isFinite(point.assetTotal) && point.assetTotal !== 0) {
+      return point;
+    }
+  }
+  return null;
+}
+
+function getNthPreviousEffectiveAssetPoint(series, date, steps) {
+  let cursorDate = date;
+  let point = null;
+  for (let step = 0; step < steps; step += 1) {
+    point = getPreviousEffectiveAssetPoint(series, cursorDate);
+    if (!point) {
+      return null;
+    }
+    cursorDate = point.date;
+  }
+  return point;
+}
+
+function getEffectiveAssetReference(series, referenceDate) {
+  if (!referenceDate) {
+    return null;
+  }
+  return getEffectiveAssetPoint(series, referenceDate);
 }
 
 function normalizeDate(value) {

@@ -306,6 +306,8 @@ td {
 .table-toolbar {
   display: flex;
   gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .split {
@@ -445,6 +447,10 @@ td {
   }
 
   .raw-toolbar {
+    width: 100%;
+  }
+
+  .table-toolbar {
     width: 100%;
   }
 }

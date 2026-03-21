@@ -66,9 +66,13 @@
           <div class="panel-heading">
             <div>
               <p class="panel-kicker">Overview</p>
-              <h2>ETF 수익률 현황</h2>
+              <h2 id="overviewTitle">ETF 수익률 현황</h2>
             </div>
             <div class="table-toolbar">
+              <div class="toggle-group" role="tablist" aria-label="Overview mode">
+                <button id="overviewReturnsButton" class="toggle-button is-active" type="button">ETF 수익률 현황</button>
+                <button id="overviewAssetButton" class="toggle-button" type="button">순자산총액</button>
+              </div>
               <label class="inline-control">
                 <span>정렬 기준</span>
                 <select id="sortMetricSelect">
