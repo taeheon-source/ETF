@@ -349,7 +349,7 @@ function renderDetailMetrics() {
 }
 
 function renderNavTable() {
-  const visibleEtfs = getVisibleEtfs().slice(0, 4);
+  const visibleEtfs = getVisibleEtfs().slice(0, 8);
   els.navTableHead.innerHTML = `<tr><th>날짜</th>${visibleEtfs.map((etf) => `<th>${escapeHtml(etf.name)}</th>`).join("")}</tr>`;
 
   const datesDesc = [...state.availableDates].sort((a, b) => b.localeCompare(a));

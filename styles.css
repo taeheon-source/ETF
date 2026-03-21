@@ -360,6 +360,11 @@ td {
   background: #131822;
 }
 
+.nav-table th,
+.nav-table td {
+  font-size: 0.86rem;
+}
+
 .empty-state {
   padding: 18px 6px;
   color: var(--muted);
