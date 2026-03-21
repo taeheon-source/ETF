@@ -8,7 +8,7 @@
       name="description"
       content="국내 종합채권 ETF NAV 기준 수익률을 비교하는 모니터링 대시보드"
     />
-    <meta name="theme-color" content="#0d1016" />
+    <meta name="theme-color" content="#0a0a0a" />
     <meta property="og:title" content="Hana Bond ETF Monitoring" />
     <meta
       property="og:description"
@@ -34,9 +34,6 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="ambient ambient-left"></div>
-    <div class="ambient ambient-right"></div>
-
     <div class="shell">
       <header class="hero">
         <h1>Hana Bond ETF Monitoring</h1>
@@ -82,21 +79,23 @@
               </label>
             </div>
           </div>
-          <div class="table-wrap">
-            <table class="returns-table">
-              <thead>
-                <tr>
-                  <th>ETF명</th>
-                  <th>1D</th>
-                  <th>7D</th>
-                  <th>MTD</th>
-                  <th>QTD</th>
-                  <th>YTD</th>
-                  <th id="compareHeader">비교일 대비</th>
-                </tr>
-              </thead>
-              <tbody id="returnsTableBody"></tbody>
-            </table>
+          <div class="table-shell">
+            <div class="table-wrap">
+              <table class="returns-table">
+                <thead>
+                  <tr>
+                    <th>ETF명</th>
+                    <th>1D</th>
+                    <th>7D</th>
+                    <th>MTD</th>
+                    <th>QTD</th>
+                    <th>YTD</th>
+                    <th id="compareHeader">비교일 대비</th>
+                  </tr>
+                </thead>
+                <tbody id="returnsTableBody"></tbody>
+              </table>
+            </div>
           </div>
         </section>
 
@@ -110,8 +109,10 @@
               <p class="panel-meta" id="chartMeta"></p>
             </div>
             <div class="detail-metrics" id="detailMetrics"></div>
-            <div class="chart-wrap">
-              <svg id="trendChart" viewBox="0 0 640 280" role="img" aria-label="ETF NAV 추이 차트"></svg>
+            <div class="chart-shell">
+              <div class="chart-wrap">
+                <svg id="trendChart" viewBox="0 0 640 280" role="img" aria-label="ETF NAV 추이 차트"></svg>
+              </div>
             </div>
           </section>
 
@@ -145,11 +146,13 @@
             </div>
             <p class="panel-meta">현재 기준 상위 4개 ETF의 날짜별 NAV를 보여줍니다.</p>
           </div>
-          <div class="table-wrap">
-            <table class="nav-table">
-              <thead id="navTableHead"></thead>
-              <tbody id="navTableBody"></tbody>
-            </table>
+          <div class="table-shell">
+            <div class="table-wrap">
+              <table class="nav-table">
+                <thead id="navTableHead"></thead>
+                <tbody id="navTableBody"></tbody>
+              </table>
+            </div>
           </div>
         </section>
       </main>
