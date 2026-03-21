@@ -1,5 +1,17 @@
 const FIXED_START_DATE = "2025-12-01";
 const FEATURED_ETF_PREFIX = "1Q ";
+const NAV_TABLE_LABELS = {
+  "1Q 종합채권(AA-이상)액티브": "1Q",
+  "ACE 종합채권(AA-이상)KIS액티브": "ACE",
+  "PLUS 종합채권(AA-이상)액티브": "PLUS",
+  "RISE 종합채권(A-이상)액티브": "RISE",
+  "KODEX 종합채권(AA-이상)액티브": "KODEX",
+  "SOL 종합채권(AA-이상)액티브": "SOL",
+  "TIGER 종합채권(AA-이상)액티브": "TIGER",
+  "HK 종합채권(AA-이상)액티브": "HK",
+  "히어로즈 종합채권(AA-이상)액티브": "히어로즈",
+  "파워 종합채권(AA-이상)액티브": "파워"
+};
 
 const TARGET_ETF_NAMES = [
   "1Q 종합채권(AA-이상)액티브",
@@ -316,8 +328,10 @@ function renderDetailMetrics() {
 }
 
 function renderNavTable() {
-  const visibleEtfs = getVisibleEtfs().slice(0, 4);
-  els.navTableHead.innerHTML = `<tr><th>날짜</th>${visibleEtfs.map((etf) => `<th>${escapeHtml(etf.name)}</th>`).join("")}</tr>`;
+  const visibleEtfs = getVisibleEtfs();
+  els.navTableHead.innerHTML = `<tr><th>날짜</th>${visibleEtfs
+    .map((etf) => `<th>${escapeHtml(getNavTableLabel(etf.name))}</th>`)
+    .join("")}</tr>`;
 
   const datesDesc = [...state.availableDates].sort((a, b) => b.localeCompare(a));
   els.navTableBody.innerHTML = datesDesc
@@ -331,6 +345,10 @@ function renderNavTable() {
       return `<tr><td>${date}</td>${cells}</tr>`;
     })
     .join("");
+}
+
+function getNavTableLabel(name) {
+  return NAV_TABLE_LABELS[name] || name;
 }
 
 function renderChart() {
