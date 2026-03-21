@@ -90,7 +90,7 @@ select {
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .panel-kicker {
@@ -114,7 +114,8 @@ select {
 }
 
 .controls-grid-compact {
-  grid-template-columns: repeat(2, minmax(0, 320px));
+  grid-template-columns: repeat(2, minmax(0, 320px)) auto;
+  align-items: end;
 }
 
 .action-button {
@@ -122,6 +123,7 @@ select {
   border: 1.5px solid #ffffff;
   background: var(--accent);
   color: #111111;
+  min-height: 50px;
   padding: 12px 18px;
   font-weight: 700;
   cursor: pointer;
@@ -161,9 +163,18 @@ select {
   width: 100%;
   border: 2px solid var(--line-field);
   border-radius: 16px;
+  min-height: 50px;
   padding: 12px 14px;
   background: var(--field);
   color: var(--text);
+}
+
+.control-action {
+  min-width: 220px;
+}
+
+.control-action .action-button {
+  width: 100%;
 }
 
 .table-shell,
@@ -362,7 +373,10 @@ td {
 
 @media (max-width: 1080px) {
   .split,
-  .detail-metrics,
+  .detail-metrics {
+    grid-template-columns: 1fr;
+  }
+
   .controls-grid-compact {
     grid-template-columns: 1fr;
   }
