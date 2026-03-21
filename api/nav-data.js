@@ -1,4 +1,4 @@
-const MAX_BUSINESS_DAYS = 70;
+const FIXED_START_DATE = "2025-12-01";
 const CONCURRENCY = 5;
 const TARGET_ETF_NAMES = [
   "1Q 종합채권(AA-이상)액티브",
@@ -19,15 +19,7 @@ const SAMPLE_ROWS = [
   { BAS_DD: "2026-03-20", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1044.21" },
   { BAS_DD: "2025-12-31", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.42" },
   { BAS_DD: "2026-01-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.66" },
-  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61" },
-  { BAS_DD: "2026-03-20", ISU_CD: "PLUS_BOND", ISU_NM: "PLUS 종합채권(AA-이상)액티브", NAV: "1032.44" },
-  { BAS_DD: "2026-03-20", ISU_CD: "RISE_BOND", ISU_NM: "RISE 종합채권(A-이상)액티브", NAV: "1019.82" },
-  { BAS_DD: "2026-03-20", ISU_CD: "KODEX_BOND", ISU_NM: "KODEX 종합채권(AA-이상)액티브", NAV: "1038.15" },
-  { BAS_DD: "2026-03-20", ISU_CD: "SOL_BOND", ISU_NM: "SOL 종합채권(AA-이상)액티브", NAV: "1030.77" },
-  { BAS_DD: "2026-03-20", ISU_CD: "TIGER_BOND", ISU_NM: "TIGER 종합채권(AA-이상)액티브", NAV: "1031.24" },
-  { BAS_DD: "2026-03-20", ISU_CD: "HK_BOND", ISU_NM: "HK 종합채권(AA-이상)액티브", NAV: "1028.64" },
-  { BAS_DD: "2026-03-20", ISU_CD: "HERO_BOND", ISU_NM: "히어로즈 종합채권(AA-이상)액티브", NAV: "1027.58" },
-  { BAS_DD: "2026-03-20", ISU_CD: "POWER_BOND", ISU_NM: "파워 종합채권(AA-이상)액티브", NAV: "1026.91" }
+  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61" }
 ];
 
 module.exports = async function handler(req, res) {
@@ -36,19 +28,12 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const from = normalizeDate(req.query.from);
-  const to = normalizeDate(req.query.to);
+  const requestedTo = normalizeDate(req.query.to);
+  const to = requestedTo || todayInKst();
+  const from = FIXED_START_DATE;
 
-  if (!from || !to || from > to) {
-    res.status(400).json({ error: "Invalid date range. Use YYYY-MM-DD." });
-    return;
-  }
-
-  const dates = buildWeekdayRange(from, to);
-  if (dates.length > MAX_BUSINESS_DAYS) {
-    res.status(400).json({
-      error: `Requested range is too large. Please keep it within ${MAX_BUSINESS_DAYS} business days.`
-    });
+  if (from > to) {
+    res.status(400).json({ error: "Invalid date range." });
     return;
   }
 
@@ -66,6 +51,7 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  const dates = buildWeekdayRange(from, to);
   const rows = [];
   const failures = [];
 
@@ -164,4 +150,14 @@ function formatDate(date) {
     String(date.getMonth() + 1).padStart(2, "0"),
     String(date.getDate()).padStart(2, "0")
   ].join("-");
+}
+
+function todayInKst() {
+  const formatter = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  });
+  return formatter.format(new Date());
 }

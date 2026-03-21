@@ -1,3 +1,5 @@
+const FIXED_START_DATE = "2025-12-01";
+
 const TARGET_ETF_NAMES = [
   "1Q 종합채권(AA-이상)액티브",
   "ACE 종합채권(AA-이상)KIS액티브",
@@ -51,7 +53,6 @@ const sampleDataset = [
 const state = {
   baseDate: "",
   compareDate: "",
-  search: "",
   rankingMetric: "YTD",
   sortMetric: "YTD",
   selectedEtf: "",
@@ -64,7 +65,6 @@ const state = {
 const els = {
   baseDateSelect: document.querySelector("#baseDateSelect"),
   compareDateSelect: document.querySelector("#compareDateSelect"),
-  searchInput: document.querySelector("#searchInput"),
   rankingMetricSelect: document.querySelector("#rankingMetricSelect"),
   sortMetricSelect: document.querySelector("#sortMetricSelect"),
   returnsTableBody: document.querySelector("#returnsTableBody"),
@@ -75,18 +75,14 @@ const els = {
   chartTitle: document.querySelector("#chartTitle"),
   chartMeta: document.querySelector("#chartMeta"),
   trendChart: document.querySelector("#trendChart"),
-  rangeStartInput: document.querySelector("#rangeStartInput"),
-  rangeEndInput: document.querySelector("#rangeEndInput"),
   refreshButton: document.querySelector("#refreshButton"),
-  detailMetrics: document.querySelector("#detailMetrics"),
-  presetButtons: [...document.querySelectorAll(".preset-button")]
+  detailMetrics: document.querySelector("#detailMetrics")
 };
 
 init();
 
 async function init() {
   bindEvents();
-  applyPreset("1M");
   await loadDataset();
 }
 
@@ -104,11 +100,6 @@ function bindEvents() {
     render();
   });
 
-  els.searchInput.addEventListener("input", (event) => {
-    state.search = event.target.value.trim().toLowerCase();
-    render();
-  });
-
   els.rankingMetricSelect.addEventListener("change", (event) => {
     state.rankingMetric = event.target.value;
     renderRanking();
@@ -122,43 +113,14 @@ function bindEvents() {
   els.refreshButton.addEventListener("click", async () => {
     await loadDataset();
   });
-
-  els.presetButtons.forEach((button) => {
-    button.addEventListener("click", async () => {
-      applyPreset(button.dataset.preset);
-      await loadDataset();
-    });
-  });
-}
-
-function applyPreset(preset) {
-  const today = new Date();
-  const endDate = toDateInput(today);
-  const start = new Date(today);
-
-  if (preset === "1M") {
-    start.setMonth(start.getMonth() - 1);
-  } else if (preset === "3M") {
-    start.setMonth(start.getMonth() - 3);
-  } else if (preset === "6M") {
-    start.setMonth(start.getMonth() - 6);
-  } else if (preset === "YTD") {
-    start.setMonth(0, 1);
-  }
-
-  els.rangeStartInput.value = toDateInput(start);
-  els.rangeEndInput.value = endDate;
-  els.presetButtons.forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.preset === preset);
-  });
 }
 
 async function loadDataset() {
   setLoading(true);
   try {
-    const from = els.rangeStartInput.value;
-    const to = els.rangeEndInput.value;
-    const response = await fetch(`/api/nav-data?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+    const today = new Date();
+    const to = toDateInput(today);
+    const response = await fetch(`/api/nav-data?from=${encodeURIComponent(FIXED_START_DATE)}&to=${encodeURIComponent(to)}`);
     const payload = await response.json();
 
     if (!response.ok) {
@@ -238,12 +200,7 @@ function render() {
 }
 
 function getVisibleEtfs() {
-  return state.etfs.filter((etf) => {
-    if (!state.search) {
-      return true;
-    }
-    return etf.name.toLowerCase().includes(state.search) || etf.code.toLowerCase().includes(state.search);
-  });
+  return state.etfs;
 }
 
 function renderOverviewTable() {
@@ -252,7 +209,7 @@ function renderOverviewTable() {
     .sort((a, b) => safeMetricValue(b.metrics[state.sortMetric]) - safeMetricValue(a.metrics[state.sortMetric]));
 
   if (!rows.length) {
-    els.returnsTableBody.innerHTML = `<tr><td colspan="7" class="empty-state">검색 조건에 맞는 ETF가 없습니다.</td></tr>`;
+    els.returnsTableBody.innerHTML = `<tr><td colspan="7" class="empty-state">표시할 ETF 데이터가 없습니다.</td></tr>`;
     return;
   }
 

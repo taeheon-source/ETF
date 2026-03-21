@@ -50,22 +50,7 @@
             <button id="refreshButton" class="action-button" type="button">KRX 데이터 새로고침</button>
           </div>
 
-          <div class="preset-row">
-            <button class="preset-button is-active" data-preset="1M" type="button">최근 1개월</button>
-            <button class="preset-button" data-preset="3M" type="button">최근 3개월</button>
-            <button class="preset-button" data-preset="6M" type="button">최근 6개월</button>
-            <button class="preset-button" data-preset="YTD" type="button">연초 이후</button>
-          </div>
-
-          <div class="controls-grid controls-grid-wide">
-            <label class="control">
-              <span>데이터 시작일</span>
-              <input id="rangeStartInput" type="date" />
-            </label>
-            <label class="control">
-              <span>데이터 종료일</span>
-              <input id="rangeEndInput" type="date" />
-            </label>
+          <div class="controls-grid controls-grid-compact">
             <label class="control">
               <span>기준일</span>
               <select id="baseDateSelect"></select>
@@ -73,10 +58,6 @@
             <label class="control">
               <span>비교일</span>
               <select id="compareDateSelect"></select>
-            </label>
-            <label class="control control-search">
-              <span>ETF 검색</span>
-              <input id="searchInput" type="search" placeholder="ETF명 또는 종목코드 검색" />
             </label>
           </div>
         </section>
@@ -162,7 +143,7 @@
               <p class="panel-kicker">Raw Data</p>
               <h2>ETF NAV 원본 데이터</h2>
             </div>
-            <p class="panel-meta">현재 필터 기준 상위 4개 ETF의 날짜별 NAV를 보여줍니다.</p>
+            <p class="panel-meta">현재 기준 상위 4개 ETF의 날짜별 NAV를 보여줍니다.</p>
           </div>
           <div class="table-wrap">
             <table class="nav-table">
