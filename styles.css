@@ -137,6 +137,12 @@ select {
   cursor: wait;
 }
 
+.action-button-secondary {
+  border-color: var(--line-field);
+  background: var(--field);
+  color: var(--text);
+}
+
 .control,
 .inline-control {
   display: flex;

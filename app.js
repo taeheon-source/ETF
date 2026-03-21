@@ -85,6 +85,7 @@ const els = {
   compareHeader: document.querySelector("#compareHeader"),
   navTableHead: document.querySelector("#navTableHead"),
   navTableBody: document.querySelector("#navTableBody"),
+  exportCsvButton: document.querySelector("#exportCsvButton"),
   chartTitle: document.querySelector("#chartTitle"),
   chartMeta: document.querySelector("#chartMeta"),
   trendChart: document.querySelector("#trendChart"),
@@ -125,6 +126,10 @@ function bindEvents() {
 
   els.refreshButton.addEventListener("click", async () => {
     await loadDataset();
+  });
+
+  els.exportCsvButton.addEventListener("click", () => {
+    exportRawDataCsv();
   });
 }
 
@@ -351,6 +356,33 @@ function getNavTableLabel(name) {
   return NAV_TABLE_LABELS[name] || name;
 }
 
+function exportRawDataCsv() {
+  const visibleEtfs = getVisibleEtfs();
+  const datesDesc = [...state.availableDates].sort((a, b) => b.localeCompare(a));
+  const header = ["날짜", ...visibleEtfs.map((etf) => getNavTableLabel(etf.name))];
+  const rows = datesDesc.map((date) => [
+    date,
+    ...visibleEtfs.map((etf) => {
+      const point = state.grouped[etf.code]?.series.find((item) => item.date === date);
+      return point ? point.nav.toFixed(2) : "-";
+    })
+  ]);
+
+  const csv = [header, ...rows]
+    .map((row) => row.map((value) => toCsvCell(value)).join(","))
+    .join("\r\n");
+
+  const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `hana-bond-etf-nav-${state.baseDate || toDateInput(new Date())}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 function renderChart() {
   const etf = state.grouped[state.selectedEtf];
   if (!etf || !etf.series.length) {
@@ -545,4 +577,12 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function toCsvCell(value) {
+  const text = String(value ?? "");
+  if (/[",\r\n]/.test(text)) {
+    return `"${text.replaceAll('"', '""')}"`;
+  }
+  return text;
 }
