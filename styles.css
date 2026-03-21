@@ -226,6 +226,22 @@ table {
   border-collapse: collapse;
 }
 
+.returns-table {
+  table-layout: fixed;
+}
+
+.returns-table .col-etf {
+  width: 30%;
+}
+
+.returns-table .col-metric {
+  width: 9.5%;
+}
+
+.returns-table .col-asset {
+  width: 13%;
+}
+
 th,
 td {
   padding: 16px 14px;
