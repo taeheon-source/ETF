@@ -14,12 +14,12 @@ const TARGET_ETF_NAMES = [
 ];
 
 const SAMPLE_ROWS = [
-  { BAS_DD: "2025-12-31", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.12" },
-  { BAS_DD: "2026-01-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.55" },
-  { BAS_DD: "2026-03-20", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1044.21" },
-  { BAS_DD: "2025-12-31", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.42" },
-  { BAS_DD: "2026-01-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.66" },
-  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61" }
+  { BAS_DD: "2025-12-31", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.12", INVSTASST_NETASST_TOTAMT: "95400000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.55", INVSTASST_NETASST_TOTAMT: "95650000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1044.21", INVSTASST_NETASST_TOTAMT: "96719830000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.42", INVSTASST_NETASST_TOTAMT: "109800000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.66", INVSTASST_NETASST_TOTAMT: "110050000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61", INVSTASST_NETASST_TOTAMT: "110407010000" }
 ];
 
 module.exports = async function handler(req, res) {
@@ -111,7 +111,8 @@ async function fetchForDate({ upstreamUrl, authKey, authHeaderName, date }) {
       BAS_DD: normalizeDate(row.BAS_DD || date),
       ISU_CD: String(row.ISU_CD || "").trim(),
       ISU_NM: String(row.ISU_NM || "").trim(),
-      NAV: String(row.NAV || "").replaceAll(",", "")
+      NAV: String(row.NAV || "").replaceAll(",", ""),
+      INVSTASST_NETASST_TOTAMT: String(row.INVSTASST_NETASST_TOTAMT || "").replaceAll(",", "")
     }))
     .filter((row) => TARGET_ETF_NAMES.includes(row.ISU_NM))
     .filter((row) => row.BAS_DD && row.ISU_CD && row.ISU_NM && row.NAV && row.NAV !== "-");

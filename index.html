@@ -94,6 +94,7 @@
                     <th>QTD</th>
                     <th>YTD</th>
                     <th id="compareHeader">비교일 대비</th>
+                    <th>순자산총액</th>
                   </tr>
                 </thead>
                 <tbody id="returnsTableBody"></tbody>
@@ -145,11 +146,17 @@
           <div class="panel-heading">
             <div>
               <p class="panel-kicker">Raw Data</p>
-              <h2>ETF NAV 원본 데이터</h2>
+              <h2 id="rawDataTitle">ETF NAV 원본 데이터</h2>
             </div>
-            <button id="exportCsvButton" class="action-button action-button-secondary" type="button">
-              CSV 다운로드
-            </button>
+            <div class="raw-toolbar">
+              <div class="toggle-group" role="tablist" aria-label="Raw data metric">
+                <button id="rawNavButton" class="toggle-button is-active" type="button">NAV</button>
+                <button id="rawAssetButton" class="toggle-button" type="button">순자산총액</button>
+              </div>
+              <button id="exportCsvButton" class="action-button action-button-secondary" type="button">
+                CSV 다운로드
+              </button>
+            </div>
           </div>
           <div class="table-shell">
             <div class="table-wrap">

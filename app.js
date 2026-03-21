@@ -31,38 +31,38 @@ const TARGET_ETF_NAMES = [
 const TARGET_ETF_ORDER = Object.fromEntries(TARGET_ETF_NAMES.map((name, index) => [name, index]));
 
 const sampleDataset = [
-  { BAS_DD: "2025-12-31", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.12" },
-  { BAS_DD: "2026-01-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.55" },
-  { BAS_DD: "2026-02-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1037.48" },
-  { BAS_DD: "2026-03-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1041.34" },
-  { BAS_DD: "2026-03-11", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1042.18" },
-  { BAS_DD: "2026-03-12", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1042.44" },
-  { BAS_DD: "2026-03-13", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1042.71" },
-  { BAS_DD: "2026-03-16", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.10" },
-  { BAS_DD: "2026-03-17", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.39" },
-  { BAS_DD: "2026-03-18", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.68" },
-  { BAS_DD: "2026-03-19", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.92" },
-  { BAS_DD: "2026-03-20", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1044.21" },
-  { BAS_DD: "2025-12-31", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.42" },
-  { BAS_DD: "2026-01-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.66" },
-  { BAS_DD: "2026-02-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1020.94" },
-  { BAS_DD: "2026-03-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1023.62" },
-  { BAS_DD: "2026-03-11", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.11" },
-  { BAS_DD: "2026-03-12", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.25" },
-  { BAS_DD: "2026-03-13", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.41" },
-  { BAS_DD: "2026-03-16", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.73" },
-  { BAS_DD: "2026-03-17", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.96" },
-  { BAS_DD: "2026-03-18", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.20" },
-  { BAS_DD: "2026-03-19", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.36" },
-  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61" },
-  { BAS_DD: "2026-03-20", ISU_CD: "PLUS_BOND", ISU_NM: "PLUS 종합채권(AA-이상)액티브", NAV: "1032.44" },
-  { BAS_DD: "2026-03-20", ISU_CD: "RISE_BOND", ISU_NM: "RISE 종합채권(A-이상)액티브", NAV: "1019.82" },
-  { BAS_DD: "2026-03-20", ISU_CD: "KODEX_BOND", ISU_NM: "KODEX 종합채권(AA-이상)액티브", NAV: "1038.15" },
-  { BAS_DD: "2026-03-20", ISU_CD: "SOL_BOND", ISU_NM: "SOL 종합채권(AA-이상)액티브", NAV: "1030.77" },
-  { BAS_DD: "2026-03-20", ISU_CD: "TIGER_BOND", ISU_NM: "TIGER 종합채권(AA-이상)액티브", NAV: "1031.24" },
-  { BAS_DD: "2026-03-20", ISU_CD: "HK_BOND", ISU_NM: "HK 종합채권(AA-이상)액티브", NAV: "1028.64" },
-  { BAS_DD: "2026-03-20", ISU_CD: "HERO_BOND", ISU_NM: "히어로즈 종합채권(AA-이상)액티브", NAV: "1027.58" },
-  { BAS_DD: "2026-03-20", ISU_CD: "POWER_BOND", ISU_NM: "파워 종합채권(AA-이상)액티브", NAV: "1026.91" }
+  { BAS_DD: "2025-12-31", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.12", ASSET_TOTAL: "95400000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.55", ASSET_TOTAL: "95650000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1037.48", ASSET_TOTAL: "96220000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1041.34", ASSET_TOTAL: "96510000000" },
+  { BAS_DD: "2026-03-11", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1042.18", ASSET_TOTAL: "96610000000" },
+  { BAS_DD: "2026-03-12", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1042.44", ASSET_TOTAL: "96635000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1042.71", ASSET_TOTAL: "96693810000" },
+  { BAS_DD: "2026-03-16", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.10", ASSET_TOTAL: "96787990000" },
+  { BAS_DD: "2026-03-17", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.39", ASSET_TOTAL: "96787320000" },
+  { BAS_DD: "2026-03-18", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.68", ASSET_TOTAL: "97214930000" },
+  { BAS_DD: "2026-03-19", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.92", ASSET_TOTAL: "96895090000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1044.21", ASSET_TOTAL: "96719830000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.42", ASSET_TOTAL: "109800000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.66", ASSET_TOTAL: "110050000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1020.94", ASSET_TOTAL: "110220000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1023.62", ASSET_TOTAL: "110280000000" },
+  { BAS_DD: "2026-03-11", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.11", ASSET_TOTAL: "110300000000" },
+  { BAS_DD: "2026-03-12", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.25", ASSET_TOTAL: "110320000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.41", ASSET_TOTAL: "110340000000" },
+  { BAS_DD: "2026-03-16", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.73", ASSET_TOTAL: "110360000000" },
+  { BAS_DD: "2026-03-17", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.96", ASSET_TOTAL: "110380000000" },
+  { BAS_DD: "2026-03-18", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.20", ASSET_TOTAL: "110390000000" },
+  { BAS_DD: "2026-03-19", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.36", ASSET_TOTAL: "110405000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61", ASSET_TOTAL: "110407010000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "PLUS_BOND", ISU_NM: "PLUS 종합채권(AA-이상)액티브", NAV: "1032.44", ASSET_TOTAL: "110407010000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "RISE_BOND", ISU_NM: "RISE 종합채권(A-이상)액티브", NAV: "1019.82", ASSET_TOTAL: "105669540000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "KODEX_BOND", ISU_NM: "KODEX 종합채권(AA-이상)액티브", NAV: "1038.15", ASSET_TOTAL: "113009680000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "SOL_BOND", ISU_NM: "SOL 종합채권(AA-이상)액티브", NAV: "1030.77", ASSET_TOTAL: "108980130000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "TIGER_BOND", ISU_NM: "TIGER 종합채권(AA-이상)액티브", NAV: "1031.24", ASSET_TOTAL: "54319360000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "HK_BOND", ISU_NM: "HK 종합채권(AA-이상)액티브", NAV: "1028.64", ASSET_TOTAL: "100673020000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "HERO_BOND", ISU_NM: "히어로즈 종합채권(AA-이상)액티브", NAV: "1027.58", ASSET_TOTAL: "98012540000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "POWER_BOND", ISU_NM: "파워 종합채권(AA-이상)액티브", NAV: "1026.91", ASSET_TOTAL: "95888950000" }
 ];
 
 const state = {
@@ -70,6 +70,7 @@ const state = {
   compareDate: "",
   rankingMetric: "YTD",
   sortMetric: "YTD",
+  rawMetric: "NAV",
   selectedEtf: "",
   dataset: [],
   grouped: {},
@@ -85,8 +86,11 @@ const els = {
   returnsTableBody: document.querySelector("#returnsTableBody"),
   rankingList: document.querySelector("#rankingList"),
   compareHeader: document.querySelector("#compareHeader"),
+  rawDataTitle: document.querySelector("#rawDataTitle"),
   navTableHead: document.querySelector("#navTableHead"),
   navTableBody: document.querySelector("#navTableBody"),
+  rawNavButton: document.querySelector("#rawNavButton"),
+  rawAssetButton: document.querySelector("#rawAssetButton"),
   exportCsvButton: document.querySelector("#exportCsvButton"),
   chartTitle: document.querySelector("#chartTitle"),
   chartMeta: document.querySelector("#chartMeta"),
@@ -128,6 +132,18 @@ function bindEvents() {
 
   els.refreshButton.addEventListener("click", async () => {
     await loadDataset();
+  });
+
+  els.rawNavButton.addEventListener("click", () => {
+    state.rawMetric = "NAV";
+    renderRawMetricControls();
+    renderNavTable();
+  });
+
+  els.rawAssetButton.addEventListener("click", () => {
+    state.rawMetric = "ASSET_TOTAL";
+    renderRawMetricControls();
+    renderNavTable();
   });
 
   els.exportCsvButton.addEventListener("click", () => {
@@ -177,7 +193,8 @@ function normalizeRows(rows) {
       BAS_DD: normalizeDate(row.BAS_DD),
       ISU_CD: String(row.ISU_CD || "").trim(),
       ISU_NM: String(row.ISU_NM || "").trim(),
-      NAV: String(row.NAV || "").replaceAll(",", "")
+      NAV: String(row.NAV || "").replaceAll(",", ""),
+      ASSET_TOTAL: String(row.INVSTASST_NETASST_TOTAMT || row.ASSET_TOTAL || "").replaceAll(",", "")
     }))
     .filter((row) => TARGET_ETF_NAMES.includes(row.ISU_NM))
     .filter((row) => row.BAS_DD && row.ISU_CD && row.ISU_NM && row.NAV && row.NAV !== "-")
@@ -189,7 +206,11 @@ function buildGroupedData(rows) {
     if (!acc[row.ISU_CD]) {
       acc[row.ISU_CD] = { code: row.ISU_CD, name: row.ISU_NM, series: [] };
     }
-    acc[row.ISU_CD].series.push({ date: row.BAS_DD, nav: parseNumber(row.NAV) });
+    acc[row.ISU_CD].series.push({
+      date: row.BAS_DD,
+      nav: parseNumber(row.NAV),
+      assetTotal: parseNullableNumber(row.ASSET_TOTAL)
+    });
     return acc;
   }, {});
 }
@@ -214,6 +235,7 @@ function render() {
   renderOverviewTable();
   renderRanking();
   renderDetailMetrics();
+  renderRawMetricControls();
   renderNavTable();
   renderChart();
   els.compareHeader.textContent = state.compareDate ? `${state.compareDate} 대비` : "사용자 지정";
@@ -259,6 +281,7 @@ function renderOverviewTable() {
           <td>${formatMetric(metrics.QTD)}</td>
           <td>${formatMetric(metrics.YTD)}</td>
           <td>${formatMetric(metrics.CUSTOM)}</td>
+          <td>${formatAssetTotal(getSeriesPoint(etf, state.baseDate)?.assetTotal)}</td>
         </tr>
       `;
     })
@@ -270,6 +293,13 @@ function renderOverviewTable() {
       render();
     });
     });
+}
+
+function renderRawMetricControls() {
+  els.rawNavButton.classList.toggle("is-active", state.rawMetric === "NAV");
+  els.rawAssetButton.classList.toggle("is-active", state.rawMetric === "ASSET_TOTAL");
+  els.rawDataTitle.textContent =
+    state.rawMetric === "NAV" ? "ETF NAV 원본 데이터" : "ETF 순자산총액 원본 데이터";
 }
 
 function isFeaturedEtf(etf) {
@@ -344,8 +374,8 @@ function renderNavTable() {
     .map((date) => {
       const cells = visibleEtfs
         .map((etf) => {
-          const point = state.grouped[etf.code]?.series.find((item) => item.date === date);
-          return `<td>${point ? point.nav.toFixed(2) : "-"}</td>`;
+          const point = getSeriesPoint(etf, date);
+          return `<td>${formatRawMetricCell(point)}</td>`;
         })
         .join("");
       return `<tr><td>${date}</td>${cells}</tr>`;
@@ -364,8 +394,8 @@ function exportRawDataCsv() {
   const rows = datesDesc.map((date) => [
     date,
     ...visibleEtfs.map((etf) => {
-      const point = state.grouped[etf.code]?.series.find((item) => item.date === date);
-      return point ? point.nav.toFixed(2) : "-";
+      const point = getSeriesPoint(etf, date);
+      return getRawMetricCsvValue(point);
     })
   ]);
 
@@ -377,11 +407,35 @@ function exportRawDataCsv() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `hana-bond-etf-nav-${state.baseDate || toDateInput(new Date())}.csv`;
+  link.download = `hana-bond-etf-${state.rawMetric === "NAV" ? "nav" : "asset-total"}-${state.baseDate || toDateInput(new Date())}.csv`;
   document.body.appendChild(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+function getSeriesPoint(etf, date) {
+  return state.grouped[etf.code]?.series.find((item) => item.date === date) || null;
+}
+
+function formatRawMetricCell(point) {
+  if (!point) {
+    return "-";
+  }
+  if (state.rawMetric === "ASSET_TOTAL") {
+    return formatAssetTotal(point.assetTotal);
+  }
+  return Number.isFinite(point.nav) ? point.nav.toFixed(2) : "-";
+}
+
+function getRawMetricCsvValue(point) {
+  if (!point) {
+    return "-";
+  }
+  if (state.rawMetric === "ASSET_TOTAL") {
+    return Number.isFinite(point.assetTotal) ? Math.round(point.assetTotal).toString() : "-";
+  }
+  return Number.isFinite(point.nav) ? point.nav.toFixed(2) : "-";
 }
 
 function renderChart() {
@@ -551,6 +605,13 @@ function formatMetric(value) {
   return `<span class="metric ${value >= 0 ? "positive" : "negative"}">${toPercent(value)}</span>`;
 }
 
+function formatAssetTotal(value) {
+  if (!Number.isFinite(value)) {
+    return "-";
+  }
+  return value.toLocaleString("ko-KR");
+}
+
 function toPercent(value) {
   return `${value >= 0 ? "+" : ""}${(value * 100).toFixed(2)}%`;
 }
@@ -561,6 +622,15 @@ function safeMetricValue(value) {
 
 function parseNumber(value) {
   return Number(String(value).replaceAll(",", ""));
+}
+
+function parseNullableNumber(value) {
+  const normalized = String(value ?? "").replaceAll(",", "").trim();
+  if (!normalized || normalized === "-") {
+    return null;
+  }
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function normalizeDate(value) {
