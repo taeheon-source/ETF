@@ -238,7 +238,7 @@ function render() {
   renderRawMetricControls();
   renderNavTable();
   renderChart();
-  els.compareHeader.textContent = state.compareDate ? `${state.compareDate} 대비` : "사용자 지정";
+  els.compareHeader.textContent = "비교일 대비";
 }
 
 function getVisibleEtfs() {
@@ -281,7 +281,7 @@ function renderOverviewTable() {
           <td>${formatMetric(metrics.QTD)}</td>
           <td>${formatMetric(metrics.YTD)}</td>
           <td>${formatMetric(metrics.CUSTOM)}</td>
-          <td>${formatAssetTotal(getSeriesPoint(etf, state.baseDate)?.assetTotal)}</td>
+          <td>${formatAssetTotalInEok(getAssetTotalAtOrBefore(etf, state.baseDate))}</td>
         </tr>
       `;
     })
@@ -375,7 +375,7 @@ function renderNavTable() {
       const cells = visibleEtfs
         .map((etf) => {
           const point = getSeriesPoint(etf, date);
-          return `<td>${formatRawMetricCell(point)}</td>`;
+          return `<td>${formatRawMetricCell(etf, date, point)}</td>`;
         })
         .join("");
       return `<tr><td>${date}</td>${cells}</tr>`;
@@ -395,7 +395,7 @@ function exportRawDataCsv() {
     date,
     ...visibleEtfs.map((etf) => {
       const point = getSeriesPoint(etf, date);
-      return getRawMetricCsvValue(point);
+      return getRawMetricCsvValue(etf, date, point);
     })
   ]);
 
@@ -418,22 +418,23 @@ function getSeriesPoint(etf, date) {
   return state.grouped[etf.code]?.series.find((item) => item.date === date) || null;
 }
 
-function formatRawMetricCell(point) {
+function formatRawMetricCell(etf, date, point) {
+  if (state.rawMetric === "ASSET_TOTAL") {
+    return formatAssetTotalInEok(getAssetTotalAtOrBefore(etf, date));
+  }
   if (!point) {
     return "-";
-  }
-  if (state.rawMetric === "ASSET_TOTAL") {
-    return formatAssetTotal(point.assetTotal);
   }
   return Number.isFinite(point.nav) ? point.nav.toFixed(2) : "-";
 }
 
-function getRawMetricCsvValue(point) {
+function getRawMetricCsvValue(etf, date, point) {
+  if (state.rawMetric === "ASSET_TOTAL") {
+    const assetTotal = getAssetTotalAtOrBefore(etf, date);
+    return Number.isFinite(assetTotal) ? formatAssetTotalInEok(assetTotal, false) : "-";
+  }
   if (!point) {
     return "-";
-  }
-  if (state.rawMetric === "ASSET_TOTAL") {
-    return Number.isFinite(point.assetTotal) ? Math.round(point.assetTotal).toString() : "-";
   }
   return Number.isFinite(point.nav) ? point.nav.toFixed(2) : "-";
 }
@@ -612,6 +613,17 @@ function formatAssetTotal(value) {
   return value.toLocaleString("ko-KR");
 }
 
+function formatAssetTotalInEok(value, withGrouping = true) {
+  if (!Number.isFinite(value)) {
+    return "-";
+  }
+  const converted = value / 100000000;
+  const formatted = Number.isInteger(converted)
+    ? converted.toFixed(0)
+    : converted.toFixed(2).replace(/\.?0+$/, "");
+  return withGrouping ? Number(formatted).toLocaleString("ko-KR") : formatted;
+}
+
 function toPercent(value) {
   return `${value >= 0 ? "+" : ""}${(value * 100).toFixed(2)}%`;
 }
@@ -631,6 +643,22 @@ function parseNullableNumber(value) {
   }
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getAssetTotalAtOrBefore(etf, date) {
+  const series = state.grouped[etf.code]?.series || [];
+
+  for (let index = series.length - 1; index >= 0; index -= 1) {
+    const point = series[index];
+    if (point.date > date) {
+      continue;
+    }
+    if (Number.isFinite(point.assetTotal) && point.assetTotal !== 0) {
+      return point.assetTotal;
+    }
+  }
+
+  return null;
 }
 
 function normalizeDate(value) {
