@@ -305,12 +305,12 @@ function renderOverviewTable() {
               <span class="etf-code">${escapeHtml(etf.code)}</span>
             </div>
           </td>
-          <td>${formatMetric(metrics["1D"])}</td>
-          <td>${formatMetric(metrics["7D"])}</td>
-          <td>${formatMetric(metrics.MTD)}</td>
-          <td>${formatMetric(metrics.QTD)}</td>
-          <td>${formatMetric(metrics.YTD)}</td>
-          <td>${formatMetric(metrics.CUSTOM)}</td>
+          <td>${formatOverviewMetric(metrics["1D"])}</td>
+          <td>${formatOverviewMetric(metrics["7D"])}</td>
+          <td>${formatOverviewMetric(metrics.MTD)}</td>
+          <td>${formatOverviewMetric(metrics.QTD)}</td>
+          <td>${formatOverviewMetric(metrics.YTD)}</td>
+          <td>${formatOverviewMetric(metrics.CUSTOM)}</td>
           <td>${formatAssetTotalInEok(getAssetTotalAtOrBefore(etf, state.baseDate))}</td>
         </tr>
       `;
@@ -644,10 +644,10 @@ function computeReturn(basePoint, referencePoint) {
 }
 
 function computeAssetReturn(basePoint, referencePoint) {
-  if (!basePoint || !referencePoint || !Number.isFinite(referencePoint.assetTotal) || referencePoint.assetTotal === 0) {
+  if (!basePoint || !referencePoint || !Number.isFinite(referencePoint.assetTotal)) {
     return null;
   }
-  return basePoint.assetTotal / referencePoint.assetTotal - 1;
+  return basePoint.assetTotal - referencePoint.assetTotal;
 }
 
 function buildGridLines(min, max, xStart, xEnd, height, paddingTop, paddingBottom, chartHeight, span) {
@@ -690,6 +690,18 @@ function formatMetric(value) {
   return `<span class="metric ${value >= 0 ? "positive" : "negative"}">${toPercent(value)}</span>`;
 }
 
+function formatOverviewMetric(value) {
+  return state.overviewMode === "ASSET" ? formatAssetDelta(value) : formatMetric(value);
+}
+
+function formatAssetDelta(value) {
+  if (value === null || !Number.isFinite(value)) {
+    return `<span class="metric empty">-</span>`;
+  }
+  const cls = value >= 0 ? "positive" : "negative";
+  return `<span class="metric ${cls}">${formatSignedAssetDeltaInEok(value)}</span>`;
+}
+
 function formatAssetTotal(value) {
   if (!Number.isFinite(value)) {
     return "-";
@@ -704,6 +716,15 @@ function formatAssetTotalInEok(value, withGrouping = true) {
   const converted = value / 100000000;
   const formatted = converted.toFixed(1);
   return withGrouping ? Number(formatted).toLocaleString("ko-KR") : formatted;
+}
+
+function formatSignedAssetDeltaInEok(value) {
+  if (!Number.isFinite(value)) {
+    return "-";
+  }
+  const converted = Math.abs(value) / 100000000;
+  const sign = value >= 0 ? "+" : "-";
+  return `${sign}${converted.toFixed(1)}`;
 }
 
 function toPercent(value) {
