@@ -1,4 +1,5 @@
 const FIXED_START_DATE = "2025-12-01";
+const FEATURED_ETF_PREFIX = "1Q ";
 
 const TARGET_ETF_NAMES = [
   "1Q 종합채권(AA-이상)액티브",
@@ -219,9 +220,14 @@ function renderOverviewTable() {
 
   els.returnsTableBody.innerHTML = rows
     .map(({ etf, metrics }) => {
-      const selectedClass = etf.code === state.selectedEtf ? "is-selected" : "";
+      const rowClasses = [
+        etf.code === state.selectedEtf ? "is-selected" : "",
+        isFeaturedEtf(etf) ? "is-featured" : ""
+      ]
+        .filter(Boolean)
+        .join(" ");
       return `
-        <tr class="${selectedClass}" data-code="${etf.code}">
+        <tr class="${rowClasses}" data-code="${etf.code}">
           <td>
             <div class="etf-name">
               <strong>${escapeHtml(etf.name)}</strong>
@@ -244,7 +250,11 @@ function renderOverviewTable() {
       state.selectedEtf = row.dataset.code;
       render();
     });
-  });
+    });
+}
+
+function isFeaturedEtf(etf) {
+  return etf?.name?.startsWith(FEATURED_ETF_PREFIX);
 }
 
 function renderRanking() {

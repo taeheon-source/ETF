@@ -11,6 +11,7 @@
   --positive: #56d68d;
   --negative: #ff717b;
   --accent: #f1f1f1;
+  --featured: #b9934d;
   --shadow: 0 16px 28px rgba(0, 0, 0, 0.24);
 }
 
@@ -201,6 +202,23 @@ td {
 .returns-table tbody tr:hover,
 .returns-table tbody tr.is-selected {
   background: rgba(255, 255, 255, 0.04);
+}
+
+.returns-table tbody tr.is-featured td {
+  border-top: 1px solid rgba(185, 147, 77, 0.9);
+  border-bottom: 1px solid rgba(185, 147, 77, 0.9);
+}
+
+.returns-table tbody tr.is-featured td:first-child {
+  border-left: 1px solid rgba(185, 147, 77, 0.9);
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+
+.returns-table tbody tr.is-featured td:last-child {
+  border-right: 1px solid rgba(185, 147, 77, 0.9);
+  border-top-right-radius: 14px;
+  border-bottom-right-radius: 14px;
 }
 
 .etf-name {
