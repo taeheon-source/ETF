@@ -58,9 +58,7 @@ const state = {
   dataset: [],
   grouped: {},
   etfs: [],
-  availableDates: [],
-  failures: [],
-  source: "sample"
+  availableDates: []
 };
 
 const els = {
@@ -80,12 +78,7 @@ const els = {
   rangeStartInput: document.querySelector("#rangeStartInput"),
   rangeEndInput: document.querySelector("#rangeEndInput"),
   refreshButton: document.querySelector("#refreshButton"),
-  sourceBadge: document.querySelector("#sourceBadge"),
-  statusText: document.querySelector("#statusText"),
-  rangeSummary: document.querySelector("#rangeSummary"),
-  summaryGrid: document.querySelector("#summaryGrid"),
   detailMetrics: document.querySelector("#detailMetrics"),
-  failureBadge: document.querySelector("#failureBadge"),
   presetButtons: [...document.querySelectorAll(".preset-button")]
 };
 
@@ -141,7 +134,7 @@ function bindEvents() {
 function applyPreset(preset) {
   const today = new Date();
   const endDate = toDateInput(today);
-  let start = new Date(today);
+  const start = new Date(today);
 
   if (preset === "1M") {
     start.setMonth(start.getMonth() - 1);
@@ -150,7 +143,7 @@ function applyPreset(preset) {
   } else if (preset === "6M") {
     start.setMonth(start.getMonth() - 6);
   } else if (preset === "YTD") {
-    start = new Date(today.getFullYear(), 0, 1);
+    start.setMonth(0, 1);
   }
 
   els.rangeStartInput.value = toDateInput(start);
@@ -161,12 +154,10 @@ function applyPreset(preset) {
 }
 
 async function loadDataset() {
-  setLoading(true, "KRX NAV 데이터를 불러오는 중입니다.");
+  setLoading(true);
   try {
     const from = els.rangeStartInput.value;
     const to = els.rangeEndInput.value;
-    els.rangeSummary.textContent = `${from} ~ ${to}`;
-
     const response = await fetch(`/api/nav-data?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
     const payload = await response.json();
 
@@ -174,19 +165,10 @@ async function loadDataset() {
       throw new Error(payload.error || `요청 실패 (${response.status})`);
     }
 
-    state.failures = Array.isArray(payload.failures) ? payload.failures : [];
-    state.source = payload.source || "sample";
     applyDataset(Array.isArray(payload.rows) && payload.rows.length ? payload.rows : sampleDataset);
-    els.sourceBadge.textContent = state.source === "upstream" ? "KRX API" : "샘플 데이터";
-    els.statusText.textContent = payload.message || `${state.dataset.length}건의 NAV 데이터를 불러왔습니다.`;
-  } catch (error) {
-    state.failures = [];
-    state.source = "sample";
+  } catch {
     applyDataset(sampleDataset);
-    els.sourceBadge.textContent = "샘플 데이터";
-    els.statusText.textContent = `실데이터 조회에 실패해 샘플 데이터를 표시합니다. ${error.message}`;
   } finally {
-    updateFailureBadge();
     setLoading(false);
   }
 }
@@ -194,9 +176,11 @@ async function loadDataset() {
 function applyDataset(rows) {
   state.dataset = normalizeRows(rows);
   state.grouped = buildGroupedData(state.dataset);
-  state.etfs = Object.values(state.grouped).sort((a, b) => {
-    return (TARGET_ETF_ORDER[a.name] ?? Number.MAX_SAFE_INTEGER) - (TARGET_ETF_ORDER[b.name] ?? Number.MAX_SAFE_INTEGER);
-  });
+  state.etfs = Object.values(state.grouped).sort(
+    (a, b) =>
+      (TARGET_ETF_ORDER[a.name] ?? Number.MAX_SAFE_INTEGER) -
+      (TARGET_ETF_ORDER[b.name] ?? Number.MAX_SAFE_INTEGER)
+  );
   state.availableDates = [...new Set(state.dataset.map((row) => row.BAS_DD))].sort();
   state.baseDate = state.availableDates[state.availableDates.length - 1] || "";
   state.compareDate = state.availableDates.find((date) => date < state.baseDate) || "";
@@ -221,11 +205,7 @@ function normalizeRows(rows) {
 function buildGroupedData(rows) {
   return rows.reduce((acc, row) => {
     if (!acc[row.ISU_CD]) {
-      acc[row.ISU_CD] = {
-        code: row.ISU_CD,
-        name: row.ISU_NM,
-        series: []
-      };
+      acc[row.ISU_CD] = { code: row.ISU_CD, name: row.ISU_NM, series: [] };
     }
     acc[row.ISU_CD].series.push({ date: row.BAS_DD, nav: parseNumber(row.NAV) });
     return acc;
@@ -249,63 +229,12 @@ function renderCompareDateOptions() {
 
 function render() {
   renderCompareDateOptions();
-  renderSummaryCards();
   renderOverviewTable();
   renderRanking();
   renderDetailMetrics();
   renderNavTable();
   renderChart();
   els.compareHeader.textContent = state.compareDate ? `${state.compareDate} 대비` : "사용자 지정";
-}
-
-function renderSummaryCards() {
-  const visibleEtfs = getVisibleEtfs();
-  const items = visibleEtfs.map((etf) => ({ etf, metrics: calculateMetrics(etf, state.baseDate, state.compareDate) }));
-  const topYtd = [...items].sort((a, b) => safeMetricValue(b.metrics.YTD) - safeMetricValue(a.metrics.YTD))[0];
-  const topDaily = [...items].sort((a, b) => safeMetricValue(b.metrics["1D"]) - safeMetricValue(a.metrics["1D"]))[0];
-  const avgYtd = averageOf(items.map((item) => item.metrics.YTD));
-  const selected = state.grouped[state.selectedEtf];
-  const selectedLatest = selected?.series.find((point) => point.date === state.baseDate);
-
-  const cards = [
-    {
-      label: "조회 ETF 수",
-      value: `${visibleEtfs.length}개`,
-      meta: `${state.baseDate || "-"} 기준`
-    },
-    {
-      label: "YTD 상위 ETF",
-      value: topYtd ? topYtd.etf.name : "-",
-      meta: topYtd ? toPercent(topYtd.metrics.YTD) : "-"
-    },
-    {
-      label: "1D 상위 ETF",
-      value: topDaily ? topDaily.etf.name : "-",
-      meta: topDaily ? toPercent(topDaily.metrics["1D"]) : "-"
-    },
-    {
-      label: "평균 YTD",
-      value: avgYtd === null ? "-" : toPercent(avgYtd),
-      meta: "필터된 ETF 평균"
-    },
-    {
-      label: "선택 ETF 현재 NAV",
-      value: selectedLatest ? selectedLatest.nav.toFixed(2) : "-",
-      meta: selected ? selected.name : "ETF 선택 필요"
-    }
-  ];
-
-  els.summaryGrid.innerHTML = cards
-    .map(
-      (card) => `
-        <article class="summary-card">
-          <span class="summary-label">${escapeHtml(card.label)}</span>
-          <strong class="summary-value">${escapeHtml(card.value)}</strong>
-          <p class="summary-meta">${escapeHtml(card.meta)}</p>
-        </article>
-      `
-    )
-    .join("");
 }
 
 function getVisibleEtfs() {
@@ -478,7 +407,7 @@ function renderChart() {
     </defs>
     <rect x="0" y="0" width="${width}" height="${height}" rx="18" fill="#111317"></rect>
     ${buildGridLines(min, max, padding, width, height, chartHeight, span)}
-    <polygon fill="url(#chartFill)" points="${buildAreaPoints(points, width, height, padding)}"></polygon>
+    <polygon fill="url(#chartFill)" points="${buildAreaPoints(points, height, padding)}"></polygon>
     <polyline fill="none" stroke="#f4b860" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" points="${points.join(" ")}"></polyline>
     <circle cx="${lastX}" cy="${lastY}" r="6" fill="#ffffff"></circle>
     <g>
@@ -555,7 +484,7 @@ function buildGridLines(min, max, padding, width, height, chartHeight, span) {
   return output;
 }
 
-function buildAreaPoints(points, width, height, padding) {
+function buildAreaPoints(points, height, padding) {
   const first = points[0];
   const last = points[points.length - 1];
   return `${first} ${points.join(" ")} ${last.split(",")[0]},${height - padding} ${first.split(",")[0]},${height - padding}`;
@@ -591,14 +520,6 @@ function safeMetricValue(value) {
   return value === null ? Number.NEGATIVE_INFINITY : value;
 }
 
-function averageOf(values) {
-  const valid = values.filter((value) => value !== null);
-  if (!valid.length) {
-    return null;
-  }
-  return valid.reduce((sum, value) => sum + value, 0) / valid.length;
-}
-
 function parseNumber(value) {
   return Number(String(value).replaceAll(",", ""));
 }
@@ -619,20 +540,9 @@ function getFallbackCompareDate(baseDate) {
   return candidates[candidates.length - 1] || "";
 }
 
-function updateFailureBadge() {
-  if (!state.failures.length) {
-    els.failureBadge.textContent = "실패한 호출 없음";
-    return;
-  }
-  els.failureBadge.textContent = `실패한 영업일 ${state.failures.length}건`;
-}
-
-function setLoading(loading, message) {
+function setLoading(loading) {
   els.refreshButton.disabled = loading;
   els.refreshButton.textContent = loading ? "불러오는 중..." : "KRX 데이터 새로고침";
-  if (message) {
-    els.statusText.textContent = message;
-  }
 }
 
 function toDateInput(date) {

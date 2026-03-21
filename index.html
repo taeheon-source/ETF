@@ -3,24 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ETF NAV 수익률 대시보드</title>
+    <title>Hana Bond ETF Monitoring</title>
     <meta
       name="description"
-      content="한국 영업일 기준 ETF NAV 수익률을 1D, 7D, MTD, QTD, YTD, 사용자 지정 날짜로 비교하는 대시보드"
+      content="국내 종합채권 ETF NAV 기준 수익률을 비교하는 모니터링 대시보드"
     />
     <meta name="theme-color" content="#0d1016" />
-    <meta property="og:title" content="ETF NAV 수익률 대시보드" />
+    <meta property="og:title" content="Hana Bond ETF Monitoring" />
     <meta
       property="og:description"
-      content="KRX ETF NAV 기준 수익률을 한 화면에서 비교하는 한국형 대시보드"
+      content="국내 종합채권 ETF NAV 기준 수익률을 비교하는 모니터링 대시보드"
     />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/social-card.svg" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="ETF NAV 수익률 대시보드" />
+    <meta name="twitter:title" content="Hana Bond ETF Monitoring" />
     <meta
       name="twitter:description"
-      content="ETF NAV 기준 1D, 7D, MTD, QTD, YTD, 사용자 지정 수익률 비교"
+      content="국내 종합채권 ETF NAV 기준 수익률을 비교하는 모니터링 대시보드"
     />
     <meta name="twitter:image" content="/social-card.svg" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -39,43 +39,14 @@
 
     <div class="shell">
       <header class="hero">
-        <div class="hero-copy-block">
-          <p class="eyebrow">KRX ETF NAV Dashboard</p>
-          <h1>ETF NAV 기준 수익률을<br />한 화면에서 비교</h1>
-          <p class="hero-copy">
-            한국 영업일 기준으로 ETF의 1D, 7D, MTD, QTD, YTD, 사용자 지정 기간 수익률을
-            계산해 보여줍니다.
-          </p>
-          <div class="hero-tags">
-            <span class="tag">NAV 전용</span>
-            <span class="tag">한국 영업일 기준</span>
-            <span class="tag">사용자 날짜 비교</span>
-          </div>
-        </div>
-
-        <aside class="hero-status">
-          <div class="status-card">
-            <span class="status-label">데이터 소스</span>
-            <strong id="sourceBadge">불러오는 중</strong>
-          </div>
-          <div class="status-card">
-            <span class="status-label">상태</span>
-            <p id="statusText">NAV 데이터를 준비하고 있습니다.</p>
-          </div>
-          <div class="status-card">
-            <span class="status-label">요청 범위</span>
-            <p id="rangeSummary">최근 영업일 기준 범위를 계산합니다.</p>
-          </div>
-        </aside>
+        <h1>Hana Bond ETF Monitoring</h1>
       </header>
+      <p class="hero-footnote">*Source: KRX API</p>
 
       <main class="dashboard">
         <section class="panel controls-panel">
           <div class="panel-heading">
-            <div>
-              <p class="panel-kicker">Controls</p>
-              <h2>조회 조건</h2>
-            </div>
+            <p class="panel-kicker">Controls</p>
             <button id="refreshButton" class="action-button" type="button">KRX 데이터 새로고침</button>
           </div>
 
@@ -108,14 +79,7 @@
               <input id="searchInput" type="search" placeholder="ETF명 또는 종목코드 검색" />
             </label>
           </div>
-
-          <div class="notice-row">
-            <div class="notice-pill">최대 약 3개월 범위를 권장합니다.</div>
-            <div class="notice-pill" id="failureBadge">실패한 호출 없음</div>
-          </div>
         </section>
-
-        <section class="summary-grid" id="summaryGrid"></section>
 
         <section class="panel">
           <div class="panel-heading">
