@@ -1,5 +1,7 @@
 const FIXED_START_DATE = "2025-12-01";
 const FEATURED_ETF_PREFIX = "1Q ";
+const FEATURED_ETF_NAME = "1Q 종합채권(AA-이상)액티브";
+const CHART_START_DATE = "2026-01-02";
 const NAV_TABLE_LABELS = {
   "1Q 종합채권(AA-이상)액티브": "1Q",
   "ACE 종합채권(AA-이상)KIS액티브": "ACE",
@@ -304,7 +306,7 @@ function renderRanking() {
 }
 
 function renderDetailMetrics() {
-  const etf = state.grouped[state.selectedEtf];
+  const etf = getFeaturedEtf();
   if (!etf) {
     els.detailMetrics.innerHTML = "";
     return;
@@ -315,8 +317,7 @@ function renderDetailMetrics() {
   const cards = [
     { label: "ETF", value: etf.name, meta: etf.code },
     { label: "기준일 NAV", value: latest ? latest.nav.toFixed(2) : "-", meta: state.baseDate || "-" },
-    { label: "YTD", value: metrics.YTD === null ? "-" : toPercent(metrics.YTD), meta: "연초 이후" },
-    { label: "사용자 지정", value: metrics.CUSTOM === null ? "-" : toPercent(metrics.CUSTOM), meta: state.compareDate || "-" }
+    { label: "YTD", value: metrics.YTD === null ? "-" : toPercent(metrics.YTD), meta: "연초 이후" }
   ];
 
   els.detailMetrics.innerHTML = cards
@@ -384,37 +385,54 @@ function exportRawDataCsv() {
 }
 
 function renderChart() {
-  const etf = state.grouped[state.selectedEtf];
+  const etf = getFeaturedEtf();
   if (!etf || !etf.series.length) {
-    els.chartTitle.textContent = "선택 ETF NAV 추이";
+    els.chartTitle.textContent = "1Q 종합채권(AA-이상)액티브";
     els.chartMeta.textContent = "";
     els.trendChart.innerHTML = "";
     return;
   }
 
-  const series = etf.series.filter((point) => point.date <= state.baseDate);
+  const series = etf.series.filter((point) => point.date >= CHART_START_DATE && point.date <= state.baseDate);
+  if (!series.length) {
+    els.chartTitle.textContent = FEATURED_ETF_NAME;
+    els.chartMeta.textContent = `${CHART_START_DATE} ~ ${state.baseDate}`;
+    els.trendChart.innerHTML = "";
+    return;
+  }
+
   const basePoint = series[0];
   const values = series.map((point) => ((point.nav / basePoint.nav) - 1) * 100);
   const min = Math.min(...values);
   const max = Math.max(...values);
-  const width = 640;
-  const height = 280;
-  const padding = 26;
-  const chartWidth = width - padding * 2;
-  const chartHeight = height - padding * 2 - 18;
+  const width = 700;
+  const height = 320;
+  const paddingLeft = 56;
+  const paddingRight = 88;
+  const paddingTop = 24;
+  const paddingBottom = 44;
+  const chartWidth = width - paddingLeft - paddingRight;
+  const chartHeight = height - paddingTop - paddingBottom;
   const span = max - min || 1;
 
   const points = values.map((value, index) => {
-    const x = padding + (chartWidth * index) / Math.max(values.length - 1, 1);
-    const y = height - padding - ((value - min) / span) * chartHeight;
+    const x = paddingLeft + (chartWidth * index) / Math.max(values.length - 1, 1);
+    const y = height - paddingBottom - ((value - min) / span) * chartHeight;
     return `${x},${y}`;
   });
 
   const lastValue = values[values.length - 1];
   const [lastX, lastY] = points[points.length - 1].split(",").map(Number);
+  const bubbleWidth = 92;
+  const bubbleHeight = 36;
+  const bubbleX = Math.max(Math.min(lastX - bubbleWidth - 12, width - bubbleWidth - 12), 12);
+  const bubbleY = Math.max(lastY - bubbleHeight - 10, 12);
+  const bubbleTextX = bubbleX + 14;
+  const bubbleTextY = bubbleY + 23;
 
-  els.chartTitle.textContent = `${etf.name} NAV 누적수익률 추이`;
-  els.chartMeta.textContent = `${series[0].date} ~ ${state.baseDate}`;
+  els.chartTitle.textContent = etf.name;
+  els.chartMeta.textContent = `${CHART_START_DATE} ~ ${state.baseDate}`;
+  els.trendChart.setAttribute("viewBox", `0 0 ${width} ${height}`);
   els.trendChart.innerHTML = `
     <defs>
       <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
@@ -423,16 +441,20 @@ function renderChart() {
       </linearGradient>
     </defs>
     <rect x="0" y="0" width="${width}" height="${height}" rx="18" fill="#111317"></rect>
-    ${buildGridLines(min, max, padding, width, height, chartHeight, span)}
-    <polygon fill="url(#chartFill)" points="${buildAreaPoints(points, height, padding)}"></polygon>
+    ${buildGridLines(min, max, paddingLeft, width - paddingRight, height, paddingTop, paddingBottom, chartHeight, span)}
+    <polygon fill="url(#chartFill)" points="${buildAreaPoints(points, height, paddingBottom)}"></polygon>
     <polyline fill="none" stroke="#f4b860" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" points="${points.join(" ")}"></polyline>
     <circle cx="${lastX}" cy="${lastY}" r="6" fill="#ffffff"></circle>
     <g>
-      <rect x="${Math.max(lastX - 36, 16)}" y="${lastY - 46}" width="82" height="34" rx="10" fill="#242933"></rect>
-      <text x="${Math.max(lastX + 4, 24)}" y="${lastY - 23}" fill="#ffffff" font-size="18" font-weight="700">${lastValue.toFixed(1)}%</text>
+      <rect x="${bubbleX}" y="${bubbleY}" width="${bubbleWidth}" height="${bubbleHeight}" rx="10" fill="#242933"></rect>
+      <text x="${bubbleTextX}" y="${bubbleTextY}" fill="#ffffff" font-size="18" font-weight="700">${lastValue.toFixed(1)}%</text>
     </g>
-    ${buildXAxisLabels(series, padding, chartWidth, height)}
+    ${buildXAxisLabels(series, paddingLeft, chartWidth, height, paddingBottom)}
   `;
+}
+
+function getFeaturedEtf() {
+  return state.etfs.find((etf) => etf.name === FEATURED_ETF_NAME) || state.grouped[state.selectedEtf] || state.etfs[0] || null;
 }
 
 function calculateMetrics(etf, baseDate, compareDate) {
@@ -489,31 +511,31 @@ function computeReturn(basePoint, referencePoint) {
   return basePoint.nav / referencePoint.nav - 1;
 }
 
-function buildGridLines(min, max, padding, width, height, chartHeight, span) {
+function buildGridLines(min, max, xStart, xEnd, height, paddingTop, paddingBottom, chartHeight, span) {
   let output = "";
   for (let i = 0; i <= 4; i += 1) {
     const ratio = i / 4;
-    const y = height - padding - ratio * chartHeight;
+    const y = height - paddingBottom - ratio * chartHeight;
     const value = min + ratio * span;
-    output += `<line x1="${padding}" y1="${y}" x2="${width - padding}" y2="${y}" stroke="rgba(255,255,255,0.12)" stroke-dasharray="4 6"></line>`;
-    output += `<text x="8" y="${y + 5}" fill="#aeb7c4" font-size="13">${value.toFixed(1)}%</text>`;
+    output += `<line x1="${xStart}" y1="${y}" x2="${xEnd}" y2="${y}" stroke="rgba(255,255,255,0.12)" stroke-dasharray="4 6"></line>`;
+    output += `<text x="14" y="${y + 5}" fill="#aeb7c4" font-size="13">${value.toFixed(1)}%</text>`;
   }
   return output;
 }
 
-function buildAreaPoints(points, height, padding) {
+function buildAreaPoints(points, height, paddingBottom) {
   const first = points[0];
   const last = points[points.length - 1];
-  return `${first} ${points.join(" ")} ${last.split(",")[0]},${height - padding} ${first.split(",")[0]},${height - padding}`;
+  return `${first} ${points.join(" ")} ${last.split(",")[0]},${height - paddingBottom} ${first.split(",")[0]},${height - paddingBottom}`;
 }
 
-function buildXAxisLabels(series, padding, chartWidth, height) {
+function buildXAxisLabels(series, paddingLeft, chartWidth, height, paddingBottom) {
   let output = "";
   const steps = Math.min(4, Math.max(series.length - 1, 1));
   for (let i = 0; i <= steps; i += 1) {
     const pointIndex = Math.round((series.length - 1) * (i / Math.max(steps, 1)));
-    const x = padding + (chartWidth * pointIndex) / Math.max(series.length - 1, 1);
-    output += `<text x="${x - 18}" y="${height - 8}" fill="#aeb7c4" font-size="13">${series[pointIndex].date.slice(5)}</text>`;
+    const x = paddingLeft + (chartWidth * pointIndex) / Math.max(series.length - 1, 1);
+    output += `<text x="${x - 18}" y="${height - Math.max(paddingBottom - 28, 8)}" fill="#aeb7c4" font-size="13">${series[pointIndex].date.slice(5)}</text>`;
   }
   return output;
 }
