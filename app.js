@@ -779,7 +779,7 @@ function formatRankCell(rank) {
 }
 
 function toPercent(value) {
-  return `${value >= 0 ? "+" : ""}${(value * 100).toFixed(2)}%`;
+  return `${value >= 0 ? "+" : ""}${(value * 100).toFixed(3)}%`;
 }
 
 function safeMetricValue(value) {
