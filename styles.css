@@ -231,15 +231,15 @@ table {
 }
 
 .returns-table .col-etf {
-  width: 28%;
+  width: 30%;
 }
 
 .returns-table .col-metric {
-  width: 8.5%;
+  width: 9.5%;
 }
 
 .returns-table .col-asset {
-  width: 12.5%;
+  width: 13%;
 }
 
 th,

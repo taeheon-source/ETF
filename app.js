@@ -297,7 +297,7 @@ function renderOverviewTable() {
     .sort((a, b) => safeMetricValue(b.metrics[state.sortMetric]) - safeMetricValue(a.metrics[state.sortMetric]));
 
   if (!rows.length) {
-    els.returnsTableBody.innerHTML = `<tr><td colspan="9" class="empty-state">표시할 ETF 데이터가 없습니다.</td></tr>`;
+    els.returnsTableBody.innerHTML = `<tr><td colspan="8" class="empty-state">표시할 ETF 데이터가 없습니다.</td></tr>`;
     return;
   }
 
@@ -326,7 +326,6 @@ function renderOverviewTable() {
           <td>${formatOverviewMetric(metrics.MTD)}</td>
           <td>${formatOverviewMetric(metrics.QTD)}</td>
           <td>${formatOverviewMetric(metrics.YTD)}</td>
-          <td>${formatOverviewMetric(metrics.SINCE_1Q)}</td>
           <td>${formatOverviewMetric(metrics.CUSTOM)}</td>
           <td>${formatAssetTotalInEok(getAssetTotalAtOrBefore(etf, state.baseDate))}</td>
         </tr>
@@ -350,7 +349,7 @@ function renderPeerRankingTable() {
 
   const featuredEtf = getFeaturedEtf();
   if (!featuredEtf) {
-    els.peerRankTableBody.innerHTML = `<tr><td colspan="9" class="empty-state">표시할 ETF 데이터가 없습니다.</td></tr>`;
+    els.peerRankTableBody.innerHTML = `<tr><td colspan="8" class="empty-state">표시할 ETF 데이터가 없습니다.</td></tr>`;
     return;
   }
 
@@ -365,7 +364,6 @@ function renderPeerRankingTable() {
     MTD: getMetricRank(peers, featuredEtf.code, "MTD"),
     QTD: getMetricRank(peers, featuredEtf.code, "QTD"),
     YTD: getMetricRank(peers, featuredEtf.code, "YTD"),
-    SINCE_1Q: getMetricRank(peers, featuredEtf.code, "SINCE_1Q"),
     CUSTOM: getMetricRank(peers, featuredEtf.code, "CUSTOM")
   };
 
@@ -377,7 +375,6 @@ function renderPeerRankingTable() {
       <td>${formatRankCell(rankRow.MTD)}</td>
       <td>${formatRankCell(rankRow.QTD)}</td>
       <td>${formatRankCell(rankRow.YTD)}</td>
-      <td>${formatRankCell(rankRow.SINCE_1Q)}</td>
       <td>${formatRankCell(rankRow.CUSTOM)}</td>
       <td>${formatAssetTotalInEok(getAssetTotalAtOrBefore(featuredEtf, state.baseDate))}</td>
     </tr>
@@ -621,7 +618,6 @@ function calculateMetrics(etf, baseDate, compareDate) {
   const monthReference = getMonthReference(etf.series, baseDate);
   const quarterReference = getQuarterReference(etf.series, baseDate);
   const yearReference = getYearReference(etf.series, baseDate);
-  const fixedReference = etf.series.find((point) => point.date === EXTRA_RAW_DATE);
   const customReference = etf.series.find((point) => point.date === compareDate);
 
   return {
@@ -630,7 +626,6 @@ function calculateMetrics(etf, baseDate, compareDate) {
     MTD: computeReturn(basePoint, monthReference),
     QTD: computeReturn(basePoint, quarterReference),
     YTD: computeReturn(basePoint, yearReference),
-    SINCE_1Q: computeReturn(basePoint, fixedReference),
     CUSTOM: computeReturn(basePoint, customReference)
   };
 }
@@ -647,7 +642,6 @@ function calculateAssetMetrics(etf, baseDate, compareDate) {
   const monthReference = getEffectiveAssetReference(series, getMonthReferenceDate(series, baseDate));
   const quarterReference = getEffectiveAssetReference(series, getQuarterReferenceDate(series, baseDate));
   const yearReference = getEffectiveAssetReference(series, getYearReferenceDate(series, baseDate));
-  const fixedReference = getEffectiveAssetReference(series, EXTRA_RAW_DATE);
   const customReference = getEffectiveAssetReference(series, compareDate);
 
   return {
@@ -656,7 +650,6 @@ function calculateAssetMetrics(etf, baseDate, compareDate) {
     MTD: computeAssetReturn(basePoint, monthReference),
     QTD: computeAssetReturn(basePoint, quarterReference),
     YTD: computeAssetReturn(basePoint, yearReference),
-    SINCE_1Q: computeAssetReturn(basePoint, fixedReference),
     CUSTOM: computeAssetReturn(basePoint, customReference)
   };
 }
@@ -751,7 +744,7 @@ function buildXAxisLabels(series, paddingLeft, chartWidth, height, paddingBottom
 }
 
 function makeEmptyMetrics() {
-  return { "1D": null, "7D": null, MTD: null, QTD: null, YTD: null, SINCE_1Q: null, CUSTOM: null };
+  return { "1D": null, "7D": null, MTD: null, QTD: null, YTD: null, CUSTOM: null };
 }
 
 function formatMetric(value) {
