@@ -5,27 +5,27 @@ const FEATURED_ETF_NAME = "1Q 종합채권(AA-이상)액티브";
 const CHART_START_DATE = "2026-01-02";
 const NAV_TABLE_LABELS = {
   "1Q 종합채권(AA-이상)액티브": "1Q",
-  "ACE 종합채권(AA-이상)KIS액티브": "ACE",
+  "ACE 종합채권(AA-이상)액티브": "ACE",
   "PLUS 종합채권(AA-이상)액티브": "PLUS",
   "RISE 종합채권(A-이상)액티브": "RISE",
   "KODEX 종합채권(AA-이상)액티브": "KODEX",
   "SOL 종합채권(AA-이상)액티브": "SOL",
   "TIGER 종합채권(AA-이상)액티브": "TIGER",
   "HK 종합채권(AA-이상)액티브": "HK",
-  "히어로즈 종합채권(AA-이상)액티브": "히어로즈",
+  "KIWOOM 종합채권(AA-이상)액티브": "KIWOOM",
   "파워 종합채권(AA-이상)액티브": "파워"
 };
 
 const TARGET_ETF_NAMES = [
   "1Q 종합채권(AA-이상)액티브",
-  "ACE 종합채권(AA-이상)KIS액티브",
+  "ACE 종합채권(AA-이상)액티브",
   "PLUS 종합채권(AA-이상)액티브",
   "RISE 종합채권(A-이상)액티브",
   "KODEX 종합채권(AA-이상)액티브",
   "SOL 종합채권(AA-이상)액티브",
   "TIGER 종합채권(AA-이상)액티브",
   "HK 종합채권(AA-이상)액티브",
-  "히어로즈 종합채권(AA-이상)액티브",
+  "KIWOOM 종합채권(AA-이상)액티브",
   "파워 종합채권(AA-이상)액티브"
 ];
 
@@ -44,25 +44,25 @@ const sampleDataset = [
   { BAS_DD: "2026-03-18", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.68", ASSET_TOTAL: "97214930000" },
   { BAS_DD: "2026-03-19", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1043.92", ASSET_TOTAL: "96895090000" },
   { BAS_DD: "2026-03-20", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1044.21", ASSET_TOTAL: "96719830000" },
-  { BAS_DD: "2025-12-31", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.42", ASSET_TOTAL: "109800000000" },
-  { BAS_DD: "2026-01-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.66", ASSET_TOTAL: "110050000000" },
-  { BAS_DD: "2026-02-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1020.94", ASSET_TOTAL: "110220000000" },
-  { BAS_DD: "2026-03-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1023.62", ASSET_TOTAL: "110280000000" },
-  { BAS_DD: "2026-03-11", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.11", ASSET_TOTAL: "110300000000" },
-  { BAS_DD: "2026-03-12", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.25", ASSET_TOTAL: "110320000000" },
-  { BAS_DD: "2026-03-13", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.41", ASSET_TOTAL: "110340000000" },
-  { BAS_DD: "2026-03-16", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.73", ASSET_TOTAL: "110360000000" },
-  { BAS_DD: "2026-03-17", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1024.96", ASSET_TOTAL: "110380000000" },
-  { BAS_DD: "2026-03-18", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.20", ASSET_TOTAL: "110390000000" },
-  { BAS_DD: "2026-03-19", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.36", ASSET_TOTAL: "110405000000" },
-  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61", ASSET_TOTAL: "110407010000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1018.42", ASSET_TOTAL: "109800000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1018.66", ASSET_TOTAL: "110050000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1020.94", ASSET_TOTAL: "110220000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1023.62", ASSET_TOTAL: "110280000000" },
+  { BAS_DD: "2026-03-11", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1024.11", ASSET_TOTAL: "110300000000" },
+  { BAS_DD: "2026-03-12", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1024.25", ASSET_TOTAL: "110320000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1024.41", ASSET_TOTAL: "110340000000" },
+  { BAS_DD: "2026-03-16", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1024.73", ASSET_TOTAL: "110360000000" },
+  { BAS_DD: "2026-03-17", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1024.96", ASSET_TOTAL: "110380000000" },
+  { BAS_DD: "2026-03-18", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1025.20", ASSET_TOTAL: "110390000000" },
+  { BAS_DD: "2026-03-19", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1025.36", ASSET_TOTAL: "110405000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1025.61", ASSET_TOTAL: "110407010000" },
   { BAS_DD: "2026-03-20", ISU_CD: "PLUS_BOND", ISU_NM: "PLUS 종합채권(AA-이상)액티브", NAV: "1032.44", ASSET_TOTAL: "110407010000" },
   { BAS_DD: "2026-03-20", ISU_CD: "RISE_BOND", ISU_NM: "RISE 종합채권(A-이상)액티브", NAV: "1019.82", ASSET_TOTAL: "105669540000" },
   { BAS_DD: "2026-03-20", ISU_CD: "KODEX_BOND", ISU_NM: "KODEX 종합채권(AA-이상)액티브", NAV: "1038.15", ASSET_TOTAL: "113009680000" },
   { BAS_DD: "2026-03-20", ISU_CD: "SOL_BOND", ISU_NM: "SOL 종합채권(AA-이상)액티브", NAV: "1030.77", ASSET_TOTAL: "108980130000" },
   { BAS_DD: "2026-03-20", ISU_CD: "TIGER_BOND", ISU_NM: "TIGER 종합채권(AA-이상)액티브", NAV: "1031.24", ASSET_TOTAL: "54319360000" },
   { BAS_DD: "2026-03-20", ISU_CD: "HK_BOND", ISU_NM: "HK 종합채권(AA-이상)액티브", NAV: "1028.64", ASSET_TOTAL: "100673020000" },
-  { BAS_DD: "2026-03-20", ISU_CD: "HERO_BOND", ISU_NM: "히어로즈 종합채권(AA-이상)액티브", NAV: "1027.58", ASSET_TOTAL: "98012540000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "KIWOOM_BOND", ISU_NM: "KIWOOM 종합채권(AA-이상)액티브", NAV: "1027.58", ASSET_TOTAL: "98012540000" },
   { BAS_DD: "2026-03-20", ISU_CD: "POWER_BOND", ISU_NM: "파워 종합채권(AA-이상)액티브", NAV: "1026.91", ASSET_TOTAL: "95888950000" }
 ];
 

@@ -2,14 +2,14 @@ const FIXED_START_DATE = "2025-12-01";
 const CONCURRENCY = 5;
 const TARGET_ETF_NAMES = [
   "1Q 종합채권(AA-이상)액티브",
-  "ACE 종합채권(AA-이상)KIS액티브",
+  "ACE 종합채권(AA-이상)액티브",
   "PLUS 종합채권(AA-이상)액티브",
   "RISE 종합채권(A-이상)액티브",
   "KODEX 종합채권(AA-이상)액티브",
   "SOL 종합채권(AA-이상)액티브",
   "TIGER 종합채권(AA-이상)액티브",
   "HK 종합채권(AA-이상)액티브",
-  "히어로즈 종합채권(AA-이상)액티브",
+  "KIWOOM 종합채권(AA-이상)액티브",
   "파워 종합채권(AA-이상)액티브"
 ];
 
@@ -17,9 +17,9 @@ const SAMPLE_ROWS = [
   { BAS_DD: "2025-12-31", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.12", INVSTASST_NETASST_TOTAMT: "95400000000" },
   { BAS_DD: "2026-01-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.55", INVSTASST_NETASST_TOTAMT: "95650000000" },
   { BAS_DD: "2026-03-20", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1044.21", INVSTASST_NETASST_TOTAMT: "96719830000" },
-  { BAS_DD: "2025-12-31", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.42", INVSTASST_NETASST_TOTAMT: "109800000000" },
-  { BAS_DD: "2026-01-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1018.66", INVSTASST_NETASST_TOTAMT: "110050000000" },
-  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)KIS액티브", NAV: "1025.61", INVSTASST_NETASST_TOTAMT: "110407010000" }
+  { BAS_DD: "2025-12-31", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1018.42", INVSTASST_NETASST_TOTAMT: "109800000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1018.66", INVSTASST_NETASST_TOTAMT: "110050000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1025.61", INVSTASST_NETASST_TOTAMT: "110407010000" }
 ];
 
 module.exports = async function handler(req, res) {
