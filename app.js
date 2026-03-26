@@ -30,6 +30,29 @@ const ETF_GROUPS = {
       "1Q 중단기회사채(A-이상)액티브",
       "SOL 중단기회사채(A-이상)액티브"
     ]
+  },
+  SHORT_TERM: {
+    label: "단기형",
+    featuredName: "1Q 단기금융채액티브",
+    chartStartDate: "2026-01-02",
+    etfNames: [
+      "1Q 단기금융채액티브",
+      "RISE 단기국공채액티브",
+      "KODEX 단기채권",
+      "KODEX 단기채권PLUS",
+      "TIGER 단기채권액티브",
+      "KOSEF 단기자금",
+      "히어로즈 단기채권ESG액티브"
+    ]
+  },
+  SPECIAL_BANK: {
+    label: "단기 특은채형",
+    featuredName: "1Q 단기특수은행채액티브",
+    chartStartDate: "2026-01-02",
+    etfNames: [
+      "1Q 단기특수은행채액티브",
+      "RISE 단기특수은행채액티브"
+    ]
   }
 };
 const NAV_TABLE_LABELS = {
@@ -44,7 +67,16 @@ const NAV_TABLE_LABELS = {
   "KIWOOM 종합채권(AA-이상)액티브": "KIWOOM",
   "파워 종합채권(AA-이상)액티브": "파워",
   "1Q 중단기회사채(A-이상)액티브": "1Q",
-  "SOL 중단기회사채(A-이상)액티브": "SOL"
+  "SOL 중단기회사채(A-이상)액티브": "SOL",
+  "1Q 단기금융채액티브": "1Q",
+  "RISE 단기국공채액티브": "RISE",
+  "KODEX 단기채권": "KODEX",
+  "KODEX 단기채권PLUS": "KODEX+",
+  "TIGER 단기채권액티브": "TIGER",
+  "KOSEF 단기자금": "KOSEF",
+  "히어로즈 단기채권ESG액티브": "히어로즈",
+  "1Q 단기특수은행채액티브": "1Q",
+  "RISE 단기특수은행채액티브": "RISE"
 };
 const ALL_TARGET_ETF_NAMES = [...new Set(Object.values(ETF_GROUPS).flatMap((group) => group.etfNames))];
 
@@ -92,7 +124,61 @@ const sampleDataset = [
   { BAS_DD: "2026-02-02", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1010.62", ASSET_TOTAL: "64070000000" },
   { BAS_DD: "2026-03-02", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1011.74", ASSET_TOTAL: "64610000000" },
   { BAS_DD: "2026-03-13", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1012.51", ASSET_TOTAL: "64890000000" },
-  { BAS_DD: "2026-03-20", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1013.05", ASSET_TOTAL: "64970000000" }
+  { BAS_DD: "2026-03-20", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1013.05", ASSET_TOTAL: "64970000000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "1Q_SHORT_TERM", ISU_NM: "1Q 단기금융채액티브", NAV: "1008.52", ASSET_TOTAL: "31800000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "1Q_SHORT_TERM", ISU_NM: "1Q 단기금융채액티브", NAV: "1008.66", ASSET_TOTAL: "31920000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "1Q_SHORT_TERM", ISU_NM: "1Q 단기금융채액티브", NAV: "1010.28", ASSET_TOTAL: "32480000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "1Q_SHORT_TERM", ISU_NM: "1Q 단기금융채액티브", NAV: "1011.42", ASSET_TOTAL: "32960000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "1Q_SHORT_TERM", ISU_NM: "1Q 단기금융채액티브", NAV: "1011.96", ASSET_TOTAL: "33150000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "1Q_SHORT_TERM", ISU_NM: "1Q 단기금융채액티브", NAV: "1012.63", ASSET_TOTAL: "33270000000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "RISE_GOV_SHORT", ISU_NM: "RISE 단기국공채액티브", NAV: "1007.92", ASSET_TOTAL: "28700000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "RISE_GOV_SHORT", ISU_NM: "RISE 단기국공채액티브", NAV: "1008.04", ASSET_TOTAL: "28750000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "RISE_GOV_SHORT", ISU_NM: "RISE 단기국공채액티브", NAV: "1008.67", ASSET_TOTAL: "29010000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "RISE_GOV_SHORT", ISU_NM: "RISE 단기국공채액티브", NAV: "1009.11", ASSET_TOTAL: "29230000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "RISE_GOV_SHORT", ISU_NM: "RISE 단기국공채액티브", NAV: "1009.26", ASSET_TOTAL: "29370000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "RISE_GOV_SHORT", ISU_NM: "RISE 단기국공채액티브", NAV: "1009.31", ASSET_TOTAL: "29460000000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "KODEX_SHORT", ISU_NM: "KODEX 단기채권", NAV: "1020.11", ASSET_TOTAL: "192000000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "KODEX_SHORT", ISU_NM: "KODEX 단기채권", NAV: "1020.26", ASSET_TOTAL: "192400000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "KODEX_SHORT", ISU_NM: "KODEX 단기채권", NAV: "1020.98", ASSET_TOTAL: "195300000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "KODEX_SHORT", ISU_NM: "KODEX 단기채권", NAV: "1021.64", ASSET_TOTAL: "197100000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "KODEX_SHORT", ISU_NM: "KODEX 단기채권", NAV: "1021.98", ASSET_TOTAL: "198200000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "KODEX_SHORT", ISU_NM: "KODEX 단기채권", NAV: "1022.14", ASSET_TOTAL: "198700000000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "KODEX_SHORT_PLUS", ISU_NM: "KODEX 단기채권PLUS", NAV: "1015.08", ASSET_TOTAL: "58200000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "KODEX_SHORT_PLUS", ISU_NM: "KODEX 단기채권PLUS", NAV: "1015.19", ASSET_TOTAL: "58340000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "KODEX_SHORT_PLUS", ISU_NM: "KODEX 단기채권PLUS", NAV: "1015.84", ASSET_TOTAL: "58910000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "KODEX_SHORT_PLUS", ISU_NM: "KODEX 단기채권PLUS", NAV: "1016.27", ASSET_TOTAL: "59420000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "KODEX_SHORT_PLUS", ISU_NM: "KODEX 단기채권PLUS", NAV: "1016.51", ASSET_TOTAL: "59670000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "KODEX_SHORT_PLUS", ISU_NM: "KODEX 단기채권PLUS", NAV: "1016.61", ASSET_TOTAL: "59820000000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "TIGER_SHORT_ACTIVE", ISU_NM: "TIGER 단기채권액티브", NAV: "1006.44", ASSET_TOTAL: "44300000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "TIGER_SHORT_ACTIVE", ISU_NM: "TIGER 단기채권액티브", NAV: "1006.58", ASSET_TOTAL: "44410000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "TIGER_SHORT_ACTIVE", ISU_NM: "TIGER 단기채권액티브", NAV: "1007.03", ASSET_TOTAL: "44760000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "TIGER_SHORT_ACTIVE", ISU_NM: "TIGER 단기채권액티브", NAV: "1007.56", ASSET_TOTAL: "45020000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "TIGER_SHORT_ACTIVE", ISU_NM: "TIGER 단기채권액티브", NAV: "1007.84", ASSET_TOTAL: "45110000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "TIGER_SHORT_ACTIVE", ISU_NM: "TIGER 단기채권액티브", NAV: "1007.97", ASSET_TOTAL: "45180000000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "KOSEF_SHORT_CASH", ISU_NM: "KOSEF 단기자금", NAV: "1024.28", ASSET_TOTAL: "86100000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "KOSEF_SHORT_CASH", ISU_NM: "KOSEF 단기자금", NAV: "1024.41", ASSET_TOTAL: "86250000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "KOSEF_SHORT_CASH", ISU_NM: "KOSEF 단기자금", NAV: "1024.92", ASSET_TOTAL: "86980000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "KOSEF_SHORT_CASH", ISU_NM: "KOSEF 단기자금", NAV: "1025.44", ASSET_TOTAL: "87530000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "KOSEF_SHORT_CASH", ISU_NM: "KOSEF 단기자금", NAV: "1025.73", ASSET_TOTAL: "87760000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "KOSEF_SHORT_CASH", ISU_NM: "KOSEF 단기자금", NAV: "1025.90", ASSET_TOTAL: "87840000000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "HEROES_SHORT_ESG", ISU_NM: "히어로즈 단기채권ESG액티브", NAV: "1004.88", ASSET_TOTAL: "12600000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "HEROES_SHORT_ESG", ISU_NM: "히어로즈 단기채권ESG액티브", NAV: "1005.03", ASSET_TOTAL: "12640000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "HEROES_SHORT_ESG", ISU_NM: "히어로즈 단기채권ESG액티브", NAV: "1005.58", ASSET_TOTAL: "12740000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "HEROES_SHORT_ESG", ISU_NM: "히어로즈 단기채권ESG액티브", NAV: "1006.01", ASSET_TOTAL: "12850000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "HEROES_SHORT_ESG", ISU_NM: "히어로즈 단기채권ESG액티브", NAV: "1006.24", ASSET_TOTAL: "12890000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "HEROES_SHORT_ESG", ISU_NM: "히어로즈 단기채권ESG액티브", NAV: "1006.37", ASSET_TOTAL: "12910000000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "1Q_SPECIAL_BANK", ISU_NM: "1Q 단기특수은행채액티브", NAV: "1009.84", ASSET_TOTAL: "35800000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "1Q_SPECIAL_BANK", ISU_NM: "1Q 단기특수은행채액티브", NAV: "1010.01", ASSET_TOTAL: "35870000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "1Q_SPECIAL_BANK", ISU_NM: "1Q 단기특수은행채액티브", NAV: "1010.72", ASSET_TOTAL: "36320000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "1Q_SPECIAL_BANK", ISU_NM: "1Q 단기특수은행채액티브", NAV: "1011.29", ASSET_TOTAL: "36710000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "1Q_SPECIAL_BANK", ISU_NM: "1Q 단기특수은행채액티브", NAV: "1011.61", ASSET_TOTAL: "36860000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "1Q_SPECIAL_BANK", ISU_NM: "1Q 단기특수은행채액티브", NAV: "1011.86", ASSET_TOTAL: "36950000000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "RISE_SPECIAL_BANK", ISU_NM: "RISE 단기특수은행채액티브", NAV: "1008.63", ASSET_TOTAL: "27400000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "RISE_SPECIAL_BANK", ISU_NM: "RISE 단기특수은행채액티브", NAV: "1008.79", ASSET_TOTAL: "27460000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "RISE_SPECIAL_BANK", ISU_NM: "RISE 단기특수은행채액티브", NAV: "1009.34", ASSET_TOTAL: "27830000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "RISE_SPECIAL_BANK", ISU_NM: "RISE 단기특수은행채액티브", NAV: "1009.96", ASSET_TOTAL: "28010000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "RISE_SPECIAL_BANK", ISU_NM: "RISE 단기특수은행채액티브", NAV: "1010.26", ASSET_TOTAL: "28090000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "RISE_SPECIAL_BANK", ISU_NM: "RISE 단기특수은행채액티브", NAV: "1010.42", ASSET_TOTAL: "28130000000" }
 ];
 
 const state = {
@@ -113,6 +199,8 @@ const state = {
 const els = {
   groupTotalBondButton: document.querySelector("#groupTotalBondButton"),
   groupCreditShortButton: document.querySelector("#groupCreditShortButton"),
+  groupShortTermButton: document.querySelector("#groupShortTermButton"),
+  groupSpecialBankButton: document.querySelector("#groupSpecialBankButton"),
   baseDateSelect: document.querySelector("#baseDateSelect"),
   compareDateSelect: document.querySelector("#compareDateSelect"),
   rankingMetricSelect: document.querySelector("#rankingMetricSelect"),
@@ -163,6 +251,14 @@ function bindEvents() {
 
   els.groupCreditShortButton.addEventListener("click", () => {
     setEtfGroup("CREDIT_SHORT");
+  });
+
+  els.groupShortTermButton.addEventListener("click", () => {
+    setEtfGroup("SHORT_TERM");
+  });
+
+  els.groupSpecialBankButton.addEventListener("click", () => {
+    setEtfGroup("SPECIAL_BANK");
   });
 
   els.baseDateSelect.addEventListener("change", (event) => {
@@ -325,6 +421,8 @@ function getCurrentGroupMeta() {
 function renderGroupControls() {
   els.groupTotalBondButton.classList.toggle("is-active", state.etfGroup === "TOTAL_BOND");
   els.groupCreditShortButton.classList.toggle("is-active", state.etfGroup === "CREDIT_SHORT");
+  els.groupShortTermButton.classList.toggle("is-active", state.etfGroup === "SHORT_TERM");
+  els.groupSpecialBankButton.classList.toggle("is-active", state.etfGroup === "SPECIAL_BANK");
 }
 
 function getVisibleEtfs() {
