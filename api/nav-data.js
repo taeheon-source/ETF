@@ -1,4 +1,4 @@
-const FIXED_START_DATE = "2025-12-01";
+const FIXED_START_DATE = "2025-01-02";
 const CONCURRENCY = 5;
 const TARGET_ETF_NAMES = [
   "1Q 종합채권(AA-이상)액티브",

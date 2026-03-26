@@ -1,4 +1,4 @@
-const FIXED_START_DATE = "2025-12-01";
+const FIXED_START_DATE = "2025-01-02";
 const FEATURED_ETF_PREFIX = "1Q ";
 const FEATURED_ETF_NAME = "1Q 종합채권(AA-이상)액티브";
 const CHART_START_DATE = "2026-01-02";
