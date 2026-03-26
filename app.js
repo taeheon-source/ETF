@@ -1,4 +1,5 @@
-const FIXED_START_DATE = "2025-01-02";
+const FIXED_START_DATE = "2025-12-01";
+const EXTRA_RAW_DATE = "2025-02-25";
 const FEATURED_ETF_PREFIX = "1Q ";
 const FEATURED_ETF_NAME = "1Q 종합채권(AA-이상)액티브";
 const CHART_START_DATE = "2026-01-02";
@@ -443,7 +444,7 @@ function renderNavTable() {
     .map((etf) => `<th>${escapeHtml(getNavTableLabel(etf.name))}</th>`)
     .join("")}</tr>`;
 
-  const datesDesc = [...state.availableDates].sort((a, b) => b.localeCompare(a));
+  const datesDesc = getRawDataDates();
   els.navTableBody.innerHTML = datesDesc
     .map((date) => {
       const cells = visibleEtfs
@@ -463,7 +464,7 @@ function getNavTableLabel(name) {
 
 function exportRawDataCsv() {
   const visibleEtfs = getVisibleEtfs();
-  const datesDesc = [...state.availableDates].sort((a, b) => b.localeCompare(a));
+  const datesDesc = getRawDataDates();
   const header = ["날짜", ...visibleEtfs.map((etf) => getNavTableLabel(etf.name))];
   const rows = datesDesc.map((date) => [
     date,
@@ -486,6 +487,14 @@ function exportRawDataCsv() {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+function getRawDataDates() {
+  const datesDesc = [...state.availableDates].sort((a, b) => b.localeCompare(a));
+  if (!datesDesc.includes(EXTRA_RAW_DATE)) {
+    datesDesc.push(EXTRA_RAW_DATE);
+  }
+  return datesDesc;
 }
 
 function getSeriesPoint(etf, date) {
