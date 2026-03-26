@@ -75,6 +75,10 @@ select {
   font-style: italic;
 }
 
+.group-switcher {
+  margin: 0 0 18px;
+}
+
 .dashboard {
   display: grid;
   gap: 18px;

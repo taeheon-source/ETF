@@ -1,10 +1,36 @@
 const FIXED_START_DATE = "2025-12-01";
 const EXTRA_RAW_DATE = "2025-02-25";
 const FEATURED_ETF_PREFIX = "1Q ";
-const FEATURED_ETF_NAME = "1Q 종합채권(AA-이상)액티브";
-const CHART_START_DATE = "2026-01-02";
 const ETF_NAME_ALIASES = {
   "ACE 종합채권(AA-이상)KIS액티브": "ACE 종합채권(AA-이상)액티브"
+};
+const ETF_GROUPS = {
+  TOTAL_BOND: {
+    label: "종합채권",
+    featuredName: "1Q 종합채권(AA-이상)액티브",
+    chartStartDate: "2026-01-02",
+    etfNames: [
+      "1Q 종합채권(AA-이상)액티브",
+      "ACE 종합채권(AA-이상)액티브",
+      "PLUS 종합채권(AA-이상)액티브",
+      "RISE 종합채권(A-이상)액티브",
+      "KODEX 종합채권(AA-이상)액티브",
+      "SOL 종합채권(AA-이상)액티브",
+      "TIGER 종합채권(AA-이상)액티브",
+      "HK 종합채권(AA-이상)액티브",
+      "KIWOOM 종합채권(AA-이상)액티브",
+      "파워 종합채권(AA-이상)액티브"
+    ]
+  },
+  CREDIT_SHORT: {
+    label: "중단기회사채",
+    featuredName: "1Q 중단기회사채(A-이상)액티브",
+    chartStartDate: "2026-01-02",
+    etfNames: [
+      "1Q 중단기회사채(A-이상)액티브",
+      "SOL 중단기회사채(A-이상)액티브"
+    ]
+  }
 };
 const NAV_TABLE_LABELS = {
   "1Q 종합채권(AA-이상)액티브": "1Q",
@@ -16,23 +42,11 @@ const NAV_TABLE_LABELS = {
   "TIGER 종합채권(AA-이상)액티브": "TIGER",
   "HK 종합채권(AA-이상)액티브": "HK",
   "KIWOOM 종합채권(AA-이상)액티브": "KIWOOM",
-  "파워 종합채권(AA-이상)액티브": "파워"
+  "파워 종합채권(AA-이상)액티브": "파워",
+  "1Q 중단기회사채(A-이상)액티브": "1Q",
+  "SOL 중단기회사채(A-이상)액티브": "SOL"
 };
-
-const TARGET_ETF_NAMES = [
-  "1Q 종합채권(AA-이상)액티브",
-  "ACE 종합채권(AA-이상)액티브",
-  "PLUS 종합채권(AA-이상)액티브",
-  "RISE 종합채권(A-이상)액티브",
-  "KODEX 종합채권(AA-이상)액티브",
-  "SOL 종합채권(AA-이상)액티브",
-  "TIGER 종합채권(AA-이상)액티브",
-  "HK 종합채권(AA-이상)액티브",
-  "KIWOOM 종합채권(AA-이상)액티브",
-  "파워 종합채권(AA-이상)액티브"
-];
-
-const TARGET_ETF_ORDER = Object.fromEntries(TARGET_ETF_NAMES.map((name, index) => [name, index]));
+const ALL_TARGET_ETF_NAMES = [...new Set(Object.values(ETF_GROUPS).flatMap((group) => group.etfNames))];
 
 const sampleDataset = [
   { BAS_DD: "2025-12-31", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.12", ASSET_TOTAL: "95400000000" },
@@ -66,10 +80,23 @@ const sampleDataset = [
   { BAS_DD: "2026-03-20", ISU_CD: "TIGER_BOND", ISU_NM: "TIGER 종합채권(AA-이상)액티브", NAV: "1031.24", ASSET_TOTAL: "54319360000" },
   { BAS_DD: "2026-03-20", ISU_CD: "HK_BOND", ISU_NM: "HK 종합채권(AA-이상)액티브", NAV: "1028.64", ASSET_TOTAL: "100673020000" },
   { BAS_DD: "2026-03-20", ISU_CD: "KIWOOM_BOND", ISU_NM: "KIWOOM 종합채권(AA-이상)액티브", NAV: "1027.58", ASSET_TOTAL: "98012540000" },
-  { BAS_DD: "2026-03-20", ISU_CD: "POWER_BOND", ISU_NM: "파워 종합채권(AA-이상)액티브", NAV: "1026.91", ASSET_TOTAL: "95888950000" }
+  { BAS_DD: "2026-03-20", ISU_CD: "POWER_BOND", ISU_NM: "파워 종합채권(AA-이상)액티브", NAV: "1026.91", ASSET_TOTAL: "95888950000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "1Q_SHORT", ISU_NM: "1Q 중단기회사채(A-이상)액티브", NAV: "1012.18", ASSET_TOTAL: "41200000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "1Q_SHORT", ISU_NM: "1Q 중단기회사채(A-이상)액티브", NAV: "1012.44", ASSET_TOTAL: "41250000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "1Q_SHORT", ISU_NM: "1Q 중단기회사채(A-이상)액티브", NAV: "1013.28", ASSET_TOTAL: "41840000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "1Q_SHORT", ISU_NM: "1Q 중단기회사채(A-이상)액티브", NAV: "1014.42", ASSET_TOTAL: "42360000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "1Q_SHORT", ISU_NM: "1Q 중단기회사채(A-이상)액티브", NAV: "1015.04", ASSET_TOTAL: "42780000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "1Q_SHORT", ISU_NM: "1Q 중단기회사채(A-이상)액티브", NAV: "1015.72", ASSET_TOTAL: "42890000000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1009.61", ASSET_TOTAL: "63300000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1009.88", ASSET_TOTAL: "63420000000" },
+  { BAS_DD: "2026-02-02", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1010.62", ASSET_TOTAL: "64070000000" },
+  { BAS_DD: "2026-03-02", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1011.74", ASSET_TOTAL: "64610000000" },
+  { BAS_DD: "2026-03-13", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1012.51", ASSET_TOTAL: "64890000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1013.05", ASSET_TOTAL: "64970000000" }
 ];
 
 const state = {
+  etfGroup: "TOTAL_BOND",
   baseDate: "",
   compareDate: "",
   overviewMode: "RETURNS",
@@ -84,6 +111,8 @@ const state = {
 };
 
 const els = {
+  groupTotalBondButton: document.querySelector("#groupTotalBondButton"),
+  groupCreditShortButton: document.querySelector("#groupCreditShortButton"),
   baseDateSelect: document.querySelector("#baseDateSelect"),
   compareDateSelect: document.querySelector("#compareDateSelect"),
   rankingMetricSelect: document.querySelector("#rankingMetricSelect"),
@@ -116,7 +145,26 @@ async function init() {
   await loadDataset();
 }
 
+function setEtfGroup(groupKey) {
+  if (!ETF_GROUPS[groupKey] || state.etfGroup === groupKey) {
+    return;
+  }
+
+  state.etfGroup = groupKey;
+  const featuredEtf = getFeaturedEtf();
+  state.selectedEtf = featuredEtf?.code || getVisibleEtfs()[0]?.code || "";
+  render();
+}
+
 function bindEvents() {
+  els.groupTotalBondButton.addEventListener("click", () => {
+    setEtfGroup("TOTAL_BOND");
+  });
+
+  els.groupCreditShortButton.addEventListener("click", () => {
+    setEtfGroup("CREDIT_SHORT");
+  });
+
   els.baseDateSelect.addEventListener("change", (event) => {
     state.baseDate = event.target.value;
     if (state.compareDate >= state.baseDate) {
@@ -196,15 +244,11 @@ async function loadDataset() {
 function applyDataset(rows) {
   state.dataset = normalizeRows(rows);
   state.grouped = buildGroupedData(state.dataset);
-  state.etfs = Object.values(state.grouped).sort(
-    (a, b) =>
-      (TARGET_ETF_ORDER[a.name] ?? Number.MAX_SAFE_INTEGER) -
-      (TARGET_ETF_ORDER[b.name] ?? Number.MAX_SAFE_INTEGER)
-  );
+  state.etfs = Object.values(state.grouped);
   state.availableDates = [...new Set(state.dataset.map((row) => row.BAS_DD))].sort();
   state.baseDate = state.availableDates[state.availableDates.length - 1] || "";
   state.compareDate = state.availableDates.find((date) => date < state.baseDate) || "";
-  state.selectedEtf = state.selectedEtf && state.grouped[state.selectedEtf] ? state.selectedEtf : state.etfs[0]?.code || "";
+  state.selectedEtf = state.selectedEtf && state.grouped[state.selectedEtf] ? state.selectedEtf : getFeaturedEtf()?.code || "";
   renderDateOptions();
   render();
 }
@@ -221,7 +265,7 @@ function normalizeRows(rows) {
         ASSET_TOTAL: String(row.INVSTASST_NETASST_TOTAMT || row.ASSET_TOTAL || "").replaceAll(",", "")
       };
     })
-    .filter((row) => TARGET_ETF_NAMES.includes(row.ISU_NM))
+    .filter((row) => ALL_TARGET_ETF_NAMES.includes(row.ISU_NM))
     .filter((row) => row.BAS_DD && row.ISU_CD && row.ISU_NM && row.NAV && row.NAV !== "-")
     .sort((a, b) => a.BAS_DD.localeCompare(b.BAS_DD) || a.ISU_CD.localeCompare(b.ISU_CD));
 }
@@ -262,6 +306,7 @@ function renderCompareDateOptions() {
 
 function render() {
   renderCompareDateOptions();
+  renderGroupControls();
   renderOverviewControls();
   renderOverviewTable();
   renderPeerRankingTable();
@@ -273,8 +318,20 @@ function render() {
   els.compareHeader.textContent = "비교일 대비";
 }
 
+function getCurrentGroupMeta() {
+  return ETF_GROUPS[state.etfGroup] || ETF_GROUPS.TOTAL_BOND;
+}
+
+function renderGroupControls() {
+  els.groupTotalBondButton.classList.toggle("is-active", state.etfGroup === "TOTAL_BOND");
+  els.groupCreditShortButton.classList.toggle("is-active", state.etfGroup === "CREDIT_SHORT");
+}
+
 function getVisibleEtfs() {
-  return state.etfs;
+  const groupMeta = getCurrentGroupMeta();
+  return groupMeta.etfNames
+    .map((name) => state.etfs.find((etf) => etf.name === name))
+    .filter(Boolean);
 }
 
 function renderOverviewControls() {
@@ -392,7 +449,7 @@ function renderRawMetricControls() {
 }
 
 function isFeaturedEtf(etf) {
-  return etf?.name?.startsWith(FEATURED_ETF_PREFIX);
+  return etf?.name === getCurrentGroupMeta().featuredName || etf?.name?.startsWith(FEATURED_ETF_PREFIX);
 }
 
 function renderRanking() {
@@ -538,17 +595,20 @@ function getRawMetricCsvValue(etf, date, point) {
 
 function renderChart() {
   const etf = getFeaturedEtf();
+  const groupMeta = getCurrentGroupMeta();
   if (!etf || !etf.series.length) {
-    els.chartTitle.textContent = "1Q 종합채권(AA-이상)액티브";
+    els.chartTitle.textContent = groupMeta.featuredName;
     els.chartMeta.textContent = "";
     els.trendChart.innerHTML = "";
     return;
   }
 
-  const series = etf.series.filter((point) => point.date >= CHART_START_DATE && point.date <= state.baseDate);
+  const series = etf.series.filter(
+    (point) => point.date >= groupMeta.chartStartDate && point.date <= state.baseDate
+  );
   if (!series.length) {
-    els.chartTitle.textContent = FEATURED_ETF_NAME;
-    els.chartMeta.textContent = `${CHART_START_DATE} ~ ${state.baseDate}`;
+    els.chartTitle.textContent = groupMeta.featuredName;
+    els.chartMeta.textContent = `${groupMeta.chartStartDate} ~ ${state.baseDate}`;
     els.trendChart.innerHTML = "";
     return;
   }
@@ -583,7 +643,7 @@ function renderChart() {
   const bubbleTextY = bubbleY + 23;
 
   els.chartTitle.textContent = etf.name;
-  els.chartMeta.textContent = `${CHART_START_DATE} ~ ${state.baseDate}`;
+  els.chartMeta.textContent = `${groupMeta.chartStartDate} ~ ${state.baseDate}`;
   els.trendChart.setAttribute("viewBox", `0 0 ${width} ${height}`);
   els.trendChart.innerHTML = `
     <defs>
@@ -606,7 +666,13 @@ function renderChart() {
 }
 
 function getFeaturedEtf() {
-  return state.etfs.find((etf) => etf.name === FEATURED_ETF_NAME) || state.grouped[state.selectedEtf] || state.etfs[0] || null;
+  const groupMeta = getCurrentGroupMeta();
+  return (
+    getVisibleEtfs().find((etf) => etf.name === groupMeta.featuredName) ||
+    getVisibleEtfs().find((etf) => etf.code === state.selectedEtf) ||
+    getVisibleEtfs()[0] ||
+    null
+  );
 }
 
 function calculateMetrics(etf, baseDate, compareDate) {

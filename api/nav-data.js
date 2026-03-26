@@ -4,18 +4,25 @@ const CONCURRENCY = 5;
 const ETF_NAME_ALIASES = {
   "ACE 종합채권(AA-이상)KIS액티브": "ACE 종합채권(AA-이상)액티브"
 };
-const TARGET_ETF_NAMES = [
-  "1Q 종합채권(AA-이상)액티브",
-  "ACE 종합채권(AA-이상)액티브",
-  "PLUS 종합채권(AA-이상)액티브",
-  "RISE 종합채권(A-이상)액티브",
-  "KODEX 종합채권(AA-이상)액티브",
-  "SOL 종합채권(AA-이상)액티브",
-  "TIGER 종합채권(AA-이상)액티브",
-  "HK 종합채권(AA-이상)액티브",
-  "KIWOOM 종합채권(AA-이상)액티브",
-  "파워 종합채권(AA-이상)액티브"
-];
+const ETF_GROUPS = {
+  TOTAL_BOND: [
+    "1Q 종합채권(AA-이상)액티브",
+    "ACE 종합채권(AA-이상)액티브",
+    "PLUS 종합채권(AA-이상)액티브",
+    "RISE 종합채권(A-이상)액티브",
+    "KODEX 종합채권(AA-이상)액티브",
+    "SOL 종합채권(AA-이상)액티브",
+    "TIGER 종합채권(AA-이상)액티브",
+    "HK 종합채권(AA-이상)액티브",
+    "KIWOOM 종합채권(AA-이상)액티브",
+    "파워 종합채권(AA-이상)액티브"
+  ],
+  CREDIT_SHORT: [
+    "1Q 중단기회사채(A-이상)액티브",
+    "SOL 중단기회사채(A-이상)액티브"
+  ]
+};
+const TARGET_ETF_NAMES = [...new Set(Object.values(ETF_GROUPS).flat())];
 
 const SAMPLE_ROWS = [
   { BAS_DD: "2025-12-31", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.12", INVSTASST_NETASST_TOTAMT: "95400000000" },
@@ -23,7 +30,13 @@ const SAMPLE_ROWS = [
   { BAS_DD: "2026-03-20", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1044.21", INVSTASST_NETASST_TOTAMT: "96719830000" },
   { BAS_DD: "2025-12-31", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1018.42", INVSTASST_NETASST_TOTAMT: "109800000000" },
   { BAS_DD: "2026-01-02", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1018.66", INVSTASST_NETASST_TOTAMT: "110050000000" },
-  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1025.61", INVSTASST_NETASST_TOTAMT: "110407010000" }
+  { BAS_DD: "2026-03-20", ISU_CD: "ACE_BOND", ISU_NM: "ACE 종합채권(AA-이상)액티브", NAV: "1025.61", INVSTASST_NETASST_TOTAMT: "110407010000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "1Q_SHORT", ISU_NM: "1Q 중단기회사채(A-이상)액티브", NAV: "1012.18", INVSTASST_NETASST_TOTAMT: "41200000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "1Q_SHORT", ISU_NM: "1Q 중단기회사채(A-이상)액티브", NAV: "1012.44", INVSTASST_NETASST_TOTAMT: "41250000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "1Q_SHORT", ISU_NM: "1Q 중단기회사채(A-이상)액티브", NAV: "1015.72", INVSTASST_NETASST_TOTAMT: "42890000000" },
+  { BAS_DD: "2025-12-31", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1009.61", INVSTASST_NETASST_TOTAMT: "63300000000" },
+  { BAS_DD: "2026-01-02", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1009.88", INVSTASST_NETASST_TOTAMT: "63420000000" },
+  { BAS_DD: "2026-03-20", ISU_CD: "SOL_SHORT", ISU_NM: "SOL 중단기회사채(A-이상)액티브", NAV: "1013.05", INVSTASST_NETASST_TOTAMT: "64970000000" }
 ];
 
 module.exports = async function handler(req, res) {
