@@ -1,4 +1,5 @@
 const FIXED_START_DATE = "2025-12-01";
+const EXTRA_DATE = "2025-02-25";
 const CONCURRENCY = 5;
 const TARGET_ETF_NAMES = [
   "1Q 종합채권(AA-이상)액티브",
@@ -51,7 +52,7 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const dates = buildWeekdayRange(from, to);
+  const dates = [...new Set([...buildWeekdayRange(from, to), EXTRA_DATE])].sort();
   const rows = [];
   const failures = [];
 
