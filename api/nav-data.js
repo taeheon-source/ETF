@@ -1,6 +1,9 @@
 const FIXED_START_DATE = "2025-12-01";
 const EXTRA_DATE = "2025-02-25";
 const CONCURRENCY = 5;
+const ETF_NAME_ALIASES = {
+  "ACE 종합채권(AA-이상)KIS액티브": "ACE 종합채권(AA-이상)액티브"
+};
 const TARGET_ETF_NAMES = [
   "1Q 종합채권(AA-이상)액티브",
   "ACE 종합채권(AA-이상)액티브",
@@ -108,15 +111,23 @@ async function fetchForDate({ upstreamUrl, authKey, authHeaderName, date }) {
   const rows = Array.isArray(payload.OutBlock_1) ? payload.OutBlock_1 : [];
 
   return rows
-    .map((row) => ({
-      BAS_DD: normalizeDate(row.BAS_DD || date),
-      ISU_CD: String(row.ISU_CD || "").trim(),
-      ISU_NM: String(row.ISU_NM || "").trim(),
-      NAV: String(row.NAV || "").replaceAll(",", ""),
-      INVSTASST_NETASST_TOTAMT: String(row.INVSTASST_NETASST_TOTAMT || "").replaceAll(",", "")
-    }))
+    .map((row) => {
+      const normalizedName = normalizeEtfName(row.ISU_NM);
+      return {
+        BAS_DD: normalizeDate(row.BAS_DD || date),
+        ISU_CD: String(row.ISU_CD || "").trim(),
+        ISU_NM: normalizedName,
+        NAV: String(row.NAV || "").replaceAll(",", ""),
+        INVSTASST_NETASST_TOTAMT: String(row.INVSTASST_NETASST_TOTAMT || "").replaceAll(",", "")
+      };
+    })
     .filter((row) => TARGET_ETF_NAMES.includes(row.ISU_NM))
     .filter((row) => row.BAS_DD && row.ISU_CD && row.ISU_NM && row.NAV && row.NAV !== "-");
+}
+
+function normalizeEtfName(name) {
+  const raw = String(name || "").trim();
+  return ETF_NAME_ALIASES[raw] || raw;
 }
 
 function buildWeekdayRange(from, to) {

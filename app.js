@@ -3,6 +3,9 @@ const EXTRA_RAW_DATE = "2025-02-25";
 const FEATURED_ETF_PREFIX = "1Q ";
 const FEATURED_ETF_NAME = "1Q 종합채권(AA-이상)액티브";
 const CHART_START_DATE = "2026-01-02";
+const ETF_NAME_ALIASES = {
+  "ACE 종합채권(AA-이상)KIS액티브": "ACE 종합채권(AA-이상)액티브"
+};
 const NAV_TABLE_LABELS = {
   "1Q 종합채권(AA-이상)액티브": "1Q",
   "ACE 종합채권(AA-이상)액티브": "ACE",
@@ -208,16 +211,24 @@ function applyDataset(rows) {
 
 function normalizeRows(rows) {
   return rows
-    .map((row) => ({
-      BAS_DD: normalizeDate(row.BAS_DD),
-      ISU_CD: String(row.ISU_CD || "").trim(),
-      ISU_NM: String(row.ISU_NM || "").trim(),
-      NAV: String(row.NAV || "").replaceAll(",", ""),
-      ASSET_TOTAL: String(row.INVSTASST_NETASST_TOTAMT || row.ASSET_TOTAL || "").replaceAll(",", "")
-    }))
+    .map((row) => {
+      const normalizedName = normalizeEtfName(row.ISU_NM);
+      return {
+        BAS_DD: normalizeDate(row.BAS_DD),
+        ISU_CD: String(row.ISU_CD || "").trim(),
+        ISU_NM: normalizedName,
+        NAV: String(row.NAV || "").replaceAll(",", ""),
+        ASSET_TOTAL: String(row.INVSTASST_NETASST_TOTAMT || row.ASSET_TOTAL || "").replaceAll(",", "")
+      };
+    })
     .filter((row) => TARGET_ETF_NAMES.includes(row.ISU_NM))
     .filter((row) => row.BAS_DD && row.ISU_CD && row.ISU_NM && row.NAV && row.NAV !== "-")
     .sort((a, b) => a.BAS_DD.localeCompare(b.BAS_DD) || a.ISU_CD.localeCompare(b.ISU_CD));
+}
+
+function normalizeEtfName(name) {
+  const raw = String(name || "").trim();
+  return ETF_NAME_ALIASES[raw] || raw;
 }
 
 function buildGroupedData(rows) {
