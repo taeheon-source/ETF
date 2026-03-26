@@ -1,5 +1,4 @@
 const FIXED_START_DATE = "2025-12-01";
-const EXTRA_RAW_DATE = "2025-02-25";
 const FEATURED_ETF_PREFIX = "1Q ";
 const ETF_NAME_ALIASES = {
   "ACE 종합채권(AA-이상)KIS액티브": "ACE 종합채권(AA-이상)액티브"
@@ -9,6 +8,7 @@ const ETF_GROUPS = {
     label: "종합채권",
     featuredName: "1Q 종합채권(AA-이상)액티브",
     chartStartDate: "2026-01-02",
+    fixedCompareDate: "2025-02-25",
     etfNames: [
       "1Q 종합채권(AA-이상)액티브",
       "ACE 종합채권(AA-이상)액티브",
@@ -26,6 +26,7 @@ const ETF_GROUPS = {
     label: "중단기회사채",
     featuredName: "1Q 중단기회사채(A-이상)액티브",
     chartStartDate: "2026-01-02",
+    fixedCompareDate: "2025-05-27",
     etfNames: [
       "1Q 중단기회사채(A-이상)액티브",
       "SOL 중단기회사채(A-이상)액티브"
@@ -35,6 +36,7 @@ const ETF_GROUPS = {
     label: "단기형",
     featuredName: "1Q 단기금융채액티브",
     chartStartDate: "2026-01-02",
+    fixedCompareDate: "2023-08-03",
     etfNames: [
       "1Q 단기금융채액티브",
       "RISE 단기국공채액티브",
@@ -49,6 +51,7 @@ const ETF_GROUPS = {
     label: "단기 특은채형",
     featuredName: "1Q 단기특수은행채액티브",
     chartStartDate: "2026-01-02",
+    fixedCompareDate: "2025-11-25",
     etfNames: [
       "1Q 단기특수은행채액티브",
       "RISE 단기특수은행채액티브"
@@ -659,11 +662,9 @@ function exportRawDataCsv() {
 }
 
 function getRawDataDates() {
-  const datesDesc = [...state.availableDates].sort((a, b) => b.localeCompare(a));
-  if (!datesDesc.includes(EXTRA_RAW_DATE)) {
-    datesDesc.push(EXTRA_RAW_DATE);
-  }
-  return datesDesc;
+  return [...state.availableDates]
+    .filter((date) => date >= FIXED_START_DATE)
+    .sort((a, b) => b.localeCompare(a));
 }
 
 function getSeriesPoint(etf, date) {
@@ -774,6 +775,7 @@ function getFeaturedEtf() {
 }
 
 function calculateMetrics(etf, baseDate, compareDate) {
+  const groupMeta = getCurrentGroupMeta();
   const baseIndex = etf.series.findIndex((point) => point.date === baseDate);
   if (baseIndex === -1) {
     return makeEmptyMetrics();
@@ -785,7 +787,7 @@ function calculateMetrics(etf, baseDate, compareDate) {
   const monthReference = getMonthReference(etf.series, baseDate);
   const quarterReference = getQuarterReference(etf.series, baseDate);
   const yearReference = getYearReference(etf.series, baseDate);
-  const fixedReference = etf.series.find((point) => point.date === EXTRA_RAW_DATE);
+  const fixedReference = etf.series.find((point) => point.date === groupMeta.fixedCompareDate);
   const customReference = etf.series.find((point) => point.date === compareDate);
 
   return {
@@ -800,6 +802,7 @@ function calculateMetrics(etf, baseDate, compareDate) {
 }
 
 function calculateAssetMetrics(etf, baseDate, compareDate) {
+  const groupMeta = getCurrentGroupMeta();
   const series = state.grouped[etf.code]?.series || [];
   const basePoint = getEffectiveAssetPoint(series, baseDate);
   if (!basePoint) {
@@ -811,7 +814,7 @@ function calculateAssetMetrics(etf, baseDate, compareDate) {
   const monthReference = getEffectiveAssetReference(series, getMonthReferenceDate(series, baseDate));
   const quarterReference = getEffectiveAssetReference(series, getQuarterReferenceDate(series, baseDate));
   const yearReference = getEffectiveAssetReference(series, getYearReferenceDate(series, baseDate));
-  const fixedReference = getEffectiveAssetReference(series, EXTRA_RAW_DATE);
+  const fixedReference = getEffectiveAssetReference(series, groupMeta.fixedCompareDate);
   const customReference = getEffectiveAssetReference(series, compareDate);
 
   return {

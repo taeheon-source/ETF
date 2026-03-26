@@ -1,5 +1,4 @@
 const FIXED_START_DATE = "2025-12-01";
-const EXTRA_DATE = "2025-02-25";
 const CONCURRENCY = 5;
 const ETF_NAME_ALIASES = {
   "ACE 종합채권(AA-이상)KIS액티브": "ACE 종합채권(AA-이상)액티브"
@@ -36,6 +35,7 @@ const ETF_GROUPS = {
   ]
 };
 const TARGET_ETF_NAMES = [...new Set(Object.values(ETF_GROUPS).flat())];
+const EXTRA_DATES = ["2025-02-25", "2023-08-03", "2025-11-25", "2025-05-27"];
 
 const SAMPLE_ROWS = [
   { BAS_DD: "2025-12-31", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.12", INVSTASST_NETASST_TOTAMT: "95400000000" },
@@ -108,7 +108,7 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const dates = [...new Set([...buildWeekdayRange(from, to), EXTRA_DATE])].sort();
+  const dates = [...new Set([...buildWeekdayRange(from, to), ...EXTRA_DATES])].sort();
   const rows = [];
   const failures = [];
 
