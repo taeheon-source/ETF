@@ -187,7 +187,7 @@ const sampleDataset = [
 const state = {
   etfGroup: "TOTAL_BOND",
   baseDate: "",
-  compareDate: "",
+  compareDatesByGroup: {},
   overviewMode: "RETURNS",
   rankingMetric: "YTD",
   sortMetric: "YTD",
@@ -244,6 +244,7 @@ function setEtfGroup(groupKey) {
   state.etfGroup = groupKey;
   const featuredEtf = getFeaturedEtf();
   state.selectedEtf = featuredEtf?.code || getVisibleEtfs()[0]?.code || "";
+  ensureCompareDateForCurrentGroup();
   render();
 }
 
@@ -266,14 +267,14 @@ function bindEvents() {
 
   els.baseDateSelect.addEventListener("change", (event) => {
     state.baseDate = event.target.value;
-    if (state.compareDate >= state.baseDate) {
-      state.compareDate = getFallbackCompareDate(state.baseDate);
+    if (getCurrentCompareDate() >= state.baseDate) {
+      state.compareDatesByGroup[state.etfGroup] = getFallbackCompareDate(state.baseDate);
     }
     render();
   });
 
   els.compareDateSelect.addEventListener("change", (event) => {
-    state.compareDate = event.target.value;
+    state.compareDatesByGroup[state.etfGroup] = event.target.value;
     render();
   });
 
@@ -346,8 +347,8 @@ function applyDataset(rows) {
   state.etfs = Object.values(state.grouped);
   state.availableDates = [...new Set(state.dataset.map((row) => row.BAS_DD))].sort();
   state.baseDate = state.availableDates[state.availableDates.length - 1] || "";
-  state.compareDate = state.availableDates.find((date) => date < state.baseDate) || "";
   state.selectedEtf = state.selectedEtf && state.grouped[state.selectedEtf] ? state.selectedEtf : getFeaturedEtf()?.code || "";
+  initializeGroupCompareDates();
   renderDateOptions();
   render();
 }
@@ -396,11 +397,9 @@ function renderDateOptions() {
 
 function renderCompareDateOptions() {
   const compareDates = state.availableDates.filter((date) => date < state.baseDate);
-  if (!compareDates.includes(state.compareDate)) {
-    state.compareDate = compareDates[compareDates.length - 1] || "";
-  }
+  ensureCompareDateForCurrentGroup(compareDates);
   els.compareDateSelect.innerHTML = compareDates.map((date) => `<option value="${date}">${date}</option>`).join("");
-  els.compareDateSelect.value = state.compareDate;
+  els.compareDateSelect.value = getCurrentCompareDate();
 }
 
 function render() {
@@ -419,6 +418,32 @@ function render() {
 
 function getCurrentGroupMeta() {
   return ETF_GROUPS[state.etfGroup] || ETF_GROUPS.TOTAL_BOND;
+}
+
+function initializeGroupCompareDates() {
+  const compareDates = state.availableDates.filter((date) => date < state.baseDate);
+  const defaultCompareDate = compareDates.includes(FIXED_START_DATE)
+    ? FIXED_START_DATE
+    : compareDates[compareDates.length - 1] || "";
+
+  Object.keys(ETF_GROUPS).forEach((groupKey) => {
+    const current = state.compareDatesByGroup[groupKey];
+    state.compareDatesByGroup[groupKey] = compareDates.includes(current) ? current : defaultCompareDate;
+  });
+}
+
+function getCurrentCompareDate() {
+  return state.compareDatesByGroup[state.etfGroup] || "";
+}
+
+function ensureCompareDateForCurrentGroup(compareDates = state.availableDates.filter((date) => date < state.baseDate)) {
+  const current = getCurrentCompareDate();
+  if (compareDates.includes(current)) {
+    return;
+  }
+  state.compareDatesByGroup[state.etfGroup] = compareDates.includes(FIXED_START_DATE)
+    ? FIXED_START_DATE
+    : compareDates[compareDates.length - 1] || "";
 }
 
 function renderGroupControls() {
@@ -449,8 +474,8 @@ function renderOverviewTable() {
       etf,
       metrics:
         state.overviewMode === "ASSET"
-          ? calculateAssetMetrics(etf, state.baseDate, state.compareDate)
-          : calculateMetrics(etf, state.baseDate, state.compareDate)
+          ? calculateAssetMetrics(etf, state.baseDate, getCurrentCompareDate())
+          : calculateMetrics(etf, state.baseDate, getCurrentCompareDate())
     }))
     .sort((a, b) => safeMetricValue(b.metrics[state.sortMetric]) - safeMetricValue(a.metrics[state.sortMetric]));
 
@@ -514,7 +539,7 @@ function renderPeerRankingTable() {
 
   const peers = getVisibleEtfs().map((etf) => ({
     etf,
-    metrics: calculateMetrics(etf, state.baseDate, state.compareDate)
+    metrics: calculateMetrics(etf, state.baseDate, getCurrentCompareDate())
   }));
 
   const rankRow = {
@@ -555,7 +580,7 @@ function isFeaturedEtf(etf) {
 
 function renderRanking() {
   const ranking = getVisibleEtfs()
-    .map((etf) => ({ etf, value: calculateMetrics(etf, state.baseDate, state.compareDate)[state.rankingMetric] }))
+    .map((etf) => ({ etf, value: calculateMetrics(etf, state.baseDate, getCurrentCompareDate())[state.rankingMetric] }))
     .filter((item) => item.value !== null)
     .sort((a, b) => b.value - a.value)
     .slice(0, 5);
@@ -589,7 +614,7 @@ function renderDetailMetrics() {
     return;
   }
 
-  const metrics = calculateMetrics(etf, state.baseDate, state.compareDate);
+  const metrics = calculateMetrics(etf, state.baseDate, getCurrentCompareDate());
   const latest = etf.series.find((point) => point.date === state.baseDate);
   const cards = [
     { label: "ETF", value: etf.name, meta: etf.code },
