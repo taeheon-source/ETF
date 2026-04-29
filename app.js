@@ -509,7 +509,7 @@ function renderOverviewTable() {
             </div>
           </td>
           <td>${formatOverviewMetric(metrics["1D"])}</td>
-          <td>${formatOverviewMetric(metrics["7D"])}</td>
+          <td>${formatOverviewMetric(metrics["5D"])}</td>
           <td>${formatOverviewMetric(metrics.MTD)}</td>
           <td>${formatOverviewMetric(metrics.QTD)}</td>
           <td>${formatOverviewMetric(metrics.YTD)}</td>
@@ -548,7 +548,7 @@ function renderPeerRankingTable() {
 
   const rankRow = {
     "1D": getMetricRank(peers, featuredEtf.code, "1D"),
-    "7D": getMetricRank(peers, featuredEtf.code, "7D"),
+    "5D": getMetricRank(peers, featuredEtf.code, "5D"),
     MTD: getMetricRank(peers, featuredEtf.code, "MTD"),
     QTD: getMetricRank(peers, featuredEtf.code, "QTD"),
     YTD: getMetricRank(peers, featuredEtf.code, "YTD"),
@@ -560,7 +560,7 @@ function renderPeerRankingTable() {
     <tr>
       <td>${escapeHtml(featuredEtf.name)}</td>
       <td>${formatRankCell(rankRow["1D"])}</td>
-      <td>${formatRankCell(rankRow["7D"])}</td>
+      <td>${formatRankCell(rankRow["5D"])}</td>
       <td>${formatRankCell(rankRow.MTD)}</td>
       <td>${formatRankCell(rankRow.QTD)}</td>
       <td>${formatRankCell(rankRow.YTD)}</td>
@@ -812,7 +812,7 @@ function calculateMetrics(etf, baseDate, compareDate) {
 
   const basePoint = etf.series[baseIndex];
   const previousPoint = etf.series[baseIndex - 1];
-  const point7D = etf.series[baseIndex - 7];
+  const point5D = etf.series[baseIndex - 5];
   const monthReference = getMonthReference(etf.series, baseDate);
   const quarterReference = getQuarterReference(etf.series, baseDate);
   const yearReference = getYearReference(etf.series, baseDate);
@@ -821,7 +821,7 @@ function calculateMetrics(etf, baseDate, compareDate) {
 
   return {
     "1D": computeReturn(basePoint, previousPoint),
-    "7D": computeReturn(basePoint, point7D),
+    "5D": computeReturn(basePoint, point5D),
     MTD: computeReturn(basePoint, monthReference),
     QTD: computeReturn(basePoint, quarterReference),
     YTD: computeReturn(basePoint, yearReference),
@@ -839,7 +839,7 @@ function calculateAssetMetrics(etf, baseDate, compareDate) {
   }
 
   const previousPoint = getPreviousEffectiveAssetPoint(series, basePoint.date);
-  const point7D = getNthPreviousEffectiveAssetPoint(series, basePoint.date, 7);
+  const point5D = getNthPreviousEffectiveAssetPoint(series, basePoint.date, 5);
   const monthReference = getEffectiveAssetReference(series, getMonthReferenceDate(series, baseDate));
   const quarterReference = getEffectiveAssetReference(series, getQuarterReferenceDate(series, baseDate));
   const yearReference = getEffectiveAssetReference(series, getYearReferenceDate(series, baseDate));
@@ -848,7 +848,7 @@ function calculateAssetMetrics(etf, baseDate, compareDate) {
 
   return {
     "1D": computeAssetReturn(basePoint, previousPoint),
-    "7D": computeAssetReturn(basePoint, point7D),
+    "5D": computeAssetReturn(basePoint, point5D),
     MTD: computeAssetReturn(basePoint, monthReference),
     QTD: computeAssetReturn(basePoint, quarterReference),
     YTD: computeAssetReturn(basePoint, yearReference),
@@ -947,7 +947,7 @@ function buildXAxisLabels(series, paddingLeft, chartWidth, height, paddingBottom
 }
 
 function makeEmptyMetrics() {
-  return { "1D": null, "7D": null, MTD: null, QTD: null, YTD: null, SINCE_1Q: null, CUSTOM: null };
+  return { "1D": null, "5D": null, MTD: null, QTD: null, YTD: null, SINCE_1Q: null, CUSTOM: null };
 }
 
 function formatMetric(value) {
