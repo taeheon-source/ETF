@@ -9,7 +9,7 @@ const SEED_URL = `${PORTAL_BASE}/contents/MDC/MDI/mdiLoader/index.cmd?menuId=MDC
 
 module.exports = async function handler(req, res) {
   try {
-    // 1단계: 메인 페이지 접근해서 세션 쿠키 획득
+    // 1단계: 세션 쿠키 획득
     const seedRes = await fetch(SEED_URL, {
       method: "GET",
       headers: {
@@ -21,13 +21,12 @@ module.exports = async function handler(req, res) {
     });
 
     const rawCookies = seedRes.headers.get("set-cookie") || "";
-    // set-cookie 헤더에서 쿠키값만 추출
     const cookieStr = rawCookies
       .split(",")
       .map((c) => c.trim().split(";")[0])
       .join("; ");
 
-    // 2단계: 세션 쿠키 포함해서 데이터 요청
+    // 2단계: 데이터 요청
     const params = new URLSearchParams({
       bld: "MDCSTAT05001",
       locale: "ko_KR",
@@ -57,17 +56,25 @@ module.exports = async function handler(req, res) {
     });
 
     const text = await dataRes.text();
+    const isHtml = text.trimStart().startsWith("<");
+
+    // HTML 응답이면 로그인 페이지인지 IP 차단 페이지인지 분석
+    const hasLoginForm = isHtml && (text.includes("login") || text.includes("Login") || text.includes("로그인") || text.includes("id=") && text.includes("password"));
+    const hasIpBlock = isHtml && (text.includes("IP") || text.includes("차단") || text.includes("접근") || text.includes("block") || text.includes("deny"));
+    const pageTitle = isHtml ? (text.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] || "") : "";
+
     let json = null;
     try { json = JSON.parse(text); } catch {}
 
     res.status(200).json({
-      seedStatus: seedRes.status,
-      cookies: cookieStr,
       dataStatus: dataRes.status,
-      isHtml: text.trimStart().startsWith("<"),
+      isHtml,
+      hasLoginForm,
+      hasIpBlock,
+      pageTitle,
       rowCount: json?.output?.length ?? null,
-      firstRow: json?.output?.[0] ?? null,
-      preview: text.slice(0, 300),
+      // HTML 본문 앞부분 더 길게 확인
+      preview: text.slice(0, 1000),
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
