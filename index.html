@@ -260,8 +260,19 @@
             </main>
           </div>
 
-          <!-- PEER 분석 탭 (비어있음) -->
+          <!-- PEER 분석 탭 -->
           <div class="tab-pane" id="tab-peer">
+            <section class="group-switcher">
+              <div class="toggle-group peer-etf-tabs" role="tablist" aria-label="PEER ETF">
+                <button class="toggle-button is-active" data-peer-etf="1q">1Q 단기금융채액티브</button>
+                <button class="toggle-button" data-peer-etf="tiger">TIGER 단기채권액티브</button>
+                <button class="toggle-button" data-peer-etf="kosef">KOSEF 단기자금</button>
+                <button class="toggle-button" data-peer-etf="rise">RISE 단기국공채액티브</button>
+                <button class="toggle-button" data-peer-etf="heroes">히어로즈 단기채권ESG액티브</button>
+                <button class="toggle-button" data-peer-etf="kodex-plus">KODEX 단기채권PLUS</button>
+                <button class="toggle-button" data-peer-etf="kodex">KODEX 단기채권</button>
+              </div>
+            </section>
             <div class="peer-empty">
               <div class="peer-empty-icon">
                 <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -288,6 +299,13 @@
           document.querySelectorAll(".tab-pane").forEach((p) => p.classList.remove("is-active"));
           btn.classList.add("is-active");
           document.getElementById("tab-" + btn.dataset.tab).classList.add("is-active");
+        });
+      });
+
+      document.querySelectorAll(".peer-etf-tabs .toggle-button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".peer-etf-tabs .toggle-button").forEach((b) => b.classList.remove("is-active"));
+          btn.classList.add("is-active");
         });
       });
     </script>

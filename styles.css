@@ -294,6 +294,7 @@ select {
   border: 1px solid var(--line);
   border-radius: 18px;
   background: var(--field);
+  flex-wrap: wrap;
 }
 
 .toggle-button {
@@ -305,6 +306,7 @@ select {
   color: var(--muted);
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .toggle-button.is-active {
