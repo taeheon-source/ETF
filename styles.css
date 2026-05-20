@@ -204,6 +204,15 @@ select {
   font-size: 0.95rem;
 }
 
+.peer-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
 /* ── ── */
 .group-switcher {
   margin: 0 0 18px;

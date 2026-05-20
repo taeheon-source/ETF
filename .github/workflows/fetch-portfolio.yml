@@ -1,0 +1,38 @@
+name: ETF 구성종목 데이터 업데이트
+
+on:
+  schedule:
+    # 매주 월~금 KST 오후 6시 30분 (UTC 09:30)
+    - cron: "30 9 * * 1-5"
+  workflow_dispatch: # 수동 실행 버튼
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: pykrx 설치
+        run: pip install pykrx
+
+      - name: 구성종목 데이터 수집
+        run: python scripts/fetch_portfolio.py
+
+      - name: 변경사항 커밋 & 푸시
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/portfolio/
+          git diff --staged --quiet && echo "변경 없음" || (
+            git commit -m "포트폴리오 데이터 업데이트 $(TZ=Asia/Seoul date +'%Y-%m-%d')"
+            git push
+          )

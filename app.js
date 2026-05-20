@@ -1142,3 +1142,132 @@ function toCsvCell(value) {
   }
   return text;
 }
+
+/* ── PEER 분석 탭 ── */
+const peerState = { currentKey: "1q", cache: {} };
+
+function initPeerTab() {
+  document.querySelectorAll(".peer-etf-tabs .toggle-button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".peer-etf-tabs .toggle-button").forEach((b) => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      peerState.currentKey = btn.dataset.peerEtf;
+      loadPeerPortfolio(peerState.currentKey);
+    });
+  });
+
+  document.querySelectorAll(".nav-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.tab === "peer") {
+        loadPeerPortfolio(peerState.currentKey);
+      }
+    });
+  });
+}
+
+async function loadPeerPortfolio(key) {
+  const container = document.getElementById("peerPortfolioContainer");
+  if (!container) return;
+
+  if (peerState.cache[key]) {
+    renderPeerPortfolio(peerState.cache[key]);
+    return;
+  }
+
+  container.innerHTML = `<div class="peer-loading">데이터 불러오는 중...</div>`;
+
+  try {
+    const res = await fetch(`/data/portfolio/${key}.json`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    peerState.cache[key] = data;
+    renderPeerPortfolio(data);
+  } catch (e) {
+    container.innerHTML = `
+      <div class="peer-empty">
+        <div class="peer-empty-icon"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="17" cy="16" r="7" stroke="currentColor" stroke-width="2.5"/>
+          <circle cx="33" cy="16" r="7" stroke="currentColor" stroke-width="2.5"/>
+          <path d="M4 40c0-6 5-10 13-10s13 4 13 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M33 30c5 0 11 3 11 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        </svg></div>
+        <h2>데이터 준비 중</h2>
+        <p>구성종목 데이터가 아직 없습니다. 매일 오후 6시 30분에 자동 업데이트됩니다.</p>
+      </div>`;
+  }
+}
+
+function renderPeerPortfolio(data) {
+  const container = document.getElementById("peerPortfolioContainer");
+  if (!container) return;
+
+  const { name, date, holdings, columns } = data;
+  if (!holdings || holdings.length === 0) {
+    container.innerHTML = `<div class="peer-empty"><h2>데이터 없음</h2><p>해당 ETF의 구성종목 데이터가 없습니다.</p></div>`;
+    return;
+  }
+
+  // 컬럼 매핑: pykrx 반환 컬럼명을 한국어로
+  const colMap = {
+    "티커": "종목코드",
+    "종목명": "종목명",
+    "수량": "수량",
+    "평가금액": "평가금액(원)",
+    "구성비율": "비중(%)",
+    "COMPST_RT": "비중(%)",
+    "EVLTAMT": "평가금액(원)",
+    "ISU_SRT_CD": "종목코드",
+    "ISU_NM": "종목명",
+  };
+
+  // 표시할 컬럼 우선순위
+  const priorityCols = ["종목명", "ISU_NM", "티커", "ISU_SRT_CD", "구성비율", "COMPST_RT", "평가금액", "EVLTAMT", "수량"];
+  const availCols = (columns || Object.keys(holdings[0] || {}));
+  const displayCols = priorityCols.filter((c) => availCols.includes(c));
+  const restCols = availCols.filter((c) => !priorityCols.includes(c));
+  const finalCols = [...displayCols, ...restCols];
+
+  const formattedDate = date ? `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}` : "";
+
+  const headerHtml = finalCols
+    .map((c) => `<th>${escapeHtml(colMap[c] || c)}</th>`)
+    .join("");
+
+  const rowsHtml = holdings
+    .map((row) => {
+      const cells = finalCols.map((c) => {
+        const val = row[c] ?? "";
+        const num = parseFloat(String(val).replaceAll(",", ""));
+        if (c === "구성비율" || c === "COMPST_RT") {
+          return `<td class="metric">${isNaN(num) ? escapeHtml(val) : num.toFixed(2) + "%"}</td>`;
+        }
+        if (c === "평가금액" || c === "EVLTAMT") {
+          return `<td>${isNaN(num) ? escapeHtml(val) : Number(num).toLocaleString()}</td>`;
+        }
+        return `<td>${escapeHtml(String(val))}</td>`;
+      });
+      return `<tr>${cells.join("")}</tr>`;
+    })
+    .join("");
+
+  container.innerHTML = `
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="panel-kicker">Portfolio</p>
+          <h2>${escapeHtml(name)} 구성종목</h2>
+        </div>
+        <p class="panel-meta">${formattedDate} 기준 &nbsp;·&nbsp; 총 ${holdings.length}개 종목</p>
+      </div>
+      <div class="table-shell">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>${headerHtml}</tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>
+      </div>
+    </section>`;
+}
+
+initPeerTab();
