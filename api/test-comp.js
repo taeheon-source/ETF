@@ -1,6 +1,7 @@
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 const BASE = "https://investments.miraeasset.com";
 const DETAIL = `${BASE}/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7272580002`;
+const LIST_URL = `${BASE}/tigeretf/ko/product/search/detail/pdfListAjax.ajax`;
 
 function parseRows(html) {
   const rows = [...html.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)];
@@ -8,11 +9,16 @@ function parseRows(html) {
     const cells = [...r[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)]
       .map(m => m[1].replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim());
     return cells.filter(c => c.length > 0);
-  }).filter(r => r.length > 0);
+  }).filter(r => r.length >= 4);
 }
 
-async function ajax(url, body, cookieStr) {
-  const r = await fetch(url, {
+function getTotalCount(html) {
+  const m = html.match(/data-tot-cnt="(\d+)"/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+async function fetchPage(pageIndex, cookieStr) {
+  const r = await fetch(LIST_URL, {
     method: "POST",
     headers: {
       "User-Agent": UA,
@@ -22,33 +28,35 @@ async function ajax(url, body, cookieStr) {
       "Origin": BASE,
       Cookie: cookieStr,
     },
-    body,
+    body: `ksdFund=KR7272580002&pageIndex=${pageIndex}&firstIndex=${(pageIndex - 1) * 10}`,
   });
-  const text = await r.text();
-  return { status: r.status, text };
+  return r.text();
 }
 
 module.exports = async function handler(req, res) {
+  // 세션 쿠키 획득
   const seedRes = await fetch(DETAIL, { headers: { "User-Agent": UA } });
   const cookieStr = (seedRes.headers.get("set-cookie") || "")
     .split(",").map(c => c.trim().split(";")[0]).join("; ");
 
-  const body = "ksdFund=KR7272580002&pageIndex=1&pageUnit=200&firstIndex=0";
+  // 1페이지로 총 건수 파악
+  const page1Html = await fetchPage(1, cookieStr);
+  const totalCount = getTotalCount(page1Html);
+  const totalPages = Math.ceil(totalCount / 10);
 
-  const [pdfRes, pdfListRes] = await Promise.all([
-    ajax(`${BASE}/tigeretf/ko/product/search/detail/pdf.ajax`, body, cookieStr),
-    ajax(`${BASE}/tigeretf/ko/product/search/detail/pdfListAjax.ajax`, body, cookieStr),
-  ]);
+  // 나머지 페이지 병렬 요청
+  const restHtmls = totalPages > 1
+    ? await Promise.all(Array.from({ length: totalPages - 1 }, (_, i) => fetchPage(i + 2, cookieStr)))
+    : [];
 
-  const pdfRows = parseRows(pdfRes.text);
-  const pdfListRows = parseRows(pdfListRes.text);
-
-  // pdf.ajax tbody 주변 컨텍스트 확인
-  const tbodyIdx = pdfRes.text.indexOf("<tbody");
-  const tbodyContext = tbodyIdx > -1 ? pdfRes.text.slice(tbodyIdx, tbodyIdx + 500) : "tbody 없음";
+  const allRows = [page1Html, ...restHtmls].flatMap(parseRows);
 
   res.status(200).json({
-    pdf: { status: pdfRes.status, htmlLength: pdfRes.text.length, rowCount: pdfRows.length, sample: pdfRows.slice(0, 3), tbodyContext },
-    pdfList: { status: pdfListRes.status, htmlLength: pdfListRes.text.length, rowCount: pdfListRows.length, sample: pdfListRows.slice(0, 3), preview: pdfListRes.text.slice(0, 500) },
+    totalCount,
+    totalPages,
+    rowCount: allRows.length,
+    headers: ["종목코드", "종목명", "수량(주)", "평가금액(원)", "비중(%)", "1주 수익률"],
+    sample: allRows.slice(0, 5),
+    all: allRows,
   });
 };
