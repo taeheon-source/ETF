@@ -40,199 +40,269 @@
       </header>
       <p class="hero-footnote">*Source: KRX API</p>
 
-      <section class="group-switcher">
-        <div class="toggle-group" role="tablist" aria-label="ETF group">
-          <button id="groupTotalBondButton" class="toggle-button is-active" type="button">종합채권</button>
-          <button id="groupCreditShortButton" class="toggle-button" type="button">중단기회사채</button>
-          <button id="groupShortTermButton" class="toggle-button" type="button">단기형</button>
-          <button id="groupSpecialBankButton" class="toggle-button" type="button">단기 특은채형</button>
+      <div class="app-layout">
+
+        <!-- 좌측 사이드바 -->
+        <nav class="sidebar">
+          <div class="sidebar-label">Menu</div>
+          <button class="nav-tab is-active" data-tab="returns">
+            <svg class="nav-tab-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 14l4-5 3 3 4-6 3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 17h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            수익률
+          </button>
+          <button class="nav-tab" data-tab="peer">
+            <svg class="nav-tab-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="7" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/>
+              <circle cx="14" cy="7" r="3" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M2 17c0-2.5 2-4 5-4s5 1.5 5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M14 13c2 0 4 1 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            PEER 분석
+          </button>
+        </nav>
+
+        <!-- 탭 콘텐츠 -->
+        <div class="tab-content">
+
+          <!-- 수익률 탭 -->
+          <div class="tab-pane is-active" id="tab-returns">
+            <section class="group-switcher">
+              <div class="toggle-group" role="tablist" aria-label="ETF group">
+                <button id="groupTotalBondButton" class="toggle-button is-active" type="button">종합채권</button>
+                <button id="groupCreditShortButton" class="toggle-button" type="button">중단기회사채</button>
+                <button id="groupShortTermButton" class="toggle-button" type="button">단기형</button>
+                <button id="groupSpecialBankButton" class="toggle-button" type="button">단기 특은채형</button>
+              </div>
+            </section>
+
+            <main class="dashboard">
+              <section class="panel controls-panel">
+                <div class="panel-heading">
+                  <p class="panel-kicker">Controls</p>
+                </div>
+                <div class="controls-grid controls-grid-compact">
+                  <label class="control">
+                    <span>기준일</span>
+                    <select id="baseDateSelect"></select>
+                  </label>
+                  <label class="control">
+                    <span>비교일</span>
+                    <select id="compareDateSelect"></select>
+                  </label>
+                  <div class="control control-action">
+                    <span>&nbsp;</span>
+                    <button id="refreshButton" class="action-button" type="button">KRX 데이터 새로고침</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-heading">
+                  <div>
+                    <p class="panel-kicker">Overview</p>
+                    <h2 id="overviewTitle">ETF 수익률 현황</h2>
+                  </div>
+                  <div class="table-toolbar">
+                    <div class="toggle-group" role="tablist" aria-label="Overview mode">
+                      <button id="overviewReturnsButton" class="toggle-button is-active" type="button">ETF 수익률 현황</button>
+                      <button id="overviewAssetButton" class="toggle-button" type="button">순자산총액</button>
+                    </div>
+                    <label class="inline-control">
+                      <span>정렬 기준</span>
+                      <select id="sortMetricSelect">
+                        <option value="YTD" selected>YTD</option>
+                        <option value="1D">1D</option>
+                        <option value="5D">5D</option>
+                        <option value="MTD">MTD</option>
+                        <option value="QTD">QTD</option>
+                        <option value="SINCE_1Q">1Q설정이후</option>
+                        <option value="CUSTOM">사용자 지정</option>
+                      </select>
+                    </label>
+                  </div>
+                </div>
+                <div class="table-shell">
+                  <div class="table-wrap">
+                    <table class="returns-table">
+                      <colgroup>
+                        <col class="col-etf" />
+                        <col class="col-metric" />
+                        <col class="col-metric" />
+                        <col class="col-metric" />
+                        <col class="col-metric" />
+                        <col class="col-metric" />
+                        <col class="col-metric" />
+                        <col class="col-metric" />
+                        <col class="col-asset" />
+                      </colgroup>
+                      <thead>
+                        <tr>
+                          <th>ETF명</th>
+                          <th>1D</th>
+                          <th>5D</th>
+                          <th>MTD</th>
+                          <th>QTD</th>
+                          <th>YTD</th>
+                          <th>1Q설정이후</th>
+                          <th id="compareHeader">비교일 대비</th>
+                          <th>순자산총액</th>
+                        </tr>
+                      </thead>
+                      <tbody id="returnsTableBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div id="peerRankingSection" class="overview-subsection">
+                  <div class="section-heading">
+                    <h2>PEER 순위</h2>
+                  </div>
+                  <div class="table-shell">
+                    <div class="table-wrap">
+                      <table class="returns-table">
+                        <colgroup>
+                          <col class="col-etf" />
+                          <col class="col-metric" />
+                          <col class="col-metric" />
+                          <col class="col-metric" />
+                          <col class="col-metric" />
+                          <col class="col-metric" />
+                          <col class="col-metric" />
+                          <col class="col-metric" />
+                          <col class="col-asset" />
+                        </colgroup>
+                        <thead>
+                          <tr>
+                            <th>PEER 순위</th>
+                            <th>1D</th>
+                            <th>5D</th>
+                            <th>MTD</th>
+                            <th>QTD</th>
+                            <th>YTD</th>
+                            <th>1Q설정이후</th>
+                            <th>비교일 대비</th>
+                            <th>순자산총액</th>
+                          </tr>
+                        </thead>
+                        <tbody id="peerRankTableBody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="split">
+                <section class="panel chart-panel">
+                  <div class="panel-heading">
+                    <div>
+                      <p class="panel-kicker">Selected ETF</p>
+                      <h2 id="chartTitle">선택 ETF NAV 추이</h2>
+                    </div>
+                    <p class="panel-meta" id="chartMeta"></p>
+                  </div>
+                  <div class="detail-metrics" id="detailMetrics"></div>
+                  <div class="chart-shell">
+                    <div class="chart-wrap">
+                      <svg id="trendChart" viewBox="0 0 640 280" role="img" aria-label="ETF NAV 추이 차트"></svg>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="panel ranking-panel">
+                  <div class="panel-heading">
+                    <div>
+                      <p class="panel-kicker">Ranking</p>
+                      <h2>ETF 수익률 랭킹</h2>
+                    </div>
+                    <label class="inline-control">
+                      <span>기준</span>
+                      <select id="rankingMetricSelect">
+                        <option value="1D">1D</option>
+                        <option value="5D">5D</option>
+                        <option value="MTD">MTD</option>
+                        <option value="QTD">QTD</option>
+                        <option value="YTD" selected>YTD</option>
+                        <option value="CUSTOM">사용자 지정</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="ranking-list" id="rankingList"></div>
+                </section>
+              </section>
+
+              <section class="panel">
+                <div class="panel-heading">
+                  <div>
+                    <p class="panel-kicker">Raw Data</p>
+                    <h2 id="rawDataTitle">ETF NAV 원본 데이터</h2>
+                  </div>
+                  <div class="raw-toolbar">
+                    <div class="toggle-group" role="tablist" aria-label="Raw data metric">
+                      <button id="rawNavButton" class="toggle-button is-active" type="button">NAV</button>
+                      <button id="rawAssetButton" class="toggle-button" type="button">순자산총액</button>
+                    </div>
+                    <button id="exportCsvButton" class="action-button action-button-secondary" type="button">
+                      CSV 다운로드
+                    </button>
+                  </div>
+                </div>
+                <div class="table-shell">
+                  <div class="table-wrap">
+                    <table class="nav-table">
+                      <thead id="navTableHead"></thead>
+                      <tbody id="navTableBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </section>
+            </main>
+          </div>
+
+          <!-- PEER 분석 탭 -->
+          <div class="tab-pane" id="tab-peer">
+            <section class="group-switcher">
+              <div class="toggle-group peer-etf-tabs" role="tablist" aria-label="PEER ETF">
+                <button class="toggle-button" data-peer-etf="1q">1Q 단기금융채액티브</button>
+                <button class="toggle-button is-active" data-peer-etf="tiger">TIGER 단기채권액티브</button>
+                <button class="toggle-button" data-peer-etf="kosef">KOSEF 단기자금</button>
+                <button class="toggle-button" data-peer-etf="rise">RISE 단기국공채액티브</button>
+                <button class="toggle-button" data-peer-etf="heroes">히어로즈 단기채권ESG액티브</button>
+                <button class="toggle-button" data-peer-etf="kodex-plus">KODEX 단기채권PLUS</button>
+                <button class="toggle-button" data-peer-etf="kodex">KODEX 단기채권</button>
+              </div>
+            </section>
+            <div id="peerPortfolioContainer">
+              <div class="peer-empty">
+                <div class="peer-empty-icon">
+                  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="17" cy="16" r="7" stroke="currentColor" stroke-width="2.5"/>
+                    <circle cx="33" cy="16" r="7" stroke="currentColor" stroke-width="2.5"/>
+                    <path d="M4 40c0-6 5-10 13-10s13 4 13 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M33 30c5 0 11 3 11 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <h2>데이터 준비 중</h2>
+                <p>구성종목 데이터가 아직 없습니다. 매일 오후 6시 30분에 자동 업데이트됩니다.</p>
+              </div>
+            </div>
+          </div>
+
         </div>
-      </section>
-
-      <main class="dashboard">
-        <section class="panel controls-panel">
-          <div class="panel-heading">
-            <p class="panel-kicker">Controls</p>
-          </div>
-
-          <div class="controls-grid controls-grid-compact">
-            <label class="control">
-              <span>기준일</span>
-              <select id="baseDateSelect"></select>
-            </label>
-            <label class="control">
-              <span>비교일</span>
-              <select id="compareDateSelect"></select>
-            </label>
-            <div class="control control-action">
-              <span>&nbsp;</span>
-              <button id="refreshButton" class="action-button" type="button">KRX 데이터 새로고침</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-heading">
-            <div>
-              <p class="panel-kicker">Overview</p>
-              <h2 id="overviewTitle">ETF 수익률 현황</h2>
-            </div>
-            <div class="table-toolbar">
-              <div class="toggle-group" role="tablist" aria-label="Overview mode">
-                <button id="overviewReturnsButton" class="toggle-button is-active" type="button">ETF 수익률 현황</button>
-                <button id="overviewAssetButton" class="toggle-button" type="button">순자산총액</button>
-              </div>
-              <label class="inline-control">
-                <span>정렬 기준</span>
-                <select id="sortMetricSelect">
-                  <option value="YTD" selected>YTD</option>
-                  <option value="1D">1D</option>
-                  <option value="5D">5D</option>
-                  <option value="MTD">MTD</option>
-                  <option value="QTD">QTD</option>
-                  <option value="SINCE_1Q">1Q설정이후</option>
-                  <option value="CUSTOM">사용자 지정</option>
-                </select>
-              </label>
-            </div>
-          </div>
-          <div class="table-shell">
-            <div class="table-wrap">
-              <table class="returns-table">
-                <colgroup>
-                  <col class="col-etf" />
-                  <col class="col-metric" />
-                  <col class="col-metric" />
-                  <col class="col-metric" />
-                  <col class="col-metric" />
-                  <col class="col-metric" />
-                  <col class="col-metric" />
-                  <col class="col-metric" />
-                  <col class="col-asset" />
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th>ETF명</th>
-                    <th>1D</th>
-                    <th>5D</th>
-                    <th>MTD</th>
-                    <th>QTD</th>
-                    <th>YTD</th>
-                    <th>1Q설정이후</th>
-                    <th id="compareHeader">비교일 대비</th>
-                    <th>순자산총액</th>
-                  </tr>
-                </thead>
-                <tbody id="returnsTableBody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div id="peerRankingSection" class="overview-subsection">
-            <div class="section-heading">
-              <h2>PEER 순위</h2>
-            </div>
-            <div class="table-shell">
-              <div class="table-wrap">
-                <table class="returns-table">
-                  <colgroup>
-                    <col class="col-etf" />
-                    <col class="col-metric" />
-                    <col class="col-metric" />
-                    <col class="col-metric" />
-                    <col class="col-metric" />
-                    <col class="col-metric" />
-                    <col class="col-metric" />
-                    <col class="col-metric" />
-                    <col class="col-asset" />
-                  </colgroup>
-                  <thead>
-                    <tr>
-                      <th>PEER 순위</th>
-                      <th>1D</th>
-                      <th>5D</th>
-                      <th>MTD</th>
-                      <th>QTD</th>
-                      <th>YTD</th>
-                      <th>1Q설정이후</th>
-                      <th>비교일 대비</th>
-                      <th>순자산총액</th>
-                    </tr>
-                  </thead>
-                  <tbody id="peerRankTableBody"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="split">
-          <section class="panel chart-panel">
-            <div class="panel-heading">
-              <div>
-                <p class="panel-kicker">Selected ETF</p>
-                <h2 id="chartTitle">선택 ETF NAV 추이</h2>
-              </div>
-              <p class="panel-meta" id="chartMeta"></p>
-            </div>
-            <div class="detail-metrics" id="detailMetrics"></div>
-            <div class="chart-shell">
-              <div class="chart-wrap">
-                <svg id="trendChart" viewBox="0 0 640 280" role="img" aria-label="ETF NAV 추이 차트"></svg>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel ranking-panel">
-            <div class="panel-heading">
-              <div>
-                <p class="panel-kicker">Ranking</p>
-                <h2>ETF 수익률 랭킹</h2>
-              </div>
-              <label class="inline-control">
-                <span>기준</span>
-                <select id="rankingMetricSelect">
-                  <option value="1D">1D</option>
-                  <option value="5D">5D</option>
-                  <option value="MTD">MTD</option>
-                  <option value="QTD">QTD</option>
-                  <option value="YTD" selected>YTD</option>
-                  <option value="CUSTOM">사용자 지정</option>
-                </select>
-              </label>
-            </div>
-            <div class="ranking-list" id="rankingList"></div>
-          </section>
-        </section>
-
-        <section class="panel">
-          <div class="panel-heading">
-            <div>
-              <p class="panel-kicker">Raw Data</p>
-              <h2 id="rawDataTitle">ETF NAV 원본 데이터</h2>
-            </div>
-            <div class="raw-toolbar">
-              <div class="toggle-group" role="tablist" aria-label="Raw data metric">
-                <button id="rawNavButton" class="toggle-button is-active" type="button">NAV</button>
-                <button id="rawAssetButton" class="toggle-button" type="button">순자산총액</button>
-              </div>
-              <button id="exportCsvButton" class="action-button action-button-secondary" type="button">
-                CSV 다운로드
-              </button>
-            </div>
-          </div>
-          <div class="table-shell">
-            <div class="table-wrap">
-              <table class="nav-table">
-                <thead id="navTableHead"></thead>
-                <tbody id="navTableBody"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-      </main>
+      </div>
     </div>
 
     <script src="./app.js"></script>
+    <script>
+      document.querySelectorAll(".nav-tab").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".nav-tab").forEach((b) => b.classList.remove("is-active"));
+          document.querySelectorAll(".tab-pane").forEach((p) => p.classList.remove("is-active"));
+          btn.classList.add("is-active");
+          document.getElementById("tab-" + btn.dataset.tab).classList.add("is-active");
+        });
+      });
+    </script>
   </body>
 </html>
