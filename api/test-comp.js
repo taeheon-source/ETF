@@ -1,80 +1,63 @@
-// 각 ETF 운용사 사이트에서 구성종목 API 접근 가능 여부 테스트
+// 운용사 사이트 HTML에서 포트폴리오 API 엔드포인트 추출
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
-async function probe(name, url, opts = {}) {
+async function extractApiHints(name, url, referer) {
   try {
     const r = await fetch(url, {
-      method: opts.method || "GET",
-      headers: {
-        "User-Agent": UA,
-        "Accept": "application/json, text/html, */*",
-        "Accept-Language": "ko-KR,ko;q=0.9",
-        ...(opts.referer ? { Referer: opts.referer } : {}),
-        ...(opts.headers || {}),
-      },
-      ...(opts.body ? { body: opts.body } : {}),
+      headers: { "User-Agent": UA, "Accept": "text/html", "Referer": referer || url },
     });
     const text = await r.text();
-    const isJson = text.trimStart().startsWith("{") || text.trimStart().startsWith("[");
-    let json = null;
-    try { json = JSON.parse(text); } catch {}
-    return {
-      name,
-      status: r.status,
-      isJson,
-      preview: text.slice(0, 200),
-      rowCount: Array.isArray(json) ? json.length : (json?.list?.length ?? json?.data?.length ?? json?.items?.length ?? null),
-    };
-  } catch (e) {
-    return { name, status: "err", error: e.message };
+
+    // JS 파일 URL 추출
+    const scriptUrls = [...text.matchAll(/src=["']([^"']*\.js[^"']*)/g)].map(m => m[1]).filter(u => !u.includes("google") && !u.includes("analytics"));
+
+    // 인라인 JS에서 API 패턴 추출
+    const apiPatterns = [
+      ...text.matchAll(/["'`]([^"'`]*(?:portfolio|component|composition|holdings|pdf|etf)[^"'`]*\.(?:json|do|action|api)[^"'`]*)/gi)
+    ].map(m => m[1]).filter(u => u.length < 200);
+
+    const fetchPatterns = [
+      ...text.matchAll(/fetch\s*\(\s*["'`]([^"'`]+)/g)
+    ].map(m => m[1]);
+
+    const ajaxPatterns = [
+      ...text.matchAll(/url\s*:\s*["'`]([^"'`]+(?:portfolio|component|pdf|composition)[^"'`]*)/gi)
+    ].map(m => m[1]);
+
+    return { name, status: r.status, scriptCount: scriptUrls.length, scriptUrls: scriptUrls.slice(0, 5), apiPatterns, fetchPatterns, ajaxPatterns };
+  } catch(e) {
+    return { name, error: e.message };
+  }
+}
+
+async function fetchScript(name, url, baseUrl) {
+  try {
+    const r = await fetch(url.startsWith("http") ? url : baseUrl + url, {
+      headers: { "User-Agent": UA },
+    });
+    const text = await r.text();
+    // 포트폴리오 관련 API 패턴 찾기
+    const patterns = [
+      ...text.matchAll(/["'`]([^"'`]*(?:portfolio|component|holdings|pdf|etf\/api)[^"'`]{0,100})/gi)
+    ].map(m => m[1]).filter(u => u.includes("/") && u.length < 200);
+    return { name, patterns: [...new Set(patterns)].slice(0, 20) };
+  } catch(e) {
+    return { name, error: e.message };
   }
 }
 
 module.exports = async function handler(req, res) {
-  const results = await Promise.all([
-    // ── 삼성자산운용 KODEX ──
-    probe("kodex-main", "https://www.kodex.com/product_etf_details.do?fId=2AAIG&menuId=201", {
-      referer: "https://www.kodex.com",
-    }),
-    probe("kodex-portfolio-api", "https://www.kodex.com/etf_portfolio_deposit_file.do?isinCd=KR7153130000", {
-      referer: "https://www.kodex.com",
-    }),
-    probe("samsungfund-portfolio", "https://www.samsungfund.com/etf/product/view.do?id=2AAIG", {
-      referer: "https://www.samsungfund.com",
-    }),
-
-    // ── 미래에셋 TIGER ──
-    probe("tiger-detail", "https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7272580002", {
-      referer: "https://investments.miraeasset.com",
-    }),
-    probe("tiger-portfolio-ajax", "https://investments.miraeasset.com/tigeretf/ko/product/search/portfolio.do?ksdFund=KR7272580002", {
-      referer: "https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7272580002",
-    }),
-    probe("tiger-api-portfolio", "https://investments.miraeasset.com/api/tigeretf/portfolio?ksdFund=KR7272580002", {
-      referer: "https://investments.miraeasset.com",
-    }),
-
-    // ── KB자산운용 RISE ──
-    probe("kbam-rise", "https://www.kbam.co.kr/etf/view?id=272560", {
-      referer: "https://www.kbam.co.kr",
-    }),
-    probe("kbam-portfolio", "https://www.kbam.co.kr/etf/portfolio?id=272560", {
-      referer: "https://www.kbam.co.kr",
-    }),
-
-    // ── 한국투자신탁 1Q ──
-    probe("1qetf-main", "https://www.1qetf.com/etf/view?code=463290", {
-      referer: "https://www.1qetf.com",
-    }),
-
-    // ── 키움 KOSEF / 히어로즈 ──
-    probe("kiwoom-kosef", "https://www.kiwoomasset.com/etf/product/detail?isinCd=KR7130730003", {
-      referer: "https://www.kiwoomasset.com",
-    }),
-    probe("kiwoom-heroes", "https://www.kiwoomasset.com/heroes/etf/product/detail?isinCd=KR7419890007", {
-      referer: "https://www.kiwoomasset.com",
-    }),
+  const [kodex, tiger, etf1q] = await Promise.all([
+    extractApiHints("kodex", "https://www.kodex.com/product_etf_details.do?fId=2AAIG&menuId=201", "https://www.kodex.com"),
+    extractApiHints("tiger", "https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7272580002", "https://investments.miraeasset.com"),
+    extractApiHints("1qetf", "https://www.1qetf.com/etf/view?code=463290", "https://www.1qetf.com"),
   ]);
 
-  res.status(200).json(results);
+  // KODEX JS 파일에서 추가 탐색
+  const kodexBase = "https://www.kodex.com";
+  const jsResults = await Promise.all(
+    (kodex.scriptUrls || []).slice(0, 3).map(u => fetchScript("kodex-js", u, kodexBase))
+  );
+
+  res.status(200).json({ kodex, tiger, etf1q, kodexJsPatterns: jsResults });
 };
