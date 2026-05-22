@@ -1,82 +1,80 @@
-const ISIN = "KR7272580002";
-const ISU_CD2 = "272580";
-const ETF_NAME = "TIGER 단기채권액티브";
-const TRD_DD = "20250519";
+// 각 ETF 운용사 사이트에서 구성종목 API 접근 가능 여부 테스트
+const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
-const PORTAL_BASE = "https://data.krx.co.kr";
-const DATA_URL = `${PORTAL_BASE}/comm/bldAttendant/getJsonData.cmd`;
-const SEED_URL = `${PORTAL_BASE}/contents/MDC/MDI/mdiLoader/index.cmd?menuId=MDC0301`;
-
-module.exports = async function handler(req, res) {
+async function probe(name, url, opts = {}) {
   try {
-    // 1단계: 세션 쿠키 획득
-    const seedRes = await fetch(SEED_URL, {
-      method: "GET",
+    const r = await fetch(url, {
+      method: opts.method || "GET",
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": UA,
+        "Accept": "application/json, text/html, */*",
         "Accept-Language": "ko-KR,ko;q=0.9",
+        ...(opts.referer ? { Referer: opts.referer } : {}),
+        ...(opts.headers || {}),
       },
-      redirect: "follow",
+      ...(opts.body ? { body: opts.body } : {}),
     });
-
-    const rawCookies = seedRes.headers.get("set-cookie") || "";
-    const cookieStr = rawCookies
-      .split(",")
-      .map((c) => c.trim().split(";")[0])
-      .join("; ");
-
-    // 2단계: 데이터 요청
-    const params = new URLSearchParams({
-      bld: "MDCSTAT05001",
-      locale: "ko_KR",
-      tboxisuCd_finder_secuprodisu2_3: ISU_CD2,
-      isuCd: ISIN,
-      isuCd2: ISU_CD2,
-      codeNmisuCd_finder_secuprodisu2_3: ETF_NAME,
-      trdDd: TRD_DD,
-      share: "1",
-      money: "1",
-      csvxls_isNo: "false",
-    });
-
-    const dataRes = await fetch(DATA_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Referer": SEED_URL,
-        "Origin": PORTAL_BASE,
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/javascript, */*; q=0.01",
-        "Accept-Language": "ko-KR,ko;q=0.9",
-        "X-Requested-With": "XMLHttpRequest",
-        ...(cookieStr ? { Cookie: cookieStr } : {}),
-      },
-      body: params.toString(),
-    });
-
-    const text = await dataRes.text();
-    const isHtml = text.trimStart().startsWith("<");
-
-    // HTML 응답이면 로그인 페이지인지 IP 차단 페이지인지 분석
-    const hasLoginForm = isHtml && (text.includes("login") || text.includes("Login") || text.includes("로그인") || text.includes("id=") && text.includes("password"));
-    const hasIpBlock = isHtml && (text.includes("IP") || text.includes("차단") || text.includes("접근") || text.includes("block") || text.includes("deny"));
-    const pageTitle = isHtml ? (text.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1] || "") : "";
-
+    const text = await r.text();
+    const isJson = text.trimStart().startsWith("{") || text.trimStart().startsWith("[");
     let json = null;
     try { json = JSON.parse(text); } catch {}
-
-    res.status(200).json({
-      dataStatus: dataRes.status,
-      isHtml,
-      hasLoginForm,
-      hasIpBlock,
-      pageTitle,
-      rowCount: json?.output?.length ?? null,
-      // HTML 본문 앞부분 더 길게 확인
-      preview: text.slice(0, 1000),
-    });
+    return {
+      name,
+      status: r.status,
+      isJson,
+      preview: text.slice(0, 200),
+      rowCount: Array.isArray(json) ? json.length : (json?.list?.length ?? json?.data?.length ?? json?.items?.length ?? null),
+    };
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    return { name, status: "err", error: e.message };
   }
+}
+
+module.exports = async function handler(req, res) {
+  const results = await Promise.all([
+    // ── 삼성자산운용 KODEX ──
+    probe("kodex-main", "https://www.kodex.com/product_etf_details.do?fId=2AAIG&menuId=201", {
+      referer: "https://www.kodex.com",
+    }),
+    probe("kodex-portfolio-api", "https://www.kodex.com/etf_portfolio_deposit_file.do?isinCd=KR7153130000", {
+      referer: "https://www.kodex.com",
+    }),
+    probe("samsungfund-portfolio", "https://www.samsungfund.com/etf/product/view.do?id=2AAIG", {
+      referer: "https://www.samsungfund.com",
+    }),
+
+    // ── 미래에셋 TIGER ──
+    probe("tiger-detail", "https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7272580002", {
+      referer: "https://investments.miraeasset.com",
+    }),
+    probe("tiger-portfolio-ajax", "https://investments.miraeasset.com/tigeretf/ko/product/search/portfolio.do?ksdFund=KR7272580002", {
+      referer: "https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7272580002",
+    }),
+    probe("tiger-api-portfolio", "https://investments.miraeasset.com/api/tigeretf/portfolio?ksdFund=KR7272580002", {
+      referer: "https://investments.miraeasset.com",
+    }),
+
+    // ── KB자산운용 RISE ──
+    probe("kbam-rise", "https://www.kbam.co.kr/etf/view?id=272560", {
+      referer: "https://www.kbam.co.kr",
+    }),
+    probe("kbam-portfolio", "https://www.kbam.co.kr/etf/portfolio?id=272560", {
+      referer: "https://www.kbam.co.kr",
+    }),
+
+    // ── 한국투자신탁 1Q ──
+    probe("1qetf-main", "https://www.1qetf.com/etf/view?code=463290", {
+      referer: "https://www.1qetf.com",
+    }),
+
+    // ── 키움 KOSEF / 히어로즈 ──
+    probe("kiwoom-kosef", "https://www.kiwoomasset.com/etf/product/detail?isinCd=KR7130730003", {
+      referer: "https://www.kiwoomasset.com",
+    }),
+    probe("kiwoom-heroes", "https://www.kiwoomasset.com/heroes/etf/product/detail?isinCd=KR7419890007", {
+      referer: "https://www.kiwoomasset.com",
+    }),
+  ]);
+
+  res.status(200).json(results);
 };
