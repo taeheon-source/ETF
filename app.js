@@ -1258,3 +1258,8 @@ function renderPeerPortfolio(data) {
 }
 
 initPeerTab();
+
+// PEER 분석 탭이 이미 활성화된 상태로 페이지가 로드된 경우 자동 로드
+if (document.getElementById("tab-peer")?.classList.contains("is-active")) {
+  loadPeerPortfolio(peerState.currentKey);
+}
