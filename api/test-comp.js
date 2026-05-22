@@ -1,48 +1,74 @@
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
-const BASE_TIGER = "https://investments.miraeasset.com";
+const BASE = "https://investments.miraeasset.com";
+const FUND = "KR7272580002";
 
-async function get(url, referer) {
-  const r = await fetch(url, { headers: { "User-Agent": UA, Referer: referer || url, "Accept-Language": "ko-KR,ko;q=0.9" } });
-  return { status: r.status, text: await r.text() };
+async function get(url, headers = {}) {
+  const r = await fetch(url, { headers: { "User-Agent": UA, "Accept-Language": "ko-KR,ko;q=0.9", ...headers } });
+  const text = await r.text();
+  const cookies = r.headers.get("set-cookie") || "";
+  return { status: r.status, text, cookies };
 }
 
 module.exports = async function handler(req, res) {
-  const detailUrl = `${BASE_TIGER}/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7272580002`;
-  const { text: html } = await get(detailUrl, BASE_TIGER);
+  const detailUrl = `${BASE}/tigeretf/ko/product/search/detail/index.do?ksdFund=${FUND}`;
 
-  // 1. HTML 안에 포트폴리오 관련 데이터 직접 탐색
-  const tableMatch = html.match(/구성종목[\s\S]{0,5000}/);
-  const pdfMatch = html.match(/pdf[\s\S]{0,2000}/i);
+  // 1. 상세 페이지 접근 → jsessionid 추출
+  const { text: html, cookies } = await get(detailUrl, { Referer: BASE });
+  const sessionMatch = html.match(/jsessionid=([A-Za-z0-9+/=._-]+)/);
+  const jsessionid = sessionMatch ? sessionMatch[1] : "";
+  const cookieStr = cookies.split(",").map(c => c.trim().split(";")[0]).join("; ");
 
-  // 2. HTML에서 모든 .do URL 추출
-  const doUrls = [...new Set([...html.matchAll(/["'](\/tigeretf[^"'\s]*\.do[^"'\s]*)/g)].map(m => m[1]))];
+  // 2. HTML <script> 태그에서 JSON 데이터 블롭 탐색
+  const scriptBlocks = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)]
+    .map(m => m[1])
+    .filter(s => s.includes("{") && s.length > 100);
 
-  // 3. JS 파일 목록 추출해서 product/detail 관련 JS 파일 스캔
-  const scriptUrls = [...html.matchAll(/src=["']([^"']*\.js[^"'?#]*)/g)]
-    .map(m => m[1].startsWith("http") ? m[1] : BASE_TIGER + m[1])
-    .filter(u => !u.includes("jquery") && !u.includes("swiper") && !u.includes("masonry") && !u.includes("sns") && !u.includes("tracking"));
+  const jsonBlobs = scriptBlocks
+    .map(s => {
+      const m = s.match(/\{[\s\S]{50,}/);
+      return m ? m[0].slice(0, 300) : null;
+    })
+    .filter(Boolean)
+    .slice(0, 5);
 
-  // 4. 나머지 JS 파일 전체 스캔 - .do URL 패턴
-  const jsScans = await Promise.allSettled(
-    scriptUrls.map(async (url) => {
-      const { text } = await get(url, BASE_TIGER);
-      const doHits = [...new Set([...text.matchAll(/["'`](\/tigeretf[^"'`\s]{5,200})/g)].map(m => m[1]))]
-        .filter(u => /portfolio|pdf|component|deposit|holding|composition|search\/detail/i.test(u));
-      const allDos = [...new Set([...text.matchAll(/["'`](\/tigeretf\/ko[^"'`\s]{5,150}\.do[^"'`\s]*)/g)].map(m => m[1]))];
-      return { url: url.replace(BASE_TIGER, ""), doHits, allDos: allDos.slice(0, 10) };
+  // 3. jsessionid 포함해서 AJAX 후보 엔드포인트 시도
+  const sessionSuffix = jsessionid ? `;jsessionid=${jsessionid}` : "";
+  const ajaxCandidates = [
+    `/tigeretf/ko/product/search/detail/portfolioList.do${sessionSuffix}?ksdFund=${FUND}`,
+    `/tigeretf/ko/product/search/detail/pdfList.do${sessionSuffix}?ksdFund=${FUND}`,
+    `/tigeretf/ko/product/search/detail/componentList.do${sessionSuffix}?ksdFund=${FUND}`,
+    `/tigeretf/ko/product/pdf/portfolioList.do${sessionSuffix}?ksdFund=${FUND}`,
+    `/tigeretf/ko/product/search/detail/etfPdfList.do${sessionSuffix}?ksdFund=${FUND}`,
+    `/tigeretf/ko/product/search/detail/holdingList.do${sessionSuffix}?ksdFund=${FUND}`,
+    `/tigeretf/ko/product/search/detail/fundHolding.do${sessionSuffix}?ksdFund=${FUND}`,
+    `/tigeretf/ko/product/search/detail/etfPortfolio.do${sessionSuffix}?ksdFund=${FUND}`,
+  ];
+
+  const ajaxResults = await Promise.all(
+    ajaxCandidates.map(async path => {
+      try {
+        const r = await fetch(BASE + path, {
+          headers: { "User-Agent": UA, Referer: detailUrl, "X-Requested-With": "XMLHttpRequest", ...(cookieStr ? { Cookie: cookieStr } : {}) }
+        });
+        const text = await r.text();
+        const isJson = text.trimStart().startsWith("{") || text.trimStart().startsWith("[");
+        return { path: path.replace(sessionSuffix, ""), status: r.status, isJson, preview: text.slice(0, 150) };
+      } catch(e) {
+        return { path, error: e.message };
+      }
     })
   );
 
-  const jsHits = jsScans
-    .filter(r => r.status === "fulfilled" && (r.value.doHits.length > 0 || r.value.allDos.length > 0))
-    .map(r => r.value);
+  // 4. HTML에서 fund 관련 데이터 테이블 패턴 탐색
+  const tableSection = html.indexOf("구성종목");
+  const tableContext = tableSection > -1 ? html.slice(tableSection, tableSection + 2000) : null;
 
   res.status(200).json({
-    htmlLength: html.length,
-    hasPortfolioText: html.includes("구성종목") || html.includes("portfolio"),
-    tablePreview: tableMatch ? tableMatch[0].slice(0, 500) : null,
-    doUrlsInHtml: doUrls.slice(0, 30),
-    scannedJsFiles: scriptUrls.length,
-    jsHits,
+    jsessionid: jsessionid || "없음",
+    cookieStr,
+    jsonBlobCount: jsonBlobs.length,
+    jsonBlobPreviews: jsonBlobs,
+    ajaxResults,
+    tableContext: tableContext ? tableContext.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").slice(0, 500) : null,
   });
 };
