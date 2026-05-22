@@ -15,7 +15,6 @@ module.exports = async function handler(req, res) {
     .filter(c => c.includes("="))
     .join("; ");
 
-  // GET 방식으로 Tab 프로브 (이전 테스트에서 POST → 405, GET → 400 확인됨)
   async function get(label, url) {
     const r = await fetch(url, {
       method: "GET",
@@ -30,27 +29,29 @@ module.exports = async function handler(req, res) {
     });
     const text = await r.text();
     const isJson = text.trimStart().startsWith("{") || text.trimStart().startsWith("[");
+    // HTML이면 테이블/목록 행 수 추출
+    const tableRows = (text.match(/<tr/gi) || []).length;
     return {
       label,
       status: r.status,
       contentType: r.headers.get("content-type"),
       isJson,
-      preview: text.slice(0, 500),
+      tableRows,
       size: text.length,
+      preview: text.slice(0, 400),
     };
   }
 
   const results = await Promise.all([
-    // Tab4 (구성종목) - prodNo 쿼리스트링
-    get("Tab4 ?prodNo=4460",    `${BASE}/prod/finder/productViewFormTab4Jquery?prodNo=${PROD_NO}`),
-    // Tab1~3 비교 (응답 형식 확인)
-    get("Tab3 ?prodNo=4460",    `${BASE}/prod/finder/productViewFormTab3Jquery?prodNo=${PROD_NO}`),
-    get("Tab2 ?prodNo=4460",    `${BASE}/prod/finder/productViewFormTab2Jquery?prodNo=${PROD_NO}`),
-    get("Tab1 ?prodNo=4460",    `${BASE}/prod/finder/productViewFormTab1Jquery?prodNo=${PROD_NO}`),
-    // prodNo 없이 (400 원인 확인)
-    get("Tab4 no param",        `${BASE}/prod/finder/productViewFormTab4Jquery`),
-    // id= 파라미터도 시도
-    get("Tab4 ?id=4460",        `${BASE}/prod/finder/productViewFormTab4Jquery?id=${PROD_NO}`),
+    // 핵심: GET + prodNo 쿼리스트링 (이전 테스트: POST→405, GET no param→400)
+    get("Tab4 ?prodNo=4460",                      `${BASE}/prod/finder/productViewFormTab4Jquery?prodNo=${PROD_NO}`),
+    get("Tab4 ?searchFlag=viewtab4",              `${BASE}/prod/finder/productViewFormTab4Jquery?searchFlag=viewtab4`),
+    get("Tab4 ?prodNo&searchFlag",                `${BASE}/prod/finder/productViewFormTab4Jquery?prodNo=${PROD_NO}&searchFlag=viewtab4`),
+    // 전체 페이지에 탭 내용 포함 여부
+    get("FullPage ?searchFlag=viewtab4",          `${BASE}/prod/finderDetail/${PROD_NO}?searchFlag=viewtab4`),
+    // Tab1~3 비교
+    get("Tab3 ?prodNo=4460",                      `${BASE}/prod/finder/productViewFormTab3Jquery?prodNo=${PROD_NO}`),
+    get("Tab1 ?prodNo=4460",                      `${BASE}/prod/finder/productViewFormTab1Jquery?prodNo=${PROD_NO}`),
   ]);
 
   res.status(200).json({ cookieStr, results });
