@@ -1207,42 +1207,29 @@ function renderPeerPortfolio(data) {
     return;
   }
 
-  // 컬럼 매핑: pykrx 반환 컬럼명을 한국어로
-  const colMap = {
-    "티커": "종목코드",
-    "종목명": "종목명",
-    "수량": "수량",
-    "평가금액": "평가금액(원)",
-    "구성비율": "비중(%)",
-    "COMPST_RT": "비중(%)",
-    "EVLTAMT": "평가금액(원)",
-    "ISU_SRT_CD": "종목코드",
-    "ISU_NM": "종목명",
-  };
-
-  // 표시할 컬럼 우선순위
-  const priorityCols = ["종목명", "ISU_NM", "티커", "ISU_SRT_CD", "구성비율", "COMPST_RT", "평가금액", "EVLTAMT", "수량"];
-  const availCols = (columns || Object.keys(holdings[0] || {}));
-  const displayCols = priorityCols.filter((c) => availCols.includes(c));
-  const restCols = availCols.filter((c) => !priorityCols.includes(c));
-  const finalCols = [...displayCols, ...restCols];
+  // pykrx get_etf_portfolio_deposit_file 반환: 티커(index), 계약수, 금액, 비중
+  const colMap = { "티커": "종목코드", "계약수": "계약수", "금액": "금액(원)", "비중": "비중(%)" };
+  const priorityCols = ["티커", "계약수", "금액", "비중"];
+  const availCols = columns || Object.keys(holdings[0] || {});
+  const finalCols = [
+    ...priorityCols.filter((c) => availCols.includes(c)),
+    ...availCols.filter((c) => !priorityCols.includes(c)),
+  ];
 
   const formattedDate = date ? `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}` : "";
 
-  const headerHtml = finalCols
-    .map((c) => `<th>${escapeHtml(colMap[c] || c)}</th>`)
-    .join("");
+  const headerHtml = finalCols.map((c) => `<th>${escapeHtml(colMap[c] || c)}</th>`).join("");
 
   const rowsHtml = holdings
     .map((row) => {
       const cells = finalCols.map((c) => {
         const val = row[c] ?? "";
         const num = parseFloat(String(val).replaceAll(",", ""));
-        if (c === "구성비율" || c === "COMPST_RT") {
-          return `<td class="metric">${isNaN(num) ? escapeHtml(val) : num.toFixed(2) + "%"}</td>`;
+        if (c === "비중") {
+          return `<td class="metric">${isNaN(num) ? escapeHtml(String(val)) : num.toFixed(2) + "%"}</td>`;
         }
-        if (c === "평가금액" || c === "EVLTAMT") {
-          return `<td>${isNaN(num) ? escapeHtml(val) : Number(num).toLocaleString()}</td>`;
+        if (c === "금액") {
+          return `<td>${isNaN(num) ? escapeHtml(String(val)) : Number(num).toLocaleString()}</td>`;
         }
         return `<td>${escapeHtml(String(val))}</td>`;
       });

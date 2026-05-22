@@ -26,6 +26,9 @@ jobs:
 
       - name: 구성종목 데이터 수집
         run: python scripts/fetch_portfolio.py
+        env:
+          KRX_ID: ${{ secrets.KRX_ID }}
+          KRX_PW: ${{ secrets.KRX_PW }}
 
       - name: 변경사항 커밋 & 푸시
         run: |
