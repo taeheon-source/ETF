@@ -1,47 +1,46 @@
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 const BASE = "https://www.samsungfund.com";
 
-async function get(url, headers = {}) {
+async function getJson(url, referer) {
   const r = await fetch(url, {
-    headers: { "User-Agent": UA, "Accept": "application/json, text/html, */*", ...headers },
+    headers: {
+      "User-Agent": UA,
+      "Referer": referer || `${BASE}/`,
+      "Accept": "application/json, text/plain, */*",
+      "X-Requested-With": "XMLHttpRequest",
+    },
   });
   const text = await r.text();
-  const isJson = text.trimStart().startsWith("{") || text.trimStart().startsWith("[");
   let json = null;
   try { json = JSON.parse(text); } catch {}
-  return { status: r.status, isJson, text, json };
+  return { status: r.status, json, preview: text.slice(0, 200) };
 }
 
 module.exports = async function handler(req, res) {
-  // 1) 삼성펀드 ETF 목록 API로 단기채권 관련 상품 ID 탐색
-  const listRes = await get(`${BASE}/api/v1/kodex/product/list.do`);
-  const listRes2 = await get(`${BASE}/api/v1/kodex/products.do`);
-  const listRes3 = await get(`${BASE}/api/v1/kodex/etf/list.do`);
+  // 1) 2ETF48.do의 pdf 키 확인 (구성종목)
+  const r48 = await getJson(
+    `${BASE}/api/v1/kodex/product/2ETF48.do`,
+    `${BASE}/etf/product/view.do?id=2ETF48`
+  );
 
-  // 2) 알려진 2ETF48.do가 어떤 JSON 구조를 반환하는지 확인
-  const productRes = await get(`${BASE}/api/v1/kodex/product/2ETF48.do`, {
-    "Referer": `${BASE}/etf/product/view.do?id=2ETF48`,
-    "X-Requested-With": "XMLHttpRequest",
-  });
+  // 2) Samsung fund ETF 목록 HTML에서 단기채권PLUS ID 추출
+  const listHtml = await fetch(`${BASE}/etf/product/list.do`, {
+    headers: { "User-Agent": UA, "Accept": "text/html" },
+  }).then(r => r.text());
+
+  // id="2ETFxx" 패턴 추출
+  const ids = [...listHtml.matchAll(/id=([A-Z0-9]{6})/g)].map(m => m[1]);
+  const uniqueIds = [...new Set(ids)];
+
+  // 3) pdf 키 구조 샘플
+  const pdf = r48.json?.pdf;
+  const pdfSample = Array.isArray(pdf) ? pdf.slice(0, 2) : pdf;
 
   res.status(200).json({
-    listDo: {
-      status: listRes.status, isJson: listRes.isJson,
-      preview: listRes.text.slice(0, 300),
-      keys: listRes.json && !Array.isArray(listRes.json) ? Object.keys(listRes.json) : null,
-    },
-    productsDo: {
-      status: listRes2.status, isJson: listRes2.isJson,
-      preview: listRes2.text.slice(0, 300),
-    },
-    etfListDo: {
-      status: listRes3.status, isJson: listRes3.isJson,
-      preview: listRes3.text.slice(0, 300),
-    },
-    product2ETF48: {
-      status: productRes.status, isJson: productRes.isJson,
-      preview: productRes.text.slice(0, 600),
-      keys: productRes.json && !Array.isArray(productRes.json) ? Object.keys(productRes.json) : null,
-    },
+    etf48_pdf_type: Array.isArray(pdf) ? "array" : typeof pdf,
+    etf48_pdf_count: Array.isArray(pdf) ? pdf.length : null,
+    etf48_pdf_sample: pdfSample,
+    etf48_all_keys: r48.json ? Object.keys(r48.json) : null,
+    list_page_ids: uniqueIds.slice(0, 30),
   });
 };
