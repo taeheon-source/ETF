@@ -1146,10 +1146,11 @@ function toCsvCell(value) {
 /* ── PEER 분석 탭 ── */
 const peerState = { currentKey: "tiger", cache: {} };
 
-// TIGER는 실시간 API, 나머지는 준비 중
 const PEER_API = {
-  "1q":    "/api/portfolio-1q",
-  "tiger": "/api/portfolio-tiger",
+  "1q":         "/api/portfolio-1q",
+  "tiger":      "/api/portfolio-tiger",
+  "kodex-plus": "/api/portfolio-kodex?ticker=476050",
+  "kodex":      "/api/portfolio-kodex?ticker=152380",
 };
 
 function initPeerTab() {
