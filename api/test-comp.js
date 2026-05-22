@@ -1,46 +1,32 @@
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 const BASE = "https://www.samsungfund.com";
 
-async function getJson(url, referer) {
-  const r = await fetch(url, {
-    headers: {
-      "User-Agent": UA,
-      "Referer": referer || `${BASE}/`,
-      "Accept": "application/json, text/plain, */*",
-      "X-Requested-With": "XMLHttpRequest",
-    },
-  });
-  const text = await r.text();
-  let json = null;
-  try { json = JSON.parse(text); } catch {}
-  return { status: r.status, json, preview: text.slice(0, 200) };
-}
-
 module.exports = async function handler(req, res) {
-  // 1) 2ETF48.do의 pdf 키 확인 (구성종목)
-  const r48 = await getJson(
-    `${BASE}/api/v1/kodex/product/2ETF48.do`,
-    `${BASE}/etf/product/view.do?id=2ETF48`
-  );
-
-  // 2) Samsung fund ETF 목록 HTML에서 단기채권PLUS ID 추출
-  const listHtml = await fetch(`${BASE}/etf/product/list.do`, {
-    headers: { "User-Agent": UA, "Accept": "text/html" },
+  // ETF 목록 HTML에서 2ETF 패턴 상품 ID 추출
+  const html = await fetch(`${BASE}/etf/product/list.do`, {
+    headers: { "User-Agent": UA, "Accept": "text/html,application/xhtml+xml" },
   }).then(r => r.text());
 
-  // id="2ETFxx" 패턴 추출
-  const ids = [...listHtml.matchAll(/id=([A-Z0-9]{6})/g)].map(m => m[1]);
-  const uniqueIds = [...new Set(ids)];
+  // 가능한 모든 2ETF 패턴 추출
+  const ids = [...new Set([
+    ...[...html.matchAll(/['"](2ETF[A-Z0-9]{2})['"]/g)].map(m => m[1]),
+    ...[...html.matchAll(/id=(2ETF[A-Z0-9]{2})/g)].map(m => m[1]),
+    ...[...html.matchAll(/fId=(2ETF[A-Z0-9]{2})/g)].map(m => m[1]),
+    ...[...html.matchAll(/data-id="(2ETF[A-Z0-9]{2})"/g)].map(m => m[1]),
+  ])];
 
-  // 3) pdf 키 구조 샘플
-  const pdf = r48.json?.pdf;
-  const pdfSample = Array.isArray(pdf) ? pdf.slice(0, 2) : pdf;
+  // 476050 (KODEX 단기채권PLUS 티커) 관련 텍스트 주변 컨텍스트
+  const idx476 = html.indexOf("476050");
+  const ctx476 = idx476 >= 0 ? html.slice(Math.max(0, idx476 - 100), idx476 + 200) : "not found";
+
+  // 단기채권 관련 텍스트 주변
+  const idx단기 = html.indexOf("단기채권PLUS");
+  const ctx단기 = idx단기 >= 0 ? html.slice(Math.max(0, idx단기 - 100), idx단기 + 300) : "not found";
 
   res.status(200).json({
-    etf48_pdf_type: Array.isArray(pdf) ? "array" : typeof pdf,
-    etf48_pdf_count: Array.isArray(pdf) ? pdf.length : null,
-    etf48_pdf_sample: pdfSample,
-    etf48_all_keys: r48.json ? Object.keys(r48.json) : null,
-    list_page_ids: uniqueIds.slice(0, 30),
+    etf_ids_found: ids,
+    ctx_476050: ctx476,
+    ctx_단기채권PLUS: ctx단기,
+    html_length: html.length,
   });
 };
