@@ -1147,7 +1147,10 @@ function toCsvCell(value) {
 const peerState = { currentKey: "tiger", cache: {} };
 
 // TIGER는 실시간 API, 나머지는 준비 중
-const PEER_API = { tiger: "/api/portfolio-tiger" };
+const PEER_API = {
+  "1q":    "/api/portfolio-1q",
+  "tiger": "/api/portfolio-tiger",
+};
 
 function initPeerTab() {
   document.querySelectorAll(".peer-etf-tabs .toggle-button").forEach((btn) => {
