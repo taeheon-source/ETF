@@ -1144,7 +1144,10 @@ function toCsvCell(value) {
 }
 
 /* ── PEER 분석 탭 ── */
-const peerState = { currentKey: "1q", cache: {} };
+const peerState = { currentKey: "tiger", cache: {} };
+
+// TIGER는 실시간 API, 나머지는 준비 중
+const PEER_API = { tiger: "/api/portfolio-tiger" };
 
 function initPeerTab() {
   document.querySelectorAll(".peer-etf-tabs .toggle-button").forEach((btn) => {
@@ -1174,15 +1177,8 @@ async function loadPeerPortfolio(key) {
     return;
   }
 
-  container.innerHTML = `<div class="peer-loading">데이터 불러오는 중...</div>`;
-
-  try {
-    const res = await fetch(`/data/portfolio/${key}.json`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    peerState.cache[key] = data;
-    renderPeerPortfolio(data);
-  } catch (e) {
+  const apiUrl = PEER_API[key];
+  if (!apiUrl) {
     container.innerHTML = `
       <div class="peer-empty">
         <div class="peer-empty-icon"><svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1191,9 +1187,22 @@ async function loadPeerPortfolio(key) {
           <path d="M4 40c0-6 5-10 13-10s13 4 13 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
           <path d="M33 30c5 0 11 3 11 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
         </svg></div>
-        <h2>데이터 준비 중</h2>
-        <p>구성종목 데이터가 아직 없습니다. 매일 오후 6시 30분에 자동 업데이트됩니다.</p>
+        <h2>준비 중</h2>
+        <p>해당 ETF의 구성종목 데이터는 준비 중입니다.</p>
       </div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="peer-loading">구성종목 불러오는 중...</div>`;
+
+  try {
+    const res = await fetch(apiUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    peerState.cache[key] = data;
+    renderPeerPortfolio(data);
+  } catch (e) {
+    container.innerHTML = `<div class="peer-empty"><h2>오류</h2><p>데이터를 불러올 수 없습니다: ${escapeHtml(e.message)}</p></div>`;
   }
 }
 
@@ -1201,39 +1210,30 @@ function renderPeerPortfolio(data) {
   const container = document.getElementById("peerPortfolioContainer");
   if (!container) return;
 
-  const { name, date, holdings, columns } = data;
+  const { name, updatedAt, holdings, headers } = data;
   if (!holdings || holdings.length === 0) {
     container.innerHTML = `<div class="peer-empty"><h2>데이터 없음</h2><p>해당 ETF의 구성종목 데이터가 없습니다.</p></div>`;
     return;
   }
 
-  // pykrx get_etf_portfolio_deposit_file 반환: 티커(index), 계약수, 금액, 비중
-  const colMap = { "티커": "종목코드", "계약수": "계약수", "금액": "금액(원)", "비중": "비중(%)" };
-  const priorityCols = ["티커", "계약수", "금액", "비중"];
-  const availCols = columns || Object.keys(holdings[0] || {});
-  const finalCols = [
-    ...priorityCols.filter((c) => availCols.includes(c)),
-    ...availCols.filter((c) => !priorityCols.includes(c)),
-  ];
-
-  const formattedDate = date ? `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}` : "";
-
-  const headerHtml = finalCols.map((c) => `<th>${escapeHtml(colMap[c] || c)}</th>`).join("");
+  const dateStr = updatedAt ? updatedAt.slice(0, 10) : "";
+  const headerHtml = (headers || ["종목코드", "종목명", "수량(주)", "평가금액(원)", "비중(%)"])
+    .map((h) => `<th>${escapeHtml(h)}</th>`).join("");
 
   const rowsHtml = holdings
     .map((row) => {
-      const cells = finalCols.map((c) => {
-        const val = row[c] ?? "";
-        const num = parseFloat(String(val).replaceAll(",", ""));
-        if (c === "비중") {
-          return `<td class="metric">${isNaN(num) ? escapeHtml(String(val)) : num.toFixed(2) + "%"}</td>`;
-        }
-        if (c === "금액") {
-          return `<td>${isNaN(num) ? escapeHtml(String(val)) : Number(num).toLocaleString()}</td>`;
-        }
-        return `<td>${escapeHtml(String(val))}</td>`;
-      });
-      return `<tr>${cells.join("")}</tr>`;
+      const cells = [
+        escapeHtml(row.code || "-"),
+        escapeHtml(row.name || "-"),
+        escapeHtml(row.quantity || "-"),
+        escapeHtml(row.value || "-"),
+        (() => {
+          const w = parseFloat(String(row.weight || "").replaceAll(",", ""));
+          const cls = isNaN(w) ? "" : w >= 0 ? " class=\"metric positive\"" : " class=\"metric negative\"";
+          return `<td${cls}>${isNaN(w) ? escapeHtml(String(row.weight || "-")) : w.toFixed(2) + "%"}</td>`;
+        })(),
+      ];
+      return `<tr><td>${cells[0]}</td><td>${cells[1]}</td><td>${cells[2]}</td><td>${cells[3]}</td>${cells[4]}</tr>`;
     })
     .join("");
 
@@ -1244,7 +1244,7 @@ function renderPeerPortfolio(data) {
           <p class="panel-kicker">Portfolio</p>
           <h2>${escapeHtml(name)} 구성종목</h2>
         </div>
-        <p class="panel-meta">${formattedDate} 기준 &nbsp;·&nbsp; 총 ${holdings.length}개 종목</p>
+        <p class="panel-meta">${escapeHtml(dateStr)} 기준 &nbsp;·&nbsp; 총 ${holdings.length}개 종목</p>
       </div>
       <div class="table-shell">
         <div class="table-wrap">
