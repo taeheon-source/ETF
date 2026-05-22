@@ -19,14 +19,21 @@ async function probe(label, url, opts = {}) {
     const isJson = text.trimStart().startsWith("{") || text.trimStart().startsWith("[");
     let json = null;
     try { json = JSON.parse(text); } catch {}
+
+    // 구성종목 배열 찾기
+    const listKey = json ? Object.keys(json).find(k => Array.isArray(json[k]) && json[k].length > 0) : null;
+    const sampleRow = listKey ? json[listKey][0] : null;
+
     return {
       label,
       status: r.status,
       contentType: r.headers.get("content-type"),
       isJson,
-      preview: text.slice(0, 400),
-      keys: json && !Array.isArray(json) ? Object.keys(json) : null,
-      rowCount: json?.list?.length ?? json?.data?.length ?? json?.result?.length ?? (Array.isArray(json) ? json.length : null),
+      preview: text.slice(0, 500),
+      topKeys: json && !Array.isArray(json) ? Object.keys(json) : null,
+      listKey,
+      rowCount: listKey ? json[listKey].length : (Array.isArray(json) ? json.length : null),
+      sampleRow,
     };
   } catch (e) {
     return { label, error: e.message };
@@ -37,21 +44,13 @@ module.exports = async function handler(req, res) {
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, ".");
 
   const results = await Promise.all([
-    // Main product data endpoint
-    probe("2ETF48.do GET", `${BASE}/etf/product/2ETF48.do`),
-    probe("2ETF48.do with date", `${BASE}/etf/product/2ETF48.do?gijunYMD=${today}`),
+    // 확인된 URL
+    probe("2ETF48.do", `${BASE}/api/v1/kodex/product/2ETF48.do`),
+    probe("2ETF48.do?date", `${BASE}/api/v1/kodex/product/2ETF48.do?gijunYMD=${today}`),
 
-    // Alternative paths
-    probe("api/2ETF48.do", `${BASE}/api/etf/product/2ETF48.do`),
-    probe("etf/2ETF48.do", `${BASE}/etf/2ETF48.do`),
-
-    // Try with different Accept header
-    probe("2ETF48.do json accept", `${BASE}/etf/product/2ETF48.do`, {
-      headers: { "Accept": "application/json" },
-    }),
-
-    // KODEX 단기채권PLUS - need to find its id
-    probe("2ETF4G.do GET", `${BASE}/etf/product/2ETF4G.do`),
+    // KODEX 단기채권PLUS - id 추정
+    probe("2ETF4G.do", `${BASE}/api/v1/kodex/product/2ETF4G.do`),
+    probe("2ETF4H.do", `${BASE}/api/v1/kodex/product/2ETF4H.do`),
   ]);
 
   res.status(200).json(results);
