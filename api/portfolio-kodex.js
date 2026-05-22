@@ -3,7 +3,7 @@ const BASE = "https://www.samsungfund.com";
 
 const PRODUCTS = {
   "152380": { id: "2ETF48", name: "KODEX 단기채권" },
-  // "476050": { id: "2ETF??", name: "KODEX 단기채권PLUS" }, // ID 확인 필요
+  "476050": { id: "2ETF35", name: "KODEX 단기채권PLUS" },
 };
 
 const SKIP_CODES = new Set(["CASH00000001", "KRD010010001"]);
