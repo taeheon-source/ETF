@@ -2,49 +2,57 @@ const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 const BASE = "https://investments.miraeasset.com";
 const DETAIL = `${BASE}/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7272580002`;
 
+function parseTdValues(html) {
+  return [...html.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)]
+    .map(m => m[1].replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim())
+    .filter(v => v.length > 0);
+}
+
+function parseRows(html) {
+  // tbody 안의 tr들 파싱
+  const tbodyMatch = html.match(/<tbody[^>]*>([\s\S]*?)<\/tbody>/);
+  if (!tbodyMatch) return [];
+  const rows = [...tbodyMatch[1].matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)];
+  return rows.map(r => parseTdValues(r[1])).filter(r => r.length > 0);
+}
+
 module.exports = async function handler(req, res) {
-  // 1단계: 상세 페이지에서 세션 쿠키 획득
-  const seedRes = await fetch(DETAIL, {
-    headers: { "User-Agent": UA, "Accept-Language": "ko-KR,ko;q=0.9" },
+  // 세션 쿠키 획득
+  const seedRes = await fetch(DETAIL, { headers: { "User-Agent": UA } });
+  const cookieStr = (seedRes.headers.get("set-cookie") || "")
+    .split(",").map(c => c.trim().split(";")[0]).join("; ");
+
+  // pdf.ajax 호출
+  const r = await fetch(`${BASE}/tigeretf/ko/product/search/detail/pdf.ajax`, {
+    method: "POST",
+    headers: {
+      "User-Agent": UA,
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      "X-Requested-With": "XMLHttpRequest",
+      "Referer": DETAIL,
+      "Origin": BASE,
+      Cookie: cookieStr,
+    },
+    body: "ksdFund=KR7272580002&pageIndex=1&pageUnit=200",
   });
-  const rawCookies = seedRes.headers.get("set-cookie") || "";
-  const cookieStr = rawCookies.split(",").map(c => c.trim().split(";")[0]).join("; ");
 
-  // 2단계: pdf.ajax 호출 (파라미터 조합별로 시도)
-  const candidates = [
-    { url: `${BASE}/tigeretf/ko/product/search/detail/pdf.ajax`, body: "ksdFund=KR7272580002" },
-    { url: `${BASE}/tigeretf/ko/product/search/detail/pdf.ajax`, body: "ksdFund=KR7272580002&pageIndex=1&pageUnit=100" },
-    { url: `${BASE}/tigeretf/ko/product/search/detail/pdf.ajax?ksdFund=KR7272580002`, body: "" },
-  ];
+  const html = await r.text();
+  const rows = parseRows(html);
 
-  const results = await Promise.all(candidates.map(async ({ url, body }, i) => {
-    const r = await fetch(url, {
-      method: "POST",
-      headers: {
-        "User-Agent": UA,
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "X-Requested-With": "XMLHttpRequest",
-        "Referer": DETAIL,
-        "Origin": BASE,
-        "Accept": "application/json, text/javascript, */*; q=0.01",
-        "Accept-Language": "ko-KR,ko;q=0.9",
-        ...(cookieStr ? { Cookie: cookieStr } : {}),
-      },
-      body,
-    });
-    const text = await r.text();
-    const isJson = text.trimStart().startsWith("{") || text.trimStart().startsWith("[");
-    let json = null;
-    try { json = JSON.parse(text); } catch {}
-    return {
-      i,
-      status: r.status,
-      isJson,
-      preview: text.slice(0, 300),
-      rowCount: json?.list?.length ?? json?.data?.length ?? json?.items?.length ?? (Array.isArray(json) ? json.length : null),
-      keys: json ? Object.keys(json) : null,
-    };
-  }));
+  // 테이블 헤더도 추출
+  const thMatch = html.match(/<thead[^>]*>([\s\S]*?)<\/thead>/);
+  const headers = thMatch
+    ? [...thMatch[1].matchAll(/<th[^>]*>([\s\S]*?)<\/th>/g)]
+        .map(m => m[1].replace(/<[^>]+>/g, "").trim()).filter(Boolean)
+    : [];
 
-  res.status(200).json({ cookieStr, results });
+  res.status(200).json({
+    status: r.status,
+    htmlLength: html.length,
+    headers,
+    rowCount: rows.length,
+    sample: rows.slice(0, 5),
+    // 전체 데이터 확인용
+    all: rows,
+  });
 };
