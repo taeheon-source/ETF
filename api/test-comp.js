@@ -1,37 +1,31 @@
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
-const PAGE_URL = "https://www.samsungfund.com/etf/product/view.do?id=2ETF48";
 const BASE = "https://www.samsungfund.com";
+const REFERER = `${BASE}/etf/product/view.do?id=2ETF48`;
 
 module.exports = async function handler(req, res) {
-  const pageRes = await fetch(PAGE_URL, {
-    headers: { "User-Agent": UA, "Accept-Language": "ko-KR,ko;q=0.9", Referer: BASE },
+  const jsRes = await fetch(`${BASE}/assets/js/product.js`, {
+    headers: { "User-Agent": UA, Referer: REFERER },
   });
-  const html = await pageRes.text();
+  const js = await jsRes.text();
 
-  // JS 파일 목록
-  const scripts = [...html.matchAll(/src=["']([^"']*\.js[^"'?#]*)/g)]
-    .map(m => m[1].startsWith("http") ? m[1] : BASE + m[1])
-    .filter(u => !u.includes("google") && !u.includes("analytics") && !u.includes("kakao") && !u.includes("jquery"));
+  const fetchCalls = [...js.matchAll(/fetch\s*\(\s*["'`]([^"'`\n]+)/g)].map(m => m[1]);
+  const ajaxCalls = [...js.matchAll(/\$\.(?:ajax|get|post)\s*\(\s*["'`]([^"'`\n]+)/g)].map(m => m[1]);
+  const apiUrls = [...new Set([...js.matchAll(/["'`](\/[^"'`\s\n]{5,150})/g)].map(m => m[1]))].filter(u =>
+    /api|ajax|portfolio|pdf|component|holding|product|etf/i.test(u)
+  );
 
-  // 인라인 스크립트에서 API 패턴
-  const inlineScripts = [...html.matchAll(/<script(?![^>]*src)[^>]*>([\s\S]*?)<\/script>/g)]
-    .map(m => m[1].trim()).filter(s => s.length > 30);
-
-  const fetchCalls = inlineScripts.flatMap(s => [...s.matchAll(/fetch\s*\(\s*["'`]([^"'`\n]+)/g)].map(m => m[1]));
-  const ajaxCalls = inlineScripts.flatMap(s => [...s.matchAll(/\$\.(?:ajax|get|post)\s*\(\s*["'`]([^"'`\n]+)/g)].map(m => m[1]));
-  const doUrls = [...new Set([...html.matchAll(/["'](\/etf\/[^"'\s]*\.do[^"'\s]*)/g)].map(m => m[1]))];
-  const apiUrls = [...new Set([...html.matchAll(/["'](\/[^"'\s]*(?:api|ajax|portfolio|pdf|component|holding)[^"'\s]*)/gi)].map(m => m[1]))];
+  // portfolio/pdf 관련 컨텍스트
+  const pdfIdx = js.toLowerCase().indexOf("portfolio");
+  const pdfIdx2 = js.toLowerCase().indexOf("pdf");
+  const compIdx = js.toLowerCase().indexOf("component");
 
   res.status(200).json({
-    status: pageRes.status,
-    htmlLength: html.length,
-    hasPortfolioText: html.includes("구성종목") || html.includes("PDF"),
-    scripts: scripts.slice(0, 8),
+    jsLength: js.length,
     fetchCalls,
     ajaxCalls,
-    doUrls: doUrls.slice(0, 20),
-    apiUrls,
-    inlineScriptCount: inlineScripts.length,
-    inlinePreview: inlineScripts.slice(0, 3).map(s => s.slice(0, 200)),
+    apiUrls: apiUrls.slice(0, 30),
+    pdfContext: pdfIdx > -1 ? js.slice(Math.max(0, pdfIdx - 50), pdfIdx + 300) : null,
+    pdf2Context: pdfIdx2 > -1 ? js.slice(Math.max(0, pdfIdx2 - 50), pdfIdx2 + 300) : null,
+    compContext: compIdx > -1 ? js.slice(Math.max(0, compIdx - 50), compIdx + 300) : null,
   });
 };
