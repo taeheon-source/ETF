@@ -15,10 +15,12 @@ password as a Vercel environment variable and redeploy:
 
 The password lives only in Vercel, never in this repository. There is no
 username. A successful login sets an HttpOnly session cookie signed with the
-password, so changing the password signs everyone out. It is a session cookie,
-so closing the browser signs you out and the next visit asks for the password
-again. A signed 8-hour cap covers browsers that restore sessions on restart.
-`/__logout` clears the session.
+password, so changing the password signs everyone out.
+
+The cookie has two stages. A fresh login grants one page view; serving that page
+downgrades the cookie to API-only. So every reload, new tab, or restart asks for
+the password again, while the page already on screen keeps loading data. It is
+also a session cookie with a signed 8-hour cap. `/__logout` clears it.
 
 ## Vercel environment variables
 

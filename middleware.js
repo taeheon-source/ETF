@@ -2,13 +2,15 @@ import { next } from "@vercel/edge";
 
 /* 사이트 전체를 로그인 뒤로 숨긴다.
    비밀번호는 저장소에 두지 않고 Vercel 환경변수 SITE_PASSWORD로 주입한다.
-   세션 쿠키는 그 비밀번호를 키로 서명하므로, 비밀번호를 바꾸면
-   기존 세션이 한꺼번에 무효가 된다. */
+
+   쿠키는 두 단계를 가진다. 로그인 직후에는 화면을 한 번 열 수 있는
+   document 단계이고, 화면을 열어주는 순간 api 단계로 낮춘다. 그래서
+   새로고침하거나 새 탭으로 들어오면 다시 로그인해야 하고, 이미 열린
+   화면의 데이터 호출은 계속 동작한다. */
 const SESSION_COOKIE = "hb_session";
-/* 세션 쿠키로 발급해 브라우저를 닫으면 사라지게 한다. 접속할 때마다
-   비밀번호를 다시 받기 위함이다. 아래 값은 브라우저가 세션을 복원해
-   쿠키를 살려두는 경우를 대비한 상한이다. */
 const SESSION_ABSOLUTE_MAX_AGE = 60 * 60 * 8;
+const STAGE_DOCUMENT = "d";
+const STAGE_API = "a";
 const LOGIN_PATH = "/login";
 const AUTH_PATH = "/__auth";
 const LOGOUT_PATH = "/__logout";
@@ -62,39 +64,36 @@ export function readCookie(header, name) {
   return null;
 }
 
-// 열린 리디렉션을 막기 위해 같은 사이트의 경로만 되돌려준다
-export function safeNextPath(value) {
-  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
-    return "/";
-  }
-  return value;
+export async function issueToken(secret, stage, expiresAt) {
+  const payload = `${stage}.${expiresAt}`;
+  return `${payload}.${await sign(payload, secret)}`;
 }
 
-export async function createSessionToken(secret, now = Date.now()) {
-  const expires = String(now + SESSION_ABSOLUTE_MAX_AGE * 1000);
-  return `${expires}.${await sign(expires, secret)}`;
-}
-
-export async function isSessionValid(token, secret, now = Date.now()) {
+export async function readSession(token, secret, now = Date.now()) {
   if (typeof token !== "string") {
-    return false;
+    return null;
   }
-  const separator = token.indexOf(".");
-  if (separator === -1) {
-    return false;
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    return null;
   }
-  const expires = token.slice(0, separator);
-  const signature = token.slice(separator + 1);
+  const [stage, expires, signature] = parts;
+  if (stage !== STAGE_DOCUMENT && stage !== STAGE_API) {
+    return null;
+  }
   const expiresAt = Number(expires);
   if (!expires || !Number.isFinite(expiresAt) || expiresAt <= now) {
-    return false;
+    return null;
   }
-  return timingSafeEqual(signature, await sign(expires, secret));
+  if (!timingSafeEqual(signature, await sign(`${stage}.${expires}`, secret))) {
+    return null;
+  }
+  return { stage, expiresAt };
 }
 
+// Max-Age를 붙이지 않으면 세션 쿠키가 되어 브라우저 종료 시 사라진다
 function sessionCookie(token, secure) {
   const parts = [`${SESSION_COOKIE}=${token}`, "Path=/", "HttpOnly", "SameSite=Lax"];
-  // Max-Age를 붙이지 않으면 세션 쿠키가 되어 브라우저 종료 시 사라진다
   if (!token) {
     parts.push("Max-Age=0");
   }
@@ -102,6 +101,16 @@ function sessionCookie(token, secure) {
     parts.push("Secure");
   }
   return parts.join("; ");
+}
+
+/* 화면 이동인지 판별한다. 스타일이나 스크립트, API 호출은 여기 해당하지
+   않으므로 이미 열린 화면이 중간에 끊기지 않는다. */
+export function isDocumentRequest(request) {
+  const destination = request.headers.get("sec-fetch-dest");
+  if (destination) {
+    return destination === "document";
+  }
+  return (request.headers.get("accept") || "").includes("text/html");
 }
 
 async function readSubmittedPassword(request) {
@@ -130,6 +139,18 @@ function jsonResponse(body, status, extraHeaders = {}) {
   });
 }
 
+function redirectToLogin(url) {
+  const target = new URL(LOGIN_PATH, url);
+  const from = url.pathname + url.search;
+  if (from !== "/") {
+    target.searchParams.set("next", from);
+  }
+  return new Response(null, {
+    status: 303,
+    headers: { location: target.toString(), "cache-control": "no-store" }
+  });
+}
+
 export default async function middleware(request) {
   const password = process.env.SITE_PASSWORD;
 
@@ -152,7 +173,8 @@ export default async function middleware(request) {
     if (!timingSafeEqual(submitted, password)) {
       return jsonResponse({ error: "비밀번호가 올바르지 않습니다." }, 401);
     }
-    const token = await createSessionToken(password);
+    const expiresAt = Date.now() + SESSION_ABSOLUTE_MAX_AGE * 1000;
+    const token = await issueToken(password, STAGE_DOCUMENT, expiresAt);
     return jsonResponse({ ok: true }, 200, { "set-cookie": sessionCookie(token, secure) });
   }
 
@@ -171,8 +193,23 @@ export default async function middleware(request) {
     return next();
   }
 
-  const token = readCookie(request.headers.get("cookie"), SESSION_COOKIE);
-  if (await isSessionValid(token, password)) {
+  const session = await readSession(readCookie(request.headers.get("cookie"), SESSION_COOKIE), password);
+
+  if (isDocumentRequest(request)) {
+    if (session?.stage !== STAGE_DOCUMENT) {
+      return redirectToLogin(url);
+    }
+    /* 화면을 한 번 내주고 곧바로 API 전용으로 낮춘다.
+       no-store를 붙여야 뒤로 가기에서 캐시로 되살아나지 않는다. */
+    return next({
+      headers: {
+        "set-cookie": sessionCookie(await issueToken(password, STAGE_API, session.expiresAt), secure),
+        "cache-control": "no-store"
+      }
+    });
+  }
+
+  if (session) {
     return next();
   }
 
@@ -182,10 +219,5 @@ export default async function middleware(request) {
     return jsonResponse({ error: "로그인이 필요합니다." }, 401);
   }
 
-  const target = new URL(LOGIN_PATH, url);
-  target.searchParams.set("next", url.pathname + url.search);
-  return new Response(null, {
-    status: 303,
-    headers: { location: target.toString(), "cache-control": "no-store" }
-  });
+  return redirectToLogin(url);
 }
