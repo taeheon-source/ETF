@@ -13,10 +13,31 @@ const SKIP_CODES = new Set(["CASH00000001", "KRD010010001"]);
 const DURATION_KEY = "itemDur";
 const YTM_KEY = "mkprcPrfr";
 
-/* 응답의 어느 깊이에 실릴지 확정할 수 없어 키로 찾는다.
-   배열은 건너뛴다. 개별 구성종목이 아니라 펀드 전체 값을 원하기 때문이다. */
+// 구성종목 한 줄에서 값을 집어오지 않도록 종목 행을 알아본다
+function isHoldingRow(node) {
+  return (
+    Object.prototype.hasOwnProperty.call(node, "secNm") ||
+    Object.prototype.hasOwnProperty.call(node, "itmNo")
+  );
+}
+
+/* 응답의 어느 깊이에 실릴지 확정할 수 없어 키로 찾는다. 상품마다 지표가
+   객체로도 배열 원소로도 실려서 배열 안까지 본다. 대신 구성종목 행은
+   건너뛴다. 원하는 값은 펀드 전체 수치이지 개별 종목 값이 아니다. */
 function findNumber(node, key, depth = 0) {
-  if (!node || typeof node !== "object" || Array.isArray(node) || depth > 6) {
+  if (!node || typeof node !== "object" || depth > 8) {
+    return null;
+  }
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findNumber(child, key, depth + 1);
+      if (found !== null) {
+        return found;
+      }
+    }
+    return null;
+  }
+  if (isHoldingRow(node)) {
     return null;
   }
   // Number(null)은 0이 된다. 응답에 null이 실려 오므로 숫자로 읽히는 값만 받는다.
@@ -48,8 +69,16 @@ async function fetchHoldings(productId, etfId) {
     },
   });
   const json = await r.json();
+
+  /* 지표를 먼저 꺼낸다. 구성종목 구조가 상품마다 달라 파싱이 실패하더라도
+     듀레이션과 YTM은 살려서 내보내기 위함이다. */
+  const duration = findNumber(json, DURATION_KEY);
+  const ytm = findNumber(json, YTM_KEY);
+
   const pdf = json.pdf;
-  if (!pdf?.list) throw new Error("pdf.list not found");
+  if (!pdf?.list) {
+    return { updatedAt: null, duration, ytm, holdings: [] };
+  }
 
   const holdings = pdf.list
     .filter(r => !SKIP_CODES.has(r.itmNo))
@@ -66,9 +95,8 @@ async function fetchHoldings(productId, etfId) {
     updatedAt: pdf.gijunYMD
       ? `${pdf.gijunYMD.slice(0, 4)}-${pdf.gijunYMD.slice(4, 6)}-${pdf.gijunYMD.slice(6, 8)}`
       : new Date().toISOString(),
-    // 값을 못 찾아도 구성종목은 그대로 내려간다
-    duration: findNumber(json, DURATION_KEY),
-    ytm: findNumber(json, YTM_KEY),
+    duration,
+    ytm,
     holdings,
   };
 }
@@ -95,6 +123,7 @@ module.exports = async function handler(req, res) {
       holdings,
     });
   } catch (e) {
+    res.setHeader("Cache-Control", "no-store");
     res.status(500).json({ error: e.message });
   }
 };
