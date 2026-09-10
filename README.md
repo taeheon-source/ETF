@@ -5,10 +5,22 @@ This MVP is now structured for Vercel deployment:
 - Static frontend: `index.html`, `styles.css`, `app.js`
 - Serverless API: `api/nav-data.js`
 
+## Site password
+
+The whole site sits behind HTTP Basic auth (`middleware.js`). Set the password
+as a Vercel environment variable and redeploy:
+
+- `SITE_PASSWORD` — required. Without it every request returns 503, so a missing
+  setting locks the site rather than opening it.
+
+The username is not checked. Leave it blank in the browser prompt and enter the
+password only. The password lives only in Vercel, never in this repository.
+
 ## Vercel environment variables
 
 Set these in your Vercel project:
 
+- `SITE_PASSWORD`
 - `KRX_UPSTREAM_URL`
 - `KRX_AUTH_KEY`
 - `KRX_AUTH_HEADER`
