@@ -5,7 +5,10 @@ import { next } from "@vercel/edge";
    세션 쿠키는 그 비밀번호를 키로 서명하므로, 비밀번호를 바꾸면
    기존 세션이 한꺼번에 무효가 된다. */
 const SESSION_COOKIE = "hb_session";
-const SESSION_MAX_AGE = 60 * 60 * 12;
+/* 세션 쿠키로 발급해 브라우저를 닫으면 사라지게 한다. 접속할 때마다
+   비밀번호를 다시 받기 위함이다. 아래 값은 브라우저가 세션을 복원해
+   쿠키를 살려두는 경우를 대비한 상한이다. */
+const SESSION_ABSOLUTE_MAX_AGE = 60 * 60 * 8;
 const LOGIN_PATH = "/login";
 const AUTH_PATH = "/__auth";
 const LOGOUT_PATH = "/__logout";
@@ -68,7 +71,7 @@ export function safeNextPath(value) {
 }
 
 export async function createSessionToken(secret, now = Date.now()) {
-  const expires = String(now + SESSION_MAX_AGE * 1000);
+  const expires = String(now + SESSION_ABSOLUTE_MAX_AGE * 1000);
   return `${expires}.${await sign(expires, secret)}`;
 }
 
@@ -90,13 +93,11 @@ export async function isSessionValid(token, secret, now = Date.now()) {
 }
 
 function sessionCookie(token, secure) {
-  const parts = [
-    `${SESSION_COOKIE}=${token}`,
-    "Path=/",
-    "HttpOnly",
-    "SameSite=Lax",
-    `Max-Age=${token ? SESSION_MAX_AGE : 0}`
-  ];
+  const parts = [`${SESSION_COOKIE}=${token}`, "Path=/", "HttpOnly", "SameSite=Lax"];
+  // Max-Age를 붙이지 않으면 세션 쿠키가 되어 브라우저 종료 시 사라진다
+  if (!token) {
+    parts.push("Max-Age=0");
+  }
   if (secure) {
     parts.push("Secure");
   }
