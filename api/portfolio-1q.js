@@ -6,7 +6,7 @@ const INFO_URL = `${BASE}/pages/ETFproducts/ETF_info.view.php?etf_no=2`;
 
 /* 상품정보 페이지는 값을 HTML에 그대로 박아 내려준다. 라벨 span 뒤에
    데이터 span이 붙는 구조라, 짝을 통째로 훑어 라벨로 찾아 쓴다. */
-const INFO_PAIR = /no-etfinfo__item-label[^>]*>([\s\S]*?)<\/span>[\s\S]{0,200}?no-etfinfo__item-data[^>]*>([\s\S]*?)<\/span>/g;
+const INFO_PAIR = /etfinfo__item-label[^>]*>([\s\S]*?)<\/span>[\s\S]{0,400}?etfinfo__item-data[^>]*>([\s\S]*?)<\/span>/gi;
 
 function stripTags(value) {
   return value.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
@@ -50,17 +50,26 @@ function toNumber(raw) {
 // 상품정보를 못 가져와도 구성종목은 그대로 내려간다
 async function fetchMetrics() {
   try {
-    const response = await fetch(INFO_URL, { headers: { "User-Agent": UA, "Referer": BASE } });
+    const response = await fetch(INFO_URL, {
+      headers: { "User-Agent": UA, "Referer": BASE, "Accept": "text/html,application/xhtml+xml" },
+    });
     if (!response.ok) {
-      return { duration: null, ytm: null };
+      return { duration: null, ytm: null, diag: { status: response.status } };
     }
-    const pairs = readInfoPairs(await response.text());
+    const html = await response.text();
+    const pairs = readInfoPairs(html);
     return {
       duration: toNumber(pickByPrefix(pairs, "듀레이션")),
       ytm: toNumber(pickByPrefix(pairs, "YTM")),
+      diag: {
+        status: response.status,
+        htmlLength: html.length,
+        hasMarker: /etfinfo__item-label/i.test(html),
+        labels: Object.keys(pairs).slice(0, 12),
+      },
     };
-  } catch {
-    return { duration: null, ytm: null };
+  } catch (e) {
+    return { duration: null, ytm: null, diag: { error: e.message } };
   }
 }
 
@@ -95,7 +104,13 @@ module.exports = async function handler(req, res) {
         weight: (Number(r.F34743) / 100).toFixed(2),
       }));
 
-    const { duration, ytm } = await metricsPromise;
+    const { duration, ytm, diag } = await metricsPromise;
+
+    // 진단용. 원인을 잡은 뒤 제거한다.
+    if (req.query?.debug) {
+      res.setHeader("Cache-Control", "no-store");
+      return res.status(200).json({ infoUrl: INFO_URL, duration, ytm, diag });
+    }
 
     res.status(200).json({
       name: "1Q 단기금융채액티브",
