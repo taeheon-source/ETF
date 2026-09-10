@@ -1674,8 +1674,7 @@ const METRIC_SOURCES = {
 
 const metricEls = {
   head: document.querySelector("#metricTableHead"),
-  body: document.querySelector("#metricTableBody"),
-  meta: document.querySelector("#metricTableMeta")
+  body: document.querySelector("#metricTableBody")
 };
 
 const metricState = { data: {}, loading: false, loaded: false };
@@ -1747,22 +1746,6 @@ function renderShortTermMetrics() {
       return `<tr><th scope="row">${row.label}</th>${cells}</tr>`;
     })
     .join("");
-
-  renderMetricMeta();
-}
-
-function renderMetricMeta() {
-  const dates = [...new Set(Object.values(metricState.data).map((entry) => entry.updatedAt).filter(Boolean))].sort();
-  if (metricState.loading) {
-    metricEls.meta.textContent = "불러오는 중...";
-    return;
-  }
-  if (!dates.length) {
-    metricEls.meta.textContent = "";
-    return;
-  }
-  metricEls.meta.textContent =
-    dates.length === 1 ? `${dates[0]} 기준` : `${dates[0]} ~ ${dates[dates.length - 1]} 기준 (운용사별 상이)`;
 }
 
 function bindGapChartEvents() {
