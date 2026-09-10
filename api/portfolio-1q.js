@@ -54,27 +54,24 @@ async function fetchMetrics() {
       headers: { "User-Agent": UA, "Referer": BASE, "Accept": "text/html,application/xhtml+xml" },
     });
     if (!response.ok) {
-      return { duration: null, ytm: null, diag: { status: response.status } };
+      return { duration: null, ytm: null };
     }
     const html = await response.text();
     const pairs = readInfoPairs(html);
     return {
       duration: toNumber(pickByPrefix(pairs, "듀레이션")),
       ytm: toNumber(pickByPrefix(pairs, "YTM")),
-      diag: {
-        status: response.status,
-        htmlLength: html.length,
-        hasMarker: /etfinfo__item-label/i.test(html),
-        labels: Object.keys(pairs).slice(0, 12),
-      },
     };
-  } catch (e) {
-    return { duration: null, ytm: null, diag: { error: e.message } };
+  } catch {
+    return { duration: null, ytm: null };
   }
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate=7200");
+  /* 값이 하루에 한 번 바뀌므로 한 시간 캐시로 운용사 사이트를 아낀다.
+     다만 만료 뒤 옛날 값을 먼저 내주면 아침 첫 조회에 어제 값이 보인다.
+     그 동작(stale-while-revalidate)은 쓰지 않는다. */
+  res.setHeader("Cache-Control", "s-maxage=3600");
 
   try {
     const metricsPromise = fetchMetrics();
@@ -104,13 +101,7 @@ module.exports = async function handler(req, res) {
         weight: (Number(r.F34743) / 100).toFixed(2),
       }));
 
-    const { duration, ytm, diag } = await metricsPromise;
-
-    // 진단용. 원인을 잡은 뒤 제거한다.
-    if (req.query?.debug) {
-      res.setHeader("Cache-Control", "no-store");
-      return res.status(200).json({ infoUrl: INFO_URL, duration, ytm, diag });
-    }
+    const { duration, ytm } = await metricsPromise;
 
     res.status(200).json({
       name: "1Q 단기금융채액티브",

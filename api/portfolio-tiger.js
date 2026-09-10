@@ -36,7 +36,10 @@ async function fetchPage(pageIndex, cookieStr) {
 }
 
 module.exports = async function handler(req, res) {
-  res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate=7200");
+  /* 값이 하루에 한 번 바뀌므로 한 시간 캐시로 운용사 사이트를 아낀다.
+     다만 만료 뒤 옛날 값을 먼저 내주면 아침 첫 조회에 어제 값이 보인다.
+     그 동작(stale-while-revalidate)은 쓰지 않는다. */
+  res.setHeader("Cache-Control", "s-maxage=3600");
 
   try {
     // 세션 쿠키 획득
