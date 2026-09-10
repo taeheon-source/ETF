@@ -13,50 +13,40 @@ const SKIP_CODES = new Set(["CASH00000001", "KRD010010001"]);
 const DURATION_KEY = "itemDur";
 const YTM_KEY = "mkprcPrfr";
 
-// 구성종목 한 줄에서 값을 집어오지 않도록 종목 행을 알아본다
-function isHoldingRow(node) {
-  return (
-    Object.prototype.hasOwnProperty.call(node, "secNm") ||
-    Object.prototype.hasOwnProperty.call(node, "itmNo")
+/* 지표는 ytm.tab8Info에 실린다. 두 상품 모두 같은 자리인 것을 응답에서
+   직접 확인했다. 경로를 알고 있으니 헤매지 않고 그대로 읽는다.
+   tab8Info와 그 안의 productYTMInfoMap이 같은 값을 반올림만 달리해
+   담고 있어, 소수 자리가 많은 쪽을 먼저 쓴다. */
+const YTM_TAB_PATH = ["ytm", "tab8Info"];
+
+function readPath(node, path) {
+  return path.reduce(
+    (current, key) => (current && typeof current === "object" ? current[key] : undefined),
+    node
   );
 }
 
-/* 응답의 어느 깊이에 실릴지 확정할 수 없어 키로 찾는다. 상품마다 지표가
-   객체로도 배열 원소로도 실려서 배열 안까지 본다. 대신 구성종목 행은
-   건너뛴다. 원하는 값은 펀드 전체 수치이지 개별 종목 값이 아니다. */
-function findNumber(node, key, depth = 0) {
-  if (!node || typeof node !== "object" || depth > 8) {
+/* 천단위 쉼표나 눈에 안 보이는 공백이 섞여 와도 숫자로 읽는다.
+   Number()는 그런 문자 하나에 NaN을 내고, NaN은 값 없음과 구분되지 않는다. */
+function toNumber(raw) {
+  if (raw === null || raw === undefined) {
     return null;
   }
-  if (Array.isArray(node)) {
-    for (const child of node) {
-      const found = findNumber(child, key, depth + 1);
-      if (found !== null) {
-        return found;
-      }
-    }
+  const cleaned = String(raw).replace(/[,\s\u00a0%]/g, "");
+  if (!cleaned) {
     return null;
   }
-  if (isHoldingRow(node)) {
-    return null;
-  }
-  // Number(null)은 0이 된다. 응답에 null이 실려 오므로 숫자로 읽히는 값만 받는다.
-  if (Object.prototype.hasOwnProperty.call(node, key)) {
-    const raw = node[key];
-    if (raw !== null && raw !== undefined && raw !== "") {
-      const value = Number(raw);
-      if (Number.isFinite(value)) {
-        return value;
-      }
-    }
-  }
-  for (const child of Object.values(node)) {
-    const found = findNumber(child, key, depth + 1);
-    if (found !== null) {
-      return found;
-    }
-  }
-  return null;
+  const value = Number(cleaned);
+  return Number.isFinite(value) ? value : null;
+}
+
+function readMetrics(json) {
+  const tab = readPath(json, YTM_TAB_PATH);
+  const fallback = tab?.productYTMInfoMap;
+  return {
+    duration: toNumber(tab?.[DURATION_KEY]) ?? toNumber(fallback?.[DURATION_KEY]),
+    ytm: toNumber(tab?.[YTM_KEY]) ?? toNumber(fallback?.[YTM_KEY]),
+  };
 }
 
 /* 진단용. 지표가 응답의 어느 경로에 있는지 그대로 찍어 본다.
@@ -104,8 +94,7 @@ async function fetchHoldings(productId, etfId) {
 
   /* 지표를 먼저 꺼낸다. 구성종목 구조가 상품마다 달라 파싱이 실패하더라도
      듀레이션과 YTM은 살려서 내보내기 위함이다. */
-  const duration = findNumber(json, DURATION_KEY);
-  const ytm = findNumber(json, YTM_KEY);
+  const { duration, ytm } = readMetrics(json);
 
   const pdf = json.pdf;
   if (!pdf?.list) {
@@ -150,7 +139,7 @@ module.exports = async function handler(req, res) {
         productId: product.id,
         topLevelKeys: Object.keys(json),
         found: findPaths(json, [DURATION_KEY, YTM_KEY]),
-        resolved: { duration: findNumber(json, DURATION_KEY), ytm: findNumber(json, YTM_KEY) },
+        resolved: readMetrics(json),
       });
     }
 
