@@ -694,3 +694,153 @@ td {
     width: 100%;
   }
 }
+
+/* ── 1Q 단기금융채 YTD 격차 차트 ── */
+.gap-chart-wrap {
+  position: relative;
+  padding: 10px;
+}
+
+#gapChart {
+  width: 100%;
+  height: auto;
+  display: block;
+  touch-action: none;
+}
+
+/* display:block이 hidden 속성을 이기지 않도록 명시한다 */
+#gapChart[hidden] {
+  display: none;
+}
+
+/* 0선 위/아래를 색으로 나눠 우위·열위를 즉시 읽게 한다 */
+.gap-line-up {
+  stroke: var(--positive);
+}
+
+.gap-line-down {
+  stroke: var(--negative);
+}
+
+.gap-area-up {
+  fill: var(--positive);
+  opacity: 0.14;
+}
+
+.gap-area-down {
+  fill: var(--negative);
+  opacity: 0.14;
+}
+
+.gap-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.gap-zero {
+  stroke: var(--line-field);
+  stroke-width: 1.5;
+}
+
+.gap-axis-text {
+  fill: var(--muted);
+  font-size: 11px;
+}
+
+.gap-crosshair {
+  stroke: var(--line-field);
+  stroke-width: 1;
+}
+
+.gap-hover-dot {
+  stroke: var(--panel-raised);
+  stroke-width: 2;
+}
+
+.gap-end-dot {
+  stroke: var(--panel-raised);
+  stroke-width: 2;
+}
+
+.gap-end-label {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.gap-tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  min-width: 210px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-field);
+  border-radius: 12px;
+  background: rgba(20, 21, 28, 0.97);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+}
+
+.gap-tooltip-date {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+}
+
+.gap-tooltip-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 5px;
+}
+
+.gap-tooltip-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+/* 시리즈 식별은 채운 상자가 아니라 짧은 선으로 표시한다 */
+.gap-tooltip-key {
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+.gap-tooltip-value {
+  font-weight: 800;
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+
+.gap-tooltip-divider {
+  margin: 8px 0 0;
+  border-top: 1px solid var(--line);
+  padding-top: 3px;
+}
+
+.gap-tooltip-rank {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.gap-note {
+  margin: 10px 2px 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.gap-positive {
+  color: var(--positive);
+}
+
+.gap-negative {
+  color: var(--negative);
+}

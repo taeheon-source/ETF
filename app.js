@@ -417,6 +417,7 @@ function render() {
   renderRawMetricControls();
   renderNavTable();
   renderChart();
+  renderGapChart();
   els.compareHeader.textContent = "비교일 대비";
 }
 
@@ -1267,3 +1268,367 @@ initPeerTab();
 if (document.getElementById("tab-peer")?.classList.contains("is-active")) {
   loadPeerPortfolio(peerState.currentKey);
 }
+
+/* ── 1Q 단기금융채 YTD 격차 ──
+   1Q 단기금융채와 그날 선두 ETF의 YTD 수익률 차이를 추적한다.
+   1Q가 선두인 날은 2위를 상대로 삼으므로, 격차 부호가 그대로 우위/열위를 뜻한다.
+   순위는 매일 바뀌기 때문에 비교 대상을 날짜마다 새로 고른다. */
+const GAP_GROUP_KEY = "SHORT_TERM";
+const GAP_FOCUS_NAME = "1Q 단기금융채액티브";
+const GAP_CHART = {
+  width: 760,
+  height: 300,
+  paddingLeft: 62,
+  paddingRight: 26,
+  paddingTop: 20,
+  paddingBottom: 34
+};
+
+const gapEls = {
+  meta: document.querySelector("#gapChartMeta"),
+  summary: document.querySelector("#gapSummary"),
+  wrap: document.querySelector("#gapChartWrap"),
+  svg: document.querySelector("#gapChart"),
+  tooltip: document.querySelector("#gapTooltip"),
+  empty: document.querySelector("#gapEmpty")
+};
+
+const gapChartState = { points: [], geometry: null };
+
+function buildGapSeries() {
+  const groupMeta = ETF_GROUPS[GAP_GROUP_KEY];
+  const universe = groupMeta.etfNames
+    .map((name) => state.etfs.find((etf) => etf.name === name))
+    .filter(Boolean);
+  const focus = universe.find((etf) => etf.name === GAP_FOCUS_NAME);
+  if (!focus || !state.baseDate) {
+    return [];
+  }
+
+  // YTD 기준 NAV는 기준연도 첫 영업일의 직전 거래일, 즉 전년도 마지막 영업일이다
+  const startNav = new Map();
+  universe.forEach((etf) => {
+    const reference = getYearReference(etf.series, state.baseDate);
+    if (reference && reference.nav) {
+      startNav.set(etf.code, reference.nav);
+    }
+  });
+  if (!startNav.has(focus.code)) {
+    return [];
+  }
+
+  const navLookup = new Map(
+    universe.map((etf) => [etf.code, new Map(etf.series.map((point) => [point.date, point.nav]))])
+  );
+  const year = state.baseDate.slice(0, 4);
+
+  return focus.series
+    .filter((point) => point.date.startsWith(year) && point.date <= state.baseDate)
+    .map((point) => {
+      const ranked = universe
+        .map((etf) => {
+          const nav = navLookup.get(etf.code).get(point.date);
+          const start = startNav.get(etf.code);
+          if (!Number.isFinite(nav) || !Number.isFinite(start) || !start) {
+            return null;
+          }
+          return { code: etf.code, name: etf.name, ytd: nav / start - 1 };
+        })
+        .filter(Boolean)
+        .sort((a, b) => b.ytd - a.ytd);
+
+      const focusRow = ranked.find((row) => row.code === focus.code);
+      if (!focusRow || ranked.length < 2) {
+        return null;
+      }
+
+      const rival = ranked[0].code === focus.code ? ranked[1] : ranked[0];
+      return {
+        date: point.date,
+        focusYtd: focusRow.ytd,
+        rivalName: rival.name,
+        rivalYtd: rival.ytd,
+        gap: focusRow.ytd - rival.ytd,
+        rank: ranked.indexOf(focusRow) + 1,
+        total: ranked.length
+      };
+    })
+    .filter(Boolean);
+}
+
+function renderGapChart() {
+  if (!gapEls.svg) {
+    return;
+  }
+
+  const points = buildGapSeries();
+  gapChartState.points = points;
+  hideGapTooltip();
+
+  // 빈 상태에서도 svg 요소는 남겨둬야 데이터가 들어온 뒤 다시 그릴 수 있다
+  if (points.length < 2) {
+    gapChartState.geometry = null;
+    gapEls.meta.textContent = "";
+    gapEls.summary.innerHTML = "";
+    gapEls.svg.innerHTML = "";
+    gapEls.svg.hidden = true;
+    gapEls.empty.hidden = false;
+    return;
+  }
+
+  gapEls.svg.hidden = false;
+  gapEls.empty.hidden = true;
+
+  const first = points[0];
+  const last = points[points.length - 1];
+  gapEls.meta.textContent = `${first.date} ~ ${last.date} · 단기형 ${last.total}종 기준`;
+  renderGapSummary(last);
+
+  const { width, height, paddingLeft, paddingRight, paddingTop, paddingBottom } = GAP_CHART;
+  const chartWidth = width - paddingLeft - paddingRight;
+  const chartHeight = height - paddingTop - paddingBottom;
+
+  // 0을 항상 포함해야 우위/열위 전환이 보인다
+  const values = points.map((point) => point.gap * 10000);
+  let min = Math.min(...values, 0);
+  let max = Math.max(...values, 0);
+  const headroom = (max - min) * 0.12 || 1;
+  min -= headroom;
+  max += headroom;
+  const span = max - min;
+
+  const toX = (index) => paddingLeft + (chartWidth * index) / (points.length - 1);
+  const toY = (value) => height - paddingBottom - ((value - min) / span) * chartHeight;
+  const zeroY = toY(0);
+
+  gapChartState.geometry = { toX, toY, chartWidth, chartHeight };
+
+  const linePoints = values.map((value, index) => `${toX(index).toFixed(2)},${toY(value).toFixed(2)}`);
+  const areaPoints = [
+    `${toX(0).toFixed(2)},${zeroY.toFixed(2)}`,
+    ...linePoints,
+    `${toX(points.length - 1).toFixed(2)},${zeroY.toFixed(2)}`
+  ].join(" ");
+  const polyline = linePoints.join(" ");
+
+  const lastValue = values[values.length - 1];
+  const lastX = toX(points.length - 1);
+  const lastY = toY(lastValue);
+  const lastClass = lastValue >= 0 ? "gap-line-up" : "gap-line-down";
+  const labelAnchor = lastX > width - paddingRight - 60 ? "end" : "start";
+  const labelX = labelAnchor === "end" ? lastX - 10 : lastX + 10;
+
+  gapEls.svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  gapEls.svg.innerHTML = `
+    <defs>
+      <clipPath id="gapClipAbove">
+        <rect x="0" y="0" width="${width}" height="${zeroY.toFixed(2)}"></rect>
+      </clipPath>
+      <clipPath id="gapClipBelow">
+        <rect x="0" y="${zeroY.toFixed(2)}" width="${width}" height="${(height - zeroY).toFixed(2)}"></rect>
+      </clipPath>
+    </defs>
+    ${buildGapGrid(min, max, span)}
+    <polygon class="gap-area-up" clip-path="url(#gapClipAbove)" points="${areaPoints}"></polygon>
+    <polygon class="gap-area-down" clip-path="url(#gapClipBelow)" points="${areaPoints}"></polygon>
+    <line class="gap-zero" x1="${paddingLeft}" y1="${zeroY.toFixed(2)}" x2="${width - paddingRight}" y2="${zeroY.toFixed(2)}"></line>
+    <polyline class="gap-line-up" clip-path="url(#gapClipAbove)" fill="none" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${polyline}"></polyline>
+    <polyline class="gap-line-down" clip-path="url(#gapClipBelow)" fill="none" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${polyline}"></polyline>
+    ${buildGapXAxis(points, toX)}
+    <circle class="gap-end-dot ${lastClass}" cx="${lastX.toFixed(2)}" cy="${lastY.toFixed(2)}" r="4.5" fill="currentColor"></circle>
+    <text class="gap-end-label ${lastClass}" x="${labelX.toFixed(2)}" y="${(lastY - 12).toFixed(2)}" text-anchor="${labelAnchor}" fill="currentColor">${formatGapBp(last.gap)}</text>
+    <g id="gapHoverLayer" style="display: none">
+      <line class="gap-crosshair" y1="${paddingTop}" y2="${height - paddingBottom}"></line>
+      <circle class="gap-hover-dot" r="5"></circle>
+    </g>
+    <rect x="${paddingLeft}" y="${paddingTop}" width="${chartWidth}" height="${chartHeight}" fill="transparent"></rect>
+  `;
+}
+
+function buildGapGrid(min, max, span) {
+  const { width, height, paddingLeft, paddingRight, paddingTop, paddingBottom } = GAP_CHART;
+  const chartHeight = height - paddingTop - paddingBottom;
+  let output = "";
+  for (let i = 0; i <= 4; i += 1) {
+    const ratio = i / 4;
+    const y = height - paddingBottom - ratio * chartHeight;
+    const value = min + ratio * span;
+    output += `<line class="gap-grid" x1="${paddingLeft}" y1="${y.toFixed(2)}" x2="${width - paddingRight}" y2="${y.toFixed(2)}"></line>`;
+    output += `<text class="gap-axis-text" x="${paddingLeft - 10}" y="${(y + 4).toFixed(2)}" text-anchor="end">${value.toFixed(1)}</text>`;
+  }
+  output += `<text class="gap-axis-text" x="${paddingLeft - 10}" y="${paddingTop - 6}" text-anchor="end">bp</text>`;
+  return output;
+}
+
+function buildGapXAxis(points, toX) {
+  const { height, paddingBottom } = GAP_CHART;
+  const tickCount = Math.min(6, points.length);
+  const y = height - paddingBottom + 20;
+  let output = "";
+  for (let i = 0; i < tickCount; i += 1) {
+    const index = Math.round((i * (points.length - 1)) / Math.max(tickCount - 1, 1));
+    const anchor = i === 0 ? "start" : i === tickCount - 1 ? "end" : "middle";
+    output += `<text class="gap-axis-text" x="${toX(index).toFixed(2)}" y="${y}" text-anchor="${anchor}">${points[index].date.slice(5)}</text>`;
+  }
+  return output;
+}
+
+function renderGapSummary(point) {
+  const gapClass = point.gap >= 0 ? "gap-positive" : "gap-negative";
+  gapEls.summary.innerHTML = `
+    <div class="detail-card">
+      <span class="detail-label">1Q 단기금융채 YTD</span>
+      <span class="detail-value">${toPercent(point.focusYtd)}</span>
+    </div>
+    <div class="detail-card">
+      <span class="detail-label">비교 대상 YTD</span>
+      <span class="detail-value">${toPercent(point.rivalYtd)}</span>
+      <p class="detail-meta">${escapeHtml(point.rivalName)}</p>
+    </div>
+    <div class="detail-card">
+      <span class="detail-label">격차</span>
+      <span class="detail-value ${gapClass}">${formatGapBp(point.gap)}</span>
+      <p class="detail-meta">${formatGapPercentPoint(point.gap)}</p>
+    </div>
+    <div class="detail-card">
+      <span class="detail-label">단기형 순위</span>
+      <span class="detail-value">${point.rank}위 / ${point.total}종</span>
+      <p class="detail-meta">${point.date} 기준</p>
+    </div>
+  `;
+}
+
+function formatGapBp(value) {
+  const bp = value * 10000;
+  return `${bp >= 0 ? "+" : ""}${bp.toFixed(1)}bp`;
+}
+
+function formatGapPercentPoint(value) {
+  return `${value >= 0 ? "+" : ""}${(value * 100).toFixed(3)}%p`;
+}
+
+function bindGapChartEvents() {
+  if (!gapEls.svg) {
+    return;
+  }
+  gapEls.svg.addEventListener("pointermove", handleGapPointerMove);
+  gapEls.svg.addEventListener("pointerleave", hideGapTooltip);
+  gapEls.svg.addEventListener("pointercancel", hideGapTooltip);
+}
+
+function handleGapPointerMove(event) {
+  const { points, geometry } = gapChartState;
+  if (!geometry || points.length < 2) {
+    return;
+  }
+
+  const rect = gapEls.svg.getBoundingClientRect();
+  if (!rect.width) {
+    return;
+  }
+
+  const { width, paddingLeft, paddingTop, height, paddingBottom } = GAP_CHART;
+  const viewX = ((event.clientX - rect.left) / rect.width) * width;
+  const ratio = (viewX - paddingLeft) / geometry.chartWidth;
+  const index = Math.min(points.length - 1, Math.max(0, Math.round(ratio * (points.length - 1))));
+  const point = points[index];
+
+  const x = geometry.toX(index);
+  const y = geometry.toY(point.gap * 10000);
+  const layer = gapEls.svg.querySelector("#gapHoverLayer");
+  const line = layer.querySelector("line");
+  const dot = layer.querySelector("circle");
+  layer.style.display = "";
+  line.setAttribute("x1", x.toFixed(2));
+  line.setAttribute("x2", x.toFixed(2));
+  line.setAttribute("y1", paddingTop);
+  line.setAttribute("y2", height - paddingBottom);
+  dot.setAttribute("cx", x.toFixed(2));
+  dot.setAttribute("cy", y.toFixed(2));
+  dot.setAttribute("fill", point.gap >= 0 ? "var(--positive)" : "var(--negative)");
+
+  showGapTooltip(point, (x / width) * rect.width, (y / GAP_CHART.height) * rect.height);
+}
+
+function showGapTooltip(point, pixelX, pixelY) {
+  const tooltip = gapEls.tooltip;
+  tooltip.replaceChildren(
+    gapTooltipDate(point.date),
+    // 색은 대상을 따라가야 하므로 우열이 바뀌어도 키 색을 바꾸지 않는다
+    gapTooltipRow(GAP_FOCUS_NAME, toPercent(point.focusYtd), "var(--gold)"),
+    gapTooltipRow(point.rivalName, toPercent(point.rivalYtd), "var(--muted)"),
+    gapTooltipGap(point),
+    gapTooltipRank(point)
+  );
+  tooltip.hidden = false;
+
+  // 좌우 끝에서 잘리지 않도록 가로 위치를 감싼 영역 안으로 되돌린다
+  const wrapWidth = gapEls.wrap.clientWidth;
+  const half = tooltip.offsetWidth / 2;
+  const clampedX = Math.min(Math.max(pixelX, half + 4), wrapWidth - half - 4);
+  tooltip.style.left = `${clampedX}px`;
+  tooltip.style.top = `${Math.max(pixelY - 14, tooltip.offsetHeight + 4)}px`;
+}
+
+function gapTooltipDate(date) {
+  const node = document.createElement("div");
+  node.className = "gap-tooltip-date";
+  node.textContent = date;
+  return node;
+}
+
+// ETF명은 외부 데이터라 textContent로만 넣는다
+function gapTooltipRow(name, value, keyColor) {
+  const row = document.createElement("div");
+  row.className = "gap-tooltip-row";
+
+  const label = document.createElement("span");
+  label.className = "gap-tooltip-name";
+  const key = document.createElement("span");
+  key.className = "gap-tooltip-key";
+  key.style.background = keyColor;
+  label.append(key, document.createTextNode(name));
+
+  const amount = document.createElement("span");
+  amount.className = "gap-tooltip-value";
+  amount.textContent = value;
+
+  row.append(label, amount);
+  return row;
+}
+
+function gapTooltipGap(point) {
+  const row = document.createElement("div");
+  row.className = "gap-tooltip-row gap-tooltip-divider";
+
+  const label = document.createElement("span");
+  label.className = "gap-tooltip-name";
+  label.textContent = "격차";
+
+  const amount = document.createElement("span");
+  amount.className = `gap-tooltip-value ${point.gap >= 0 ? "gap-positive" : "gap-negative"}`;
+  amount.textContent = `${formatGapBp(point.gap)} (${formatGapPercentPoint(point.gap)})`;
+
+  row.append(label, amount);
+  return row;
+}
+
+function gapTooltipRank(point) {
+  const node = document.createElement("div");
+  node.className = "gap-tooltip-rank";
+  node.textContent = `단기형 ${point.total}종 중 ${point.rank}위`;
+  return node;
+}
+
+function hideGapTooltip() {
+  if (!gapEls.tooltip) {
+    return;
+  }
+  gapEls.tooltip.hidden = true;
+  const layer = gapEls.svg?.querySelector("#gapHoverLayer");
+  if (layer) {
+    layer.style.display = "none";
+  }
+}
+
+bindGapChartEvents();

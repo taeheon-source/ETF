@@ -304,17 +304,35 @@
 
           <!-- 1Q 단기금융채 탭 -->
           <div class="tab-pane" id="tab-1q-short">
-            <div class="peer-empty">
-              <div class="peer-empty-icon">
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="7" y="7" width="34" height="34" rx="7" stroke="currentColor" stroke-width="2.5"/>
-                  <path d="M16 20h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                  <path d="M16 28h10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-                </svg>
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="panel-kicker">YTD GAP</p>
+                  <h2>1Q 단기금융채 YTD 격차</h2>
+                </div>
+                <p class="panel-meta" id="gapChartMeta"></p>
               </div>
-              <h2>1Q 단기금융채</h2>
-              <p>화면 준비 중입니다.</p>
-            </div>
+
+              <div class="detail-metrics" id="gapSummary"></div>
+
+              <div class="chart-shell">
+                <div class="gap-chart-wrap" id="gapChartWrap">
+                  <svg
+                    id="gapChart"
+                    role="img"
+                    aria-label="1Q 단기금융채와 선두 ETF의 YTD 수익률 격차 추이"
+                  ></svg>
+                  <div class="gap-tooltip" id="gapTooltip" hidden></div>
+                  <p class="empty-state" id="gapEmpty" hidden>
+                    YTD 격차를 그릴 데이터가 아직 없습니다.
+                  </p>
+                </div>
+              </div>
+              <p class="gap-note">
+                선두 ETF 대비 격차입니다. 1Q가 1위인 날은 2위와 비교합니다.
+                순위는 매일 바뀌므로 비교 대상도 날마다 달라집니다.
+              </p>
+            </section>
           </div>
 
         </div>
