@@ -59,6 +59,38 @@ function findNumber(node, key, depth = 0) {
   return null;
 }
 
+/* 진단용. 지표가 응답의 어느 경로에 있는지 그대로 찍어 본다.
+   상품마다 위치가 달라 탐색이 빗나가는 지점을 눈으로 확인하기 위함이다. */
+function findPaths(node, keys, path = "", out = [], depth = 0) {
+  if (!node || typeof node !== "object" || depth > 10 || out.length >= 20) {
+    return out;
+  }
+  if (Array.isArray(node)) {
+    node.forEach((child, index) => findPaths(child, keys, `${path}[${index}]`, out, depth + 1));
+    return out;
+  }
+  for (const [name, value] of Object.entries(node)) {
+    const next = path ? `${path}.${name}` : name;
+    if (keys.includes(name)) {
+      out.push({ path: next, value });
+    }
+    findPaths(value, keys, next, out, depth + 1);
+  }
+  return out;
+}
+
+async function fetchRaw(productId) {
+  const r = await fetch(`${BASE}/api/v1/kodex/product/${productId}.do`, {
+    headers: {
+      "User-Agent": UA,
+      "Referer": `${BASE}/etf/product/view.do?id=${productId}`,
+      "Accept": "application/json, text/plain, */*",
+      "X-Requested-With": "XMLHttpRequest",
+    },
+  });
+  return r.json();
+}
+
 async function fetchHoldings(productId, etfId) {
   const r = await fetch(`${BASE}/api/v1/kodex/product/${productId}.do`, {
     headers: {
@@ -111,6 +143,17 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    if (req.query?.debug) {
+      res.setHeader("Cache-Control", "no-store");
+      const json = await fetchRaw(product.id);
+      return res.status(200).json({
+        productId: product.id,
+        topLevelKeys: Object.keys(json),
+        found: findPaths(json, [DURATION_KEY, YTM_KEY]),
+        resolved: { duration: findNumber(json, DURATION_KEY), ytm: findNumber(json, YTM_KEY) },
+      });
+    }
+
     const { updatedAt, duration, ytm, holdings } = await fetchHoldings(product.id, ticker);
     res.status(200).json({
       name: product.name,
