@@ -1701,7 +1701,8 @@ async function loadShortTermMetrics() {
         metricState.data[name] = {
           ytm: Number.isFinite(payload.ytm) ? payload.ytm : null,
           duration: Number.isFinite(payload.duration) ? payload.duration : null,
-          updatedAt: payload.updatedAt || null
+          // 엔드포인트에 따라 타임스탬프로 오기도 해서 날짜까지만 남긴다
+          updatedAt: payload.updatedAt ? String(payload.updatedAt).slice(0, 10) : null
         };
       } catch {
         // 한 곳이 막혀도 나머지는 채운다. 실패한 종목만 빈칸으로 남는다.
