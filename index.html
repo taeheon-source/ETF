@@ -315,6 +315,10 @@
 
               <div class="gap-toolbar">
                 <div class="toggle-group" id="gapToggle" role="tablist" aria-label="비교 대상"></div>
+                <div class="toggle-group" id="gapAdjustToggle" role="group" aria-label="분배락 보정">
+                  <button type="button" class="toggle-button is-active" data-gap-adjust="on">분배락 보정</button>
+                  <button type="button" class="toggle-button" data-gap-adjust="off">원본 NAV</button>
+                </div>
               </div>
 
               <div class="detail-metrics" id="gapSummary"></div>
@@ -333,6 +337,7 @@
                 </div>
               </div>
               <p class="gap-note" id="gapNote"></p>
+              <p class="gap-note gap-exdates" id="gapExDates"></p>
             </section>
           </div>
 

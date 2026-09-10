@@ -1277,6 +1277,12 @@ const GAP_GROUP_KEY = "SHORT_TERM";
 const GAP_FOCUS_NAME = "1Q 단기금융채액티브";
 // 그날의 선두를 상대로 삼는 기본 모드. 나머지 값은 고정 비교 ETF명이다.
 const GAP_LEADER_MODE = "LEADER";
+/* 분배락 판정 기준. 단기채 ETF의 일간 변동은 1bp 안팎이라 중앙값보다
+   15bp 넘게 빠지는 날은 금리 변동으로 설명되지 않는다. 월 분배금은
+   보통 20~30bp라 이 선에서 갈린다. */
+const GAP_EX_DATE_DROP = 0.0015;
+// 세로축이 최소한 이만큼(bp)은 담게 해서 눈금이 전부 같은 숫자로 찍히지 않게 한다
+const GAP_MIN_AXIS_SPAN_BP = 2;
 const GAP_CHART = {
   width: 760,
   height: 300,
@@ -1294,10 +1300,48 @@ const gapEls = {
   tooltip: document.querySelector("#gapTooltip"),
   empty: document.querySelector("#gapEmpty"),
   toggle: document.querySelector("#gapToggle"),
-  note: document.querySelector("#gapNote")
+  adjustToggle: document.querySelector("#gapAdjustToggle"),
+  note: document.querySelector("#gapNote"),
+  exDates: document.querySelector("#gapExDates")
 };
 
-const gapChartState = { points: [], geometry: null, mode: GAP_LEADER_MODE };
+const gapChartState = {
+  points: [],
+  geometry: null,
+  mode: GAP_LEADER_MODE,
+  adjustExDate: true,
+  exDates: []
+};
+
+function medianOf(values) {
+  if (!values.length) {
+    return 0;
+  }
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+/* NAV만으로는 분배금이 수익률에서 빠진다. 분배락으로 보이는 날의 일간
+   수익률을 그 ETF의 평소 수준으로 되돌려 총수익 지수를 다시 쌓는다.
+   분배금 자체를 알 수 없으므로 중앙값으로 대체하는 근사다. */
+function buildTotalReturnSeries(series) {
+  if (!gapChartState.adjustExDate || series.length < 2) {
+    return series.map((point) => ({ ...point, navTr: point.nav, isExDate: false }));
+  }
+
+  const returns = series.slice(1).map((point, index) => point.nav / series[index].nav - 1);
+  const median = medianOf(returns);
+  let level = series[0].nav;
+  const output = [{ ...series[0], navTr: level, isExDate: false }];
+
+  series.slice(1).forEach((point, index) => {
+    const isExDate = returns[index] < median - GAP_EX_DATE_DROP;
+    level *= 1 + (isExDate ? median : returns[index]);
+    output.push({ ...point, navTr: level, isExDate });
+  });
+  return output;
+}
 
 function buildGapSeries() {
   const groupMeta = ETF_GROUPS[GAP_GROUP_KEY];
@@ -1309,12 +1353,20 @@ function buildGapSeries() {
     return [];
   }
 
-  // YTD 기준 NAV는 기준연도 첫 영업일의 직전 거래일, 즉 전년도 마지막 영업일이다
+  const adjusted = new Map(universe.map((etf) => [etf.code, buildTotalReturnSeries(etf.series)]));
+  gapChartState.exDates = universe
+    .map((etf) => ({
+      name: etf.name,
+      dates: adjusted.get(etf.code).filter((point) => point.isExDate).map((point) => point.date)
+    }))
+    .filter((entry) => entry.dates.length);
+
+  // YTD 기준값은 기준연도 첫 영업일의 직전 거래일, 즉 전년도 마지막 영업일이다
   const startNav = new Map();
   universe.forEach((etf) => {
-    const reference = getYearReference(etf.series, state.baseDate);
-    if (reference && reference.nav) {
-      startNav.set(etf.code, reference.nav);
+    const reference = getYearReference(adjusted.get(etf.code), state.baseDate);
+    if (reference && reference.navTr) {
+      startNav.set(etf.code, reference.navTr);
     }
   });
   if (!startNav.has(focus.code)) {
@@ -1322,11 +1374,11 @@ function buildGapSeries() {
   }
 
   const navLookup = new Map(
-    universe.map((etf) => [etf.code, new Map(etf.series.map((point) => [point.date, point.nav]))])
+    universe.map((etf) => [etf.code, new Map(adjusted.get(etf.code).map((point) => [point.date, point.navTr]))])
   );
   const year = state.baseDate.slice(0, 4);
 
-  return focus.series
+  return adjusted.get(focus.code)
     .filter((point) => point.date.startsWith(year) && point.date <= state.baseDate)
     .map((point) => {
       const ranked = universe
@@ -1382,6 +1434,7 @@ function renderGapChart() {
     gapChartState.geometry = null;
     gapEls.meta.textContent = "";
     gapEls.note.textContent = "";
+    gapEls.exDates.textContent = "";
     gapEls.summary.innerHTML = "";
     gapEls.svg.innerHTML = "";
     gapEls.svg.hidden = true;
@@ -1401,6 +1454,7 @@ function renderGapChart() {
   gapEls.note.textContent = isLeaderMode
     ? "선두 ETF 대비 격차입니다. 1Q가 1위인 날은 2위와 비교합니다. 순위는 매일 바뀌므로 비교 대상도 날마다 달라집니다."
     : `${last.rivalName} 대비 격차입니다. 양수면 1Q가 앞선 폭입니다.`;
+  renderGapExDates();
   renderGapSummary(last);
 
   const { width, height, paddingLeft, paddingRight, paddingTop, paddingBottom } = GAP_CHART;
@@ -1414,6 +1468,12 @@ function renderGapChart() {
   const headroom = (max - min) * 0.12 || 1;
   min -= headroom;
   max += headroom;
+  // 격차가 거의 없는 구간에서 소수점 잡음이 화면 전체로 확대되지 않게 한다
+  if (max - min < GAP_MIN_AXIS_SPAN_BP) {
+    const middle = (max + min) / 2;
+    min = middle - GAP_MIN_AXIS_SPAN_BP / 2;
+    max = middle + GAP_MIN_AXIS_SPAN_BP / 2;
+  }
   const span = max - min;
 
   const toX = (index) => paddingLeft + (chartWidth * index) / (points.length - 1);
@@ -1473,7 +1533,7 @@ function buildGapGrid(min, max, span) {
     const y = height - paddingBottom - ratio * chartHeight;
     const value = min + ratio * span;
     output += `<line class="gap-grid" x1="${paddingLeft}" y1="${y.toFixed(2)}" x2="${width - paddingRight}" y2="${y.toFixed(2)}"></line>`;
-    output += `<text class="gap-axis-text" x="${paddingLeft - 10}" y="${(y + 4).toFixed(2)}" text-anchor="end">${value.toFixed(1)}</text>`;
+    output += `<text class="gap-axis-text" x="${paddingLeft - 10}" y="${(y + 4).toFixed(2)}" text-anchor="end">${value.toFixed(span < 5 ? 2 : 1)}</text>`;
   }
   output += `<text class="gap-axis-text" x="${paddingLeft - 10}" y="${paddingTop - 6}" text-anchor="end">bp</text>`;
   return output;
@@ -1490,6 +1550,24 @@ function buildGapXAxis(points, toX) {
     output += `<text class="gap-axis-text" x="${toX(index).toFixed(2)}" y="${y}" text-anchor="${anchor}">${points[index].date.slice(5)}</text>`;
   }
   return output;
+}
+
+function renderGapExDates() {
+  if (!gapChartState.adjustExDate) {
+    gapEls.exDates.textContent = "원본 NAV 그대로입니다. 분배금이 빠져 있어 분배하는 ETF의 수익률이 실제보다 낮게 나옵니다.";
+    return;
+  }
+  if (!gapChartState.exDates.length) {
+    gapEls.exDates.textContent = "단기형 7종에서 분배락으로 볼 만한 날이 잡히지 않았습니다.";
+    return;
+  }
+  const summary = gapChartState.exDates
+    .map((entry) => `${entry.name} ${entry.dates.length}회`)
+    .join(" · ");
+  gapEls.exDates.textContent = `보정한 분배락: ${summary}`;
+  gapEls.exDates.title = gapChartState.exDates
+    .map((entry) => `${entry.name}: ${entry.dates.join(", ")}`)
+    .join("\n");
 }
 
 function renderGapSummary(point) {
@@ -1517,13 +1595,19 @@ function renderGapSummary(point) {
   `;
 }
 
+// 반올림해서 0이 되는 값에 부호를 붙이면 -0.0bp 같은 표기가 나온다
+function signedFixed(value, digits, suffix) {
+  const rounded = Number(value.toFixed(digits));
+  const sign = rounded > 0 ? "+" : rounded < 0 ? "-" : "";
+  return `${sign}${Math.abs(rounded).toFixed(digits)}${suffix}`;
+}
+
 function formatGapBp(value) {
-  const bp = value * 10000;
-  return `${bp >= 0 ? "+" : ""}${bp.toFixed(1)}bp`;
+  return signedFixed(value * 10000, 1, "bp");
 }
 
 function formatGapPercentPoint(value) {
-  return `${value >= 0 ? "+" : ""}${(value * 100).toFixed(3)}%p`;
+  return signedFixed(value * 100, 3, "%p");
 }
 
 // 비교 대상 목록은 단기형 그룹 정의에서 그대로 끌어온다
@@ -1565,6 +1649,22 @@ function bindGapChartEvents() {
     }
     gapChartState.mode = button.dataset.gapMode;
     renderGapToggle();
+    renderGapChart();
+  });
+
+  gapEls.adjustToggle?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-gap-adjust]");
+    if (!button) {
+      return;
+    }
+    const next = button.dataset.gapAdjust === "on";
+    if (next === gapChartState.adjustExDate) {
+      return;
+    }
+    gapChartState.adjustExDate = next;
+    gapEls.adjustToggle.querySelectorAll("[data-gap-adjust]").forEach((item) => {
+      item.classList.toggle("is-active", item === button);
+    });
     renderGapChart();
   });
 

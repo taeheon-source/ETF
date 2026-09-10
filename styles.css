@@ -697,7 +697,16 @@ td {
 
 /* ── 1Q 단기금융채 YTD 격차 차트 ── */
 .gap-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
   margin-bottom: 12px;
+}
+
+.gap-exdates {
+  margin-top: 4px;
+  font-size: 0.8rem;
 }
 
 .gap-chart-wrap {
