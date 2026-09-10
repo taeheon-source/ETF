@@ -16,6 +16,8 @@
   --featured: #e8a83a;
   --shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   --panel-glow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 20px 40px rgba(0, 0, 0, 0.4);
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
 }
 
 * {
@@ -25,7 +27,11 @@
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: "Noto Sans KR", sans-serif;
+  font-family: var(--font-sans);
+  /* 표의 자릿수를 세로로 맞추기 위해 숫자를 고정폭으로 렌더링한다 */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  -webkit-font-smoothing: antialiased;
   background: var(--bg);
   color: var(--text);
 }
