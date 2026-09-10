@@ -426,6 +426,17 @@ td {
   text-align: center;
 }
 
+/* 종목명 길이에 따라 열 폭이 들쭉날쭉해지지 않도록 고정 배분한다.
+   첫 열만 폭을 주면 나머지 일곱 열이 남은 폭을 균등하게 나눠 갖는다. */
+.metric-table {
+  table-layout: fixed;
+}
+
+.metric-table th:first-child,
+.metric-table td:first-child {
+  width: 16%;
+}
+
 /* 지표 이름 열은 표 머리글과 같은 톤으로 둔다 */
 .metric-table tbody th {
   color: #bbbbbb;
