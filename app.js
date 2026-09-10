@@ -143,21 +143,9 @@ function syncExDateToggles() {
   });
 }
 
-function describeExDates() {
-  if (!state.adjustExDate) {
-    return "원본 NAV 그대로입니다. 분배금이 빠져 있어 분배하는 ETF의 수익률이 실제보다 낮게 나옵니다.";
-  }
-  if (!state.exDates.length) {
-    return "분배락으로 볼 만한 날이 잡히지 않았습니다.";
-  }
-  return `보정한 분배락: ${state.exDates.map((entry) => `${entry.name} ${entry.dates.length}회`).join(" · ")}`;
-}
-
-function exDateDetail() {
-  return state.exDates.map((entry) => `${entry.name}: ${entry.dates.join(", ")}`).join("\n");
-}
-
-// 모든 수익률 계산이 같은 시계열을 보도록 한 곳에서 붙인다
+/* 모든 수익률 계산이 같은 시계열을 보도록 한 곳에서 붙인다.
+   state.exDates는 화면에 그리지 않는다. 숫자가 의심스러울 때 콘솔에서
+   어느 날이 보정됐는지 바로 확인하기 위한 기록이다. */
 function applyExDateAdjustment() {
   state.exDates = [];
   Object.values(state.grouped).forEach((etf) => {
@@ -1397,8 +1385,7 @@ const gapEls = {
   empty: document.querySelector("#gapEmpty"),
   toggle: document.querySelector("#gapToggle"),
   adjustToggle: document.querySelector("#gapAdjustToggle"),
-  note: document.querySelector("#gapNote"),
-  exDates: document.querySelector("#gapExDates")
+  note: document.querySelector("#gapNote")
 };
 
 const gapChartState = { points: [], geometry: null, mode: GAP_LEADER_MODE };
@@ -1491,7 +1478,6 @@ function renderGapChart() {
     gapChartState.geometry = null;
     gapEls.meta.textContent = "";
     gapEls.note.textContent = "";
-    gapEls.exDates.textContent = "";
     gapEls.summary.innerHTML = "";
     gapEls.svg.innerHTML = "";
     gapEls.svg.hidden = true;
@@ -1511,7 +1497,6 @@ function renderGapChart() {
   gapEls.note.textContent = isLeaderMode
     ? "선두 ETF 대비 격차입니다. 1Q가 1위인 날은 2위와 비교합니다. 순위는 매일 바뀌므로 비교 대상도 날마다 달라집니다."
     : `${last.rivalName} 대비 격차입니다. 양수면 1Q가 앞선 폭입니다.`;
-  renderGapExDates();
   renderGapSummary(last);
 
   const { width, height, paddingLeft, paddingRight, paddingTop, paddingBottom } = GAP_CHART;
@@ -1607,11 +1592,6 @@ function buildGapXAxis(points, toX) {
     output += `<text class="gap-axis-text" x="${toX(index).toFixed(2)}" y="${y}" text-anchor="${anchor}">${points[index].date.slice(5)}</text>`;
   }
   return output;
-}
-
-function renderGapExDates() {
-  gapEls.exDates.textContent = describeExDates();
-  gapEls.exDates.title = exDateDetail();
 }
 
 function renderGapSummary(point) {
