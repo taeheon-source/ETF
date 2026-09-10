@@ -1275,6 +1275,8 @@ if (document.getElementById("tab-peer")?.classList.contains("is-active")) {
    순위는 매일 바뀌기 때문에 비교 대상을 날짜마다 새로 고른다. */
 const GAP_GROUP_KEY = "SHORT_TERM";
 const GAP_FOCUS_NAME = "1Q 단기금융채액티브";
+// 그날의 선두를 상대로 삼는 기본 모드. 나머지 값은 고정 비교 ETF명이다.
+const GAP_LEADER_MODE = "LEADER";
 const GAP_CHART = {
   width: 760,
   height: 300,
@@ -1290,10 +1292,12 @@ const gapEls = {
   wrap: document.querySelector("#gapChartWrap"),
   svg: document.querySelector("#gapChart"),
   tooltip: document.querySelector("#gapTooltip"),
-  empty: document.querySelector("#gapEmpty")
+  empty: document.querySelector("#gapEmpty"),
+  toggle: document.querySelector("#gapToggle"),
+  note: document.querySelector("#gapNote")
 };
 
-const gapChartState = { points: [], geometry: null };
+const gapChartState = { points: [], geometry: null, mode: GAP_LEADER_MODE };
 
 function buildGapSeries() {
   const groupMeta = ETF_GROUPS[GAP_GROUP_KEY];
@@ -1338,11 +1342,19 @@ function buildGapSeries() {
         .sort((a, b) => b.ytd - a.ytd);
 
       const focusRow = ranked.find((row) => row.code === focus.code);
-      if (!focusRow || ranked.length < 2) {
+      if (!focusRow) {
         return null;
       }
 
-      const rival = ranked[0].code === focus.code ? ranked[1] : ranked[0];
+      // 선두 모드에서는 1Q가 1위인 날만 2위를 상대로 삼는다
+      const rival =
+        gapChartState.mode === GAP_LEADER_MODE
+          ? ranked[ranked[0].code === focus.code ? 1 : 0]
+          : ranked.find((row) => row.name === gapChartState.mode);
+      if (!rival || rival.code === focus.code) {
+        return null;
+      }
+
       return {
         date: point.date,
         focusYtd: focusRow.ytd,
@@ -1369,6 +1381,7 @@ function renderGapChart() {
   if (points.length < 2) {
     gapChartState.geometry = null;
     gapEls.meta.textContent = "";
+    gapEls.note.textContent = "";
     gapEls.summary.innerHTML = "";
     gapEls.svg.innerHTML = "";
     gapEls.svg.hidden = true;
@@ -1381,7 +1394,13 @@ function renderGapChart() {
 
   const first = points[0];
   const last = points[points.length - 1];
-  gapEls.meta.textContent = `${first.date} ~ ${last.date} · 단기형 ${last.total}종 기준`;
+  const isLeaderMode = gapChartState.mode === GAP_LEADER_MODE;
+  gapEls.meta.textContent = isLeaderMode
+    ? `${first.date} ~ ${last.date} · 단기형 ${last.total}종 기준`
+    : `${first.date} ~ ${last.date} · ${last.rivalName} 대비`;
+  gapEls.note.textContent = isLeaderMode
+    ? "선두 ETF 대비 격차입니다. 1Q가 1위인 날은 2위와 비교합니다. 순위는 매일 바뀌므로 비교 대상도 날마다 달라집니다."
+    : `${last.rivalName} 대비 격차입니다. 양수면 1Q가 앞선 폭입니다.`;
   renderGapSummary(last);
 
   const { width, height, paddingLeft, paddingRight, paddingTop, paddingBottom } = GAP_CHART;
@@ -1507,10 +1526,48 @@ function formatGapPercentPoint(value) {
   return `${value >= 0 ? "+" : ""}${(value * 100).toFixed(3)}%p`;
 }
 
+// 비교 대상 목록은 단기형 그룹 정의에서 그대로 끌어온다
+function gapCompareOptions() {
+  return [
+    { value: GAP_LEADER_MODE, label: "최상위권" },
+    ...ETF_GROUPS[GAP_GROUP_KEY].etfNames
+      .filter((name) => name !== GAP_FOCUS_NAME)
+      .map((name) => ({ value: name, label: NAV_TABLE_LABELS[name] || name }))
+  ];
+}
+
+function renderGapToggle() {
+  if (!gapEls.toggle) {
+    return;
+  }
+  gapEls.toggle.innerHTML = gapCompareOptions()
+    .map(
+      (option) => `
+        <button
+          type="button"
+          class="toggle-button${option.value === gapChartState.mode ? " is-active" : ""}"
+          data-gap-mode="${escapeHtml(option.value)}"
+        >${escapeHtml(option.label)}</button>
+      `
+    )
+    .join("");
+}
+
 function bindGapChartEvents() {
   if (!gapEls.svg) {
     return;
   }
+
+  gapEls.toggle?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-gap-mode]");
+    if (!button || button.dataset.gapMode === gapChartState.mode) {
+      return;
+    }
+    gapChartState.mode = button.dataset.gapMode;
+    renderGapToggle();
+    renderGapChart();
+  });
+
   gapEls.svg.addEventListener("pointermove", handleGapPointerMove);
   gapEls.svg.addEventListener("pointerleave", hideGapTooltip);
   gapEls.svg.addEventListener("pointercancel", hideGapTooltip);
@@ -1631,4 +1688,5 @@ function hideGapTooltip() {
   }
 }
 
+renderGapToggle();
 bindGapChartEvents();

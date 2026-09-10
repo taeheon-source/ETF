@@ -308,9 +308,13 @@
               <div class="panel-heading">
                 <div>
                   <p class="panel-kicker">YTD GAP</p>
-                  <h2>1Q 단기금융채 YTD 격차</h2>
+                  <h2>1Q 단기금융채 GAP</h2>
                 </div>
                 <p class="panel-meta" id="gapChartMeta"></p>
+              </div>
+
+              <div class="gap-toolbar">
+                <div class="toggle-group" id="gapToggle" role="tablist" aria-label="비교 대상"></div>
               </div>
 
               <div class="detail-metrics" id="gapSummary"></div>
@@ -328,10 +332,7 @@
                   </p>
                 </div>
               </div>
-              <p class="gap-note">
-                선두 ETF 대비 격차입니다. 1Q가 1위인 날은 2위와 비교합니다.
-                순위는 매일 바뀌므로 비교 대상도 날마다 달라집니다.
-              </p>
+              <p class="gap-note" id="gapNote"></p>
             </section>
           </div>
 
