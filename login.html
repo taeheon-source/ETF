@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>로그인 · Hana Bond ETF Monitoring</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0c0d11;
+        --panel: #13141a;
+        --field: #1c1d25;
+        --line: #252730;
+        --line-strong: #2e3040;
+        --line-field: #3a3c4e;
+        --text: #f0f1f5;
+        --muted: #7a7f96;
+        --gold: #e8a83a;
+        --negative: #ff6470;
+        --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+          system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+        font-family: var(--font-sans);
+        font-variant-numeric: tabular-nums;
+        -webkit-font-smoothing: antialiased;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .card {
+        width: min(380px, 100%);
+        padding: 28px 26px 24px;
+        border: 1px solid var(--line-strong);
+        border-radius: 18px;
+        background: linear-gradient(135deg, #161720 0%, #13141a 55%, #171520 100%);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 24px 48px rgba(0, 0, 0, 0.5);
+      }
+
+      .kicker {
+        margin: 0 0 8px;
+        color: var(--gold);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0 0 6px;
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .lede {
+        margin: 0 0 22px;
+        color: var(--muted);
+        font-size: 0.88rem;
+        line-height: 1.5;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      input {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 13px;
+        border: 2px solid var(--line-field);
+        border-radius: 12px;
+        background: var(--field);
+        color: var(--text);
+        font: inherit;
+        letter-spacing: 0.08em;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: var(--gold);
+      }
+
+      button {
+        width: 100%;
+        min-height: 44px;
+        margin-top: 14px;
+        border: 1.5px solid #ffffff;
+        border-radius: 12px;
+        background: #f0f1f5;
+        color: #111111;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.18s ease, opacity 0.18s ease;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+
+      .error {
+        margin: 14px 0 0;
+        color: var(--negative);
+        font-size: 0.85rem;
+        min-height: 1.2em;
+      }
+
+      .footnote {
+        margin: 20px 0 0;
+        padding-top: 14px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <p class="kicker">Hana Bond ETF</p>
+      <h1>모니터링 대시보드</h1>
+      <p class="lede">비밀번호를 입력하면 접속됩니다.</p>
+
+      <form id="loginForm" novalidate>
+        <label for="password">비밀번호</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          autofocus
+          required
+        />
+        <button id="submitButton" type="submit">접속</button>
+        <p class="error" id="error" role="alert" aria-live="polite"></p>
+      </form>
+
+      <p class="footnote">*Source: KRX API</p>
+    </main>
+
+    <script>
+      const form = document.querySelector("#loginForm");
+      const input = document.querySelector("#password");
+      const button = document.querySelector("#submitButton");
+      const error = document.querySelector("#error");
+
+      // 로그인 전에 보려던 경로로 되돌려 보낸다. 같은 사이트 경로만 허용한다.
+      function nextPath() {
+        const value = new URLSearchParams(location.search).get("next");
+        return value && value.startsWith("/") && !value.startsWith("//") ? value : "/";
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        error.textContent = "";
+        button.disabled = true;
+        button.textContent = "확인 중...";
+
+        try {
+          const response = await fetch("/__auth", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ password: input.value })
+          });
+
+          if (response.ok) {
+            location.replace(nextPath());
+            return;
+          }
+
+          const payload = await response.json().catch(() => ({}));
+          error.textContent = payload.error || "접속하지 못했습니다.";
+        } catch {
+          error.textContent = "서버에 연결하지 못했습니다.";
+        }
+
+        button.disabled = false;
+        button.textContent = "접속";
+        input.select();
+      });
+    </script>
+  </body>
+</html>
