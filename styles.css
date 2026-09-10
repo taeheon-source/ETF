@@ -335,7 +335,7 @@ select {
 
 .toggle-button.is-active {
   background: var(--brand);
-  color: #111111;
+  color: #ffffff;
 }
 
 .control,
