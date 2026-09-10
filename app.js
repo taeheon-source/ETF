@@ -314,7 +314,6 @@ const els = {
   chartMeta: document.querySelector("#chartMeta"),
   trendChart: document.querySelector("#trendChart"),
   refreshButton: document.querySelector("#refreshButton"),
-  returnBasisNote: document.querySelector("#returnBasisNote"),
   detailMetrics: document.querySelector("#detailMetrics")
 };
 
@@ -512,13 +511,7 @@ function render() {
   renderNavTable();
   renderChart();
   renderGapChart();
-  renderReturnBasisNote();
   els.compareHeader.textContent = "비교일 대비";
-}
-
-function renderReturnBasisNote() {
-  els.returnBasisNote.textContent = describeExDates();
-  els.returnBasisNote.title = exDateDetail();
 }
 
 function getCurrentGroupMeta() {

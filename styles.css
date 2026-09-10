@@ -271,10 +271,6 @@ select {
   align-items: end;
 }
 
-.return-basis-note {
-  margin-top: 10px;
-  font-size: 0.82rem;
-}
 
 .action-button {
   border-radius: 12px;
