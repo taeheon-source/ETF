@@ -11,9 +11,9 @@
   --positive: #4ecb82;
   --negative: #ff6470;
   --accent: #f0f1f5;
-  --gold: #e8a83a;
-  --gold-glow: rgba(232, 168, 58, 0.08);
-  --featured: #e8a83a;
+  --brand: #019178;
+  --brand-glow: rgba(1, 145, 120, 0.08);
+  --featured: #019178;
   --shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   --panel-glow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 20px 40px rgba(0, 0, 0, 0.4);
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
@@ -74,7 +74,7 @@ select {
   right: -40px;
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, rgba(232, 168, 58, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(1, 145, 120, 0.08) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -124,7 +124,7 @@ select {
 }
 
 .sidebar-label {
-  color: var(--gold);
+  color: var(--brand);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.2em;
@@ -155,9 +155,9 @@ select {
 }
 
 .nav-tab.is-active {
-  background: var(--gold-glow);
-  color: var(--gold);
-  border-color: rgba(232, 168, 58, 0.2);
+  background: var(--brand-glow);
+  color: var(--brand);
+  border-color: rgba(1, 145, 120, 0.2);
 }
 
 .nav-tab-icon {
@@ -192,7 +192,7 @@ select {
 .peer-empty-icon {
   width: 64px;
   height: 64px;
-  color: var(--gold);
+  color: var(--brand);
   opacity: 0.5;
 }
 
@@ -248,7 +248,7 @@ select {
 
 .panel-kicker {
   margin: 0 0 6px;
-  color: var(--gold);
+  color: var(--brand);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.2em;
@@ -334,7 +334,7 @@ select {
 }
 
 .toggle-button.is-active {
-  background: var(--gold);
+  background: var(--brand);
   color: #111111;
 }
 
@@ -451,27 +451,27 @@ td {
 }
 
 .returns-table tbody tr.is-featured {
-  background: var(--gold-glow);
+  background: var(--brand-glow);
 }
 
 .returns-table tbody tr.is-featured td {
-  box-shadow: inset 0 1px 0 rgba(232, 168, 58, 0.45), inset 0 -1px 0 rgba(232, 168, 58, 0.45);
+  box-shadow: inset 0 1px 0 rgba(1, 145, 120, 0.45), inset 0 -1px 0 rgba(1, 145, 120, 0.45);
 }
 
 .returns-table tbody tr.is-featured td:first-child {
   box-shadow:
-    inset 1px 0 0 rgba(232, 168, 58, 0.45),
-    inset 0 1px 0 rgba(232, 168, 58, 0.45),
-    inset 0 -1px 0 rgba(232, 168, 58, 0.45);
+    inset 1px 0 0 rgba(1, 145, 120, 0.45),
+    inset 0 1px 0 rgba(1, 145, 120, 0.45),
+    inset 0 -1px 0 rgba(1, 145, 120, 0.45);
   border-top-left-radius: 14px;
   border-bottom-left-radius: 14px;
 }
 
 .returns-table tbody tr.is-featured td:last-child {
   box-shadow:
-    inset -1px 0 0 rgba(232, 168, 58, 0.45),
-    inset 0 1px 0 rgba(232, 168, 58, 0.45),
-    inset 0 -1px 0 rgba(232, 168, 58, 0.45);
+    inset -1px 0 0 rgba(1, 145, 120, 0.45),
+    inset 0 1px 0 rgba(1, 145, 120, 0.45),
+    inset 0 -1px 0 rgba(1, 145, 120, 0.45);
   border-top-right-radius: 14px;
   border-bottom-right-radius: 14px;
 }
@@ -604,7 +604,7 @@ td {
 .rank {
   font-size: 1.4rem;
   font-weight: 800;
-  color: var(--gold);
+  color: var(--brand);
   text-align: center;
 }
 

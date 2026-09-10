@@ -878,14 +878,14 @@ function renderChart() {
   els.trendChart.innerHTML = `
     <defs>
       <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="rgba(244,184,96,0.40)"></stop>
-        <stop offset="100%" stop-color="rgba(244,184,96,0.00)"></stop>
+        <stop offset="0%" stop-color="rgba(1,145,120,0.40)"></stop>
+        <stop offset="100%" stop-color="rgba(1,145,120,0.00)"></stop>
       </linearGradient>
     </defs>
     <rect x="0" y="0" width="${width}" height="${height}" rx="18" fill="#111317"></rect>
     ${buildGridLines(min, max, paddingLeft, width - paddingRight, height, paddingTop, paddingBottom, chartHeight, span)}
     <polygon fill="url(#chartFill)" points="${buildAreaPoints(points, height, paddingBottom)}"></polygon>
-    <polyline fill="none" stroke="#f4b860" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" points="${points.join(" ")}"></polyline>
+    <polyline fill="none" stroke="#019178" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" points="${points.join(" ")}"></polyline>
     <circle cx="${lastX}" cy="${lastY}" r="6" fill="#ffffff"></circle>
     <g>
       <rect x="${bubbleX}" y="${bubbleY}" width="${bubbleWidth}" height="${bubbleHeight}" rx="10" fill="#242933"></rect>
@@ -1747,7 +1747,7 @@ function showGapTooltip(point, pixelX, pixelY) {
   tooltip.replaceChildren(
     gapTooltipDate(point.date),
     // 색은 대상을 따라가야 하므로 우열이 바뀌어도 키 색을 바꾸지 않는다
-    gapTooltipRow(GAP_FOCUS_NAME, toPercent(point.focusYtd), "var(--gold)"),
+    gapTooltipRow(GAP_FOCUS_NAME, toPercent(point.focusYtd), "var(--brand)"),
     gapTooltipRow(point.rivalName, toPercent(point.rivalYtd), "var(--muted)"),
     gapTooltipGap(point),
     gapTooltipRank(point)
