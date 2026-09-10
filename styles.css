@@ -267,8 +267,13 @@ select {
 }
 
 .controls-grid-compact {
-  grid-template-columns: repeat(2, minmax(0, 320px)) auto;
+  grid-template-columns: repeat(2, minmax(0, 280px)) auto auto;
   align-items: end;
+}
+
+.return-basis-note {
+  margin-top: 10px;
+  font-size: 0.82rem;
 }
 
 .action-button {

@@ -87,6 +87,84 @@ const NAV_TABLE_LABELS = {
 };
 const ALL_TARGET_ETF_NAMES = [...new Set(Object.values(ETF_GROUPS).flatMap((group) => group.etfNames))];
 
+/* 분배락 판정 기준. 단기채 ETF의 일간 변동은 1bp 안팎이라 중앙값보다
+   15bp 넘게 빠지는 날은 금리 변동으로 설명되지 않는다. 월 분배금은
+   보통 20~30bp라 이 선에서 갈린다. */
+const EX_DATE_DROP_THRESHOLD = 0.0015;
+
+function medianOf(values) {
+  if (!values.length) {
+    return 0;
+  }
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+/* NAV만으로는 분배금이 수익률에서 빠져 분배하는 ETF가 불리하게 잡힌다.
+   분배락으로 보이는 날의 일간 수익률을 그 ETF의 평소 수준으로 되돌려
+   총수익 지수(navTr)를 다시 쌓는다. 분배금 액수를 알 수 없어 쓰는 근사다.
+   원본 nav는 그대로 두므로 껐다 켜도 같은 결과가 나온다. */
+function buildTotalReturnSeries(series) {
+  if (!state.adjustExDate || series.length < 2) {
+    return series.map((point) => ({ ...point, navTr: point.nav, isExDate: false }));
+  }
+
+  const returns = series.slice(1).map((point, index) => point.nav / series[index].nav - 1);
+  const median = medianOf(returns);
+  let level = series[0].nav;
+  const output = [{ ...series[0], navTr: level, isExDate: false }];
+
+  series.slice(1).forEach((point, index) => {
+    const isExDate = returns[index] < median - EX_DATE_DROP_THRESHOLD;
+    level *= 1 + (isExDate ? median : returns[index]);
+    output.push({ ...point, navTr: level, isExDate });
+  });
+  return output;
+}
+
+function setExDateAdjustment(enabled) {
+  if (state.adjustExDate === enabled) {
+    return;
+  }
+  state.adjustExDate = enabled;
+  applyExDateAdjustment();
+  syncExDateToggles();
+  render();
+}
+
+function syncExDateToggles() {
+  document.querySelectorAll("[data-gap-adjust]").forEach((button) => {
+    button.classList.toggle("is-active", (button.dataset.gapAdjust === "on") === state.adjustExDate);
+  });
+}
+
+function describeExDates() {
+  if (!state.adjustExDate) {
+    return "원본 NAV 그대로입니다. 분배금이 빠져 있어 분배하는 ETF의 수익률이 실제보다 낮게 나옵니다.";
+  }
+  if (!state.exDates.length) {
+    return "분배락으로 볼 만한 날이 잡히지 않았습니다.";
+  }
+  return `보정한 분배락: ${state.exDates.map((entry) => `${entry.name} ${entry.dates.length}회`).join(" · ")}`;
+}
+
+function exDateDetail() {
+  return state.exDates.map((entry) => `${entry.name}: ${entry.dates.join(", ")}`).join("\n");
+}
+
+// 모든 수익률 계산이 같은 시계열을 보도록 한 곳에서 붙인다
+function applyExDateAdjustment() {
+  state.exDates = [];
+  Object.values(state.grouped).forEach((etf) => {
+    etf.series = buildTotalReturnSeries(etf.series);
+    const dates = etf.series.filter((point) => point.isExDate).map((point) => point.date);
+    if (dates.length) {
+      state.exDates.push({ name: etf.name, dates });
+    }
+  });
+}
+
 const sampleDataset = [
   { BAS_DD: "2025-12-31", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.12", ASSET_TOTAL: "95400000000" },
   { BAS_DD: "2026-01-02", ISU_CD: "1Q_BOND", ISU_NM: "1Q 종합채권(AA-이상)액티브", NAV: "1034.55", ASSET_TOTAL: "95650000000" },
@@ -200,7 +278,9 @@ const state = {
   dataset: [],
   grouped: {},
   etfs: [],
-  availableDates: []
+  availableDates: [],
+  adjustExDate: true,
+  exDates: []
 };
 
 const els = {
@@ -230,6 +310,7 @@ const els = {
   chartMeta: document.querySelector("#chartMeta"),
   trendChart: document.querySelector("#trendChart"),
   refreshButton: document.querySelector("#refreshButton"),
+  returnBasisNote: document.querySelector("#returnBasisNote"),
   detailMetrics: document.querySelector("#detailMetrics")
 };
 
@@ -253,6 +334,14 @@ function setEtfGroup(groupKey) {
 }
 
 function bindEvents() {
+  // 수익률 탭과 GAP 탭 양쪽에 같은 토글이 있어 위임으로 한 번에 처리한다
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-gap-adjust]");
+    if (button) {
+      setExDateAdjustment(button.dataset.gapAdjust === "on");
+    }
+  });
+
   els.groupTotalBondButton.addEventListener("click", () => {
     setEtfGroup("TOTAL_BOND");
   });
@@ -348,6 +437,7 @@ async function loadDataset() {
 function applyDataset(rows) {
   state.dataset = normalizeRows(rows);
   state.grouped = buildGroupedData(state.dataset);
+  applyExDateAdjustment();
   state.etfs = Object.values(state.grouped);
   state.availableDates = [...new Set(state.dataset.map((row) => row.BAS_DD))].sort();
   state.baseDate = state.availableDates[state.availableDates.length - 1] || "";
@@ -418,7 +508,13 @@ function render() {
   renderNavTable();
   renderChart();
   renderGapChart();
+  renderReturnBasisNote();
   els.compareHeader.textContent = "비교일 대비";
+}
+
+function renderReturnBasisNote() {
+  els.returnBasisNote.textContent = describeExDates();
+  els.returnBasisNote.title = exDateDetail();
 }
 
 function getCurrentGroupMeta() {
@@ -743,7 +839,8 @@ function renderChart() {
   }
 
   const basePoint = series[0];
-  const values = series.map((point) => ((point.nav / basePoint.nav) - 1) * 100);
+  const baseNav = basePoint.navTr ?? basePoint.nav;
+  const values = series.map((point) => (((point.navTr ?? point.nav) / baseNav) - 1) * 100);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const width = 700;
@@ -904,11 +1001,17 @@ function getYearReferenceDate(series, baseDate) {
   return index > 0 ? series[index - 1]?.date ?? null : null;
 }
 
+// 수익률은 분배락 보정된 총수익 지수 기준이다. 원본 NAV는 원자료 표에만 쓴다.
 function computeReturn(basePoint, referencePoint) {
-  if (!basePoint || !referencePoint || referencePoint.nav === 0) {
+  if (!basePoint || !referencePoint) {
     return null;
   }
-  return basePoint.nav / referencePoint.nav - 1;
+  const base = basePoint.navTr ?? basePoint.nav;
+  const reference = referencePoint.navTr ?? referencePoint.nav;
+  if (!reference) {
+    return null;
+  }
+  return base / reference - 1;
 }
 
 function computeAssetReturn(basePoint, referencePoint) {
@@ -1277,10 +1380,6 @@ const GAP_GROUP_KEY = "SHORT_TERM";
 const GAP_FOCUS_NAME = "1Q 단기금융채액티브";
 // 그날의 선두를 상대로 삼는 기본 모드. 나머지 값은 고정 비교 ETF명이다.
 const GAP_LEADER_MODE = "LEADER";
-/* 분배락 판정 기준. 단기채 ETF의 일간 변동은 1bp 안팎이라 중앙값보다
-   15bp 넘게 빠지는 날은 금리 변동으로 설명되지 않는다. 월 분배금은
-   보통 20~30bp라 이 선에서 갈린다. */
-const GAP_EX_DATE_DROP = 0.0015;
 // 세로축이 최소한 이만큼(bp)은 담게 해서 눈금이 전부 같은 숫자로 찍히지 않게 한다
 const GAP_MIN_AXIS_SPAN_BP = 2;
 const GAP_CHART = {
@@ -1305,43 +1404,8 @@ const gapEls = {
   exDates: document.querySelector("#gapExDates")
 };
 
-const gapChartState = {
-  points: [],
-  geometry: null,
-  mode: GAP_LEADER_MODE,
-  adjustExDate: true,
-  exDates: []
-};
+const gapChartState = { points: [], geometry: null, mode: GAP_LEADER_MODE };
 
-function medianOf(values) {
-  if (!values.length) {
-    return 0;
-  }
-  const sorted = [...values].sort((a, b) => a - b);
-  const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
-}
-
-/* NAV만으로는 분배금이 수익률에서 빠진다. 분배락으로 보이는 날의 일간
-   수익률을 그 ETF의 평소 수준으로 되돌려 총수익 지수를 다시 쌓는다.
-   분배금 자체를 알 수 없으므로 중앙값으로 대체하는 근사다. */
-function buildTotalReturnSeries(series) {
-  if (!gapChartState.adjustExDate || series.length < 2) {
-    return series.map((point) => ({ ...point, navTr: point.nav, isExDate: false }));
-  }
-
-  const returns = series.slice(1).map((point, index) => point.nav / series[index].nav - 1);
-  const median = medianOf(returns);
-  let level = series[0].nav;
-  const output = [{ ...series[0], navTr: level, isExDate: false }];
-
-  series.slice(1).forEach((point, index) => {
-    const isExDate = returns[index] < median - GAP_EX_DATE_DROP;
-    level *= 1 + (isExDate ? median : returns[index]);
-    output.push({ ...point, navTr: level, isExDate });
-  });
-  return output;
-}
 
 function buildGapSeries() {
   const groupMeta = ETF_GROUPS[GAP_GROUP_KEY];
@@ -1353,20 +1417,13 @@ function buildGapSeries() {
     return [];
   }
 
-  const adjusted = new Map(universe.map((etf) => [etf.code, buildTotalReturnSeries(etf.series)]));
-  gapChartState.exDates = universe
-    .map((etf) => ({
-      name: etf.name,
-      dates: adjusted.get(etf.code).filter((point) => point.isExDate).map((point) => point.date)
-    }))
-    .filter((entry) => entry.dates.length);
-
   // YTD 기준값은 기준연도 첫 영업일의 직전 거래일, 즉 전년도 마지막 영업일이다
   const startNav = new Map();
   universe.forEach((etf) => {
-    const reference = getYearReference(adjusted.get(etf.code), state.baseDate);
-    if (reference && reference.navTr) {
-      startNav.set(etf.code, reference.navTr);
+    const reference = getYearReference(etf.series, state.baseDate);
+    const nav = reference?.navTr ?? reference?.nav;
+    if (nav) {
+      startNav.set(etf.code, nav);
     }
   });
   if (!startNav.has(focus.code)) {
@@ -1374,11 +1431,14 @@ function buildGapSeries() {
   }
 
   const navLookup = new Map(
-    universe.map((etf) => [etf.code, new Map(adjusted.get(etf.code).map((point) => [point.date, point.navTr]))])
+    universe.map((etf) => [
+      etf.code,
+      new Map(etf.series.map((point) => [point.date, point.navTr ?? point.nav]))
+    ])
   );
   const year = state.baseDate.slice(0, 4);
 
-  return adjusted.get(focus.code)
+  return focus.series
     .filter((point) => point.date.startsWith(year) && point.date <= state.baseDate)
     .map((point) => {
       const ranked = universe
@@ -1553,21 +1613,8 @@ function buildGapXAxis(points, toX) {
 }
 
 function renderGapExDates() {
-  if (!gapChartState.adjustExDate) {
-    gapEls.exDates.textContent = "원본 NAV 그대로입니다. 분배금이 빠져 있어 분배하는 ETF의 수익률이 실제보다 낮게 나옵니다.";
-    return;
-  }
-  if (!gapChartState.exDates.length) {
-    gapEls.exDates.textContent = "단기형 7종에서 분배락으로 볼 만한 날이 잡히지 않았습니다.";
-    return;
-  }
-  const summary = gapChartState.exDates
-    .map((entry) => `${entry.name} ${entry.dates.length}회`)
-    .join(" · ");
-  gapEls.exDates.textContent = `보정한 분배락: ${summary}`;
-  gapEls.exDates.title = gapChartState.exDates
-    .map((entry) => `${entry.name}: ${entry.dates.join(", ")}`)
-    .join("\n");
+  gapEls.exDates.textContent = describeExDates();
+  gapEls.exDates.title = exDateDetail();
 }
 
 function renderGapSummary(point) {
@@ -1649,22 +1696,6 @@ function bindGapChartEvents() {
     }
     gapChartState.mode = button.dataset.gapMode;
     renderGapToggle();
-    renderGapChart();
-  });
-
-  gapEls.adjustToggle?.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-gap-adjust]");
-    if (!button) {
-      return;
-    }
-    const next = button.dataset.gapAdjust === "on";
-    if (next === gapChartState.adjustExDate) {
-      return;
-    }
-    gapChartState.adjustExDate = next;
-    gapEls.adjustToggle.querySelectorAll("[data-gap-adjust]").forEach((item) => {
-      item.classList.toggle("is-active", item === button);
-    });
     renderGapChart();
   });
 

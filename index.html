@@ -104,11 +104,19 @@
                     <span>비교일</span>
                     <select id="compareDateSelect"></select>
                   </label>
+                  <div class="control">
+                    <span>수익률 기준</span>
+                    <div class="toggle-group" role="group" aria-label="수익률 기준">
+                      <button type="button" class="toggle-button is-active" data-gap-adjust="on">분배락 보정</button>
+                      <button type="button" class="toggle-button" data-gap-adjust="off">원본 NAV</button>
+                    </div>
+                  </div>
                   <div class="control control-action">
                     <span>&nbsp;</span>
                     <button id="refreshButton" class="action-button" type="button">KRX 데이터 새로고침</button>
                   </div>
                 </div>
+                <p class="panel-meta return-basis-note" id="returnBasisNote"></p>
               </section>
 
               <section class="panel">
