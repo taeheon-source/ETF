@@ -8,6 +8,36 @@ const PRODUCTS = {
 
 const SKIP_CODES = new Set(["CASH00000001", "KRD010010001"]);
 
+/* 삼성 응답에서 편입물 가중평균 듀레이션과 YTM을 담는 키.
+   보수·헤지비용·세금 차감 전 기준이고 기준일은 전일이다. */
+const DURATION_KEY = "itemDur";
+const YTM_KEY = "mkprcPrfr";
+
+/* 응답의 어느 깊이에 실릴지 확정할 수 없어 키로 찾는다.
+   배열은 건너뛴다. 개별 구성종목이 아니라 펀드 전체 값을 원하기 때문이다. */
+function findNumber(node, key, depth = 0) {
+  if (!node || typeof node !== "object" || Array.isArray(node) || depth > 6) {
+    return null;
+  }
+  // Number(null)은 0이 된다. 응답에 null이 실려 오므로 숫자로 읽히는 값만 받는다.
+  if (Object.prototype.hasOwnProperty.call(node, key)) {
+    const raw = node[key];
+    if (raw !== null && raw !== undefined && raw !== "") {
+      const value = Number(raw);
+      if (Number.isFinite(value)) {
+        return value;
+      }
+    }
+  }
+  for (const child of Object.values(node)) {
+    const found = findNumber(child, key, depth + 1);
+    if (found !== null) {
+      return found;
+    }
+  }
+  return null;
+}
+
 async function fetchHoldings(productId, etfId) {
   const r = await fetch(`${BASE}/api/v1/kodex/product/${productId}.do`, {
     headers: {
@@ -36,6 +66,9 @@ async function fetchHoldings(productId, etfId) {
     updatedAt: pdf.gijunYMD
       ? `${pdf.gijunYMD.slice(0, 4)}-${pdf.gijunYMD.slice(4, 6)}-${pdf.gijunYMD.slice(6, 8)}`
       : new Date().toISOString(),
+    // 값을 못 찾아도 구성종목은 그대로 내려간다
+    duration: findNumber(json, DURATION_KEY),
+    ytm: findNumber(json, YTM_KEY),
     holdings,
   };
 }
@@ -50,11 +83,13 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { updatedAt, holdings } = await fetchHoldings(product.id, ticker);
+    const { updatedAt, duration, ytm, holdings } = await fetchHoldings(product.id, ticker);
     res.status(200).json({
       name: product.name,
       ticker,
       updatedAt,
+      duration,
+      ytm,
       headers: ["종목코드", "종목명", "수량(주)", "평가금액(원)", "비중(%)"],
       totalCount: holdings.length,
       holdings,
