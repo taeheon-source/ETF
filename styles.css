@@ -420,8 +420,18 @@ td {
 .returns-table th:not(:first-child),
 .returns-table td:not(:first-child),
 .nav-table th:not(:first-child),
-.nav-table td:not(:first-child) {
+.nav-table td:not(:first-child),
+.metric-table th:not(:first-child),
+.metric-table td:not(:first-child) {
   text-align: center;
+}
+
+/* 지표 이름 열은 표 머리글과 같은 톤으로 둔다 */
+.metric-table tbody th {
+  color: #bbbbbb;
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 /* 순자산총액은 자릿수 편차가 커서 우측 정렬로 소수점을 맞춘다 */

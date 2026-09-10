@@ -1661,6 +1661,110 @@ function renderGapToggle() {
     .join("");
 }
 
+
+/* ── 편입물 가중평균 YTM·듀레이션 ──
+   운용사가 공시하는 값이라 수집 경로가 종목마다 다르다. 지금은 구성종목
+   API에 값이 함께 실려 오는 곳만 채워지고, 나머지는 빈칸으로 둔다. */
+const METRIC_SOURCES = {
+  "1Q 단기금융채액티브": "/api/portfolio-1q",
+  "TIGER 단기채권액티브": "/api/portfolio-tiger",
+  "KODEX 단기채권": "/api/portfolio-kodex?ticker=152380",
+  "KODEX 단기채권PLUS": "/api/portfolio-kodex?ticker=476050"
+};
+
+const metricEls = {
+  head: document.querySelector("#metricTableHead"),
+  body: document.querySelector("#metricTableBody"),
+  meta: document.querySelector("#metricTableMeta")
+};
+
+const metricState = { data: {}, loading: false, loaded: false };
+
+function metricEtfNames() {
+  return ETF_GROUPS[GAP_GROUP_KEY].etfNames;
+}
+
+async function loadShortTermMetrics() {
+  if (!metricEls.body || metricState.loading || metricState.loaded) {
+    return;
+  }
+  metricState.loading = true;
+  renderShortTermMetrics();
+
+  await Promise.all(
+    Object.entries(METRIC_SOURCES).map(async ([name, url]) => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          return;
+        }
+        const payload = await response.json();
+        metricState.data[name] = {
+          ytm: Number.isFinite(payload.ytm) ? payload.ytm : null,
+          duration: Number.isFinite(payload.duration) ? payload.duration : null,
+          updatedAt: payload.updatedAt || null
+        };
+      } catch {
+        // 한 곳이 막혀도 나머지는 채운다. 실패한 종목만 빈칸으로 남는다.
+      }
+    })
+  );
+
+  metricState.loading = false;
+  metricState.loaded = true;
+  renderShortTermMetrics();
+}
+
+function renderShortTermMetrics() {
+  if (!metricEls.body) {
+    return;
+  }
+
+  const names = metricEtfNames();
+  metricEls.head.innerHTML = `<tr><th>지표</th>${names
+    .map((name) => `<th>${escapeHtml(NAV_TABLE_LABELS[name] || name)}</th>`)
+    .join("")}</tr>`;
+
+  const rows = [
+    { label: "YTM (%)", key: "ytm" },
+    { label: "듀레이션 (년)", key: "duration" }
+  ];
+
+  metricEls.body.innerHTML = rows
+    .map((row) => {
+      const cells = names
+        .map((name) => {
+          const entry = metricState.data[name];
+          const value = entry?.[row.key];
+          if (!Number.isFinite(value)) {
+            return `<td class="metric empty">${metricState.loading ? "…" : "-"}</td>`;
+          }
+          // 기준일은 열을 늘리지 않고 셀에 담는다
+          const asOf = entry.updatedAt ? ` title="${escapeHtml(entry.updatedAt)} 기준"` : "";
+          return `<td class="metric"${asOf}>${value.toFixed(2)}</td>`;
+        })
+        .join("");
+      return `<tr><th scope="row">${row.label}</th>${cells}</tr>`;
+    })
+    .join("");
+
+  renderMetricMeta();
+}
+
+function renderMetricMeta() {
+  const dates = [...new Set(Object.values(metricState.data).map((entry) => entry.updatedAt).filter(Boolean))].sort();
+  if (metricState.loading) {
+    metricEls.meta.textContent = "불러오는 중...";
+    return;
+  }
+  if (!dates.length) {
+    metricEls.meta.textContent = "";
+    return;
+  }
+  metricEls.meta.textContent =
+    dates.length === 1 ? `${dates[0]} 기준` : `${dates[0]} ~ ${dates[dates.length - 1]} 기준 (운용사별 상이)`;
+}
+
 function bindGapChartEvents() {
   if (!gapEls.svg) {
     return;
@@ -1675,6 +1779,8 @@ function bindGapChartEvents() {
     renderGapToggle();
     renderGapChart();
   });
+
+  document.querySelector('.nav-tab[data-tab="1q-short"]')?.addEventListener("click", loadShortTermMetrics);
 
   gapEls.svg.addEventListener("pointermove", handleGapPointerMove);
   gapEls.svg.addEventListener("pointerleave", hideGapTooltip);
@@ -1797,4 +1903,5 @@ function hideGapTooltip() {
 }
 
 renderGapToggle();
+renderShortTermMetrics();
 bindGapChartEvents();
