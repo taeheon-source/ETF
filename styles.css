@@ -45,7 +45,7 @@ select {
 .shell {
   width: min(1400px, calc(100vw - 32px));
   margin: 0 auto;
-  padding: 24px 0 44px;
+  padding: 16px 0 28px;
 }
 
 .hero,
@@ -58,9 +58,9 @@ select {
 .hero {
   display: flex;
   align-items: center;
-  min-height: 152px;
-  padding: 24px 32px;
-  border-radius: 28px;
+  min-height: 92px;
+  padding: 16px 24px;
+  border-radius: 18px;
   margin-bottom: 10px;
   background: linear-gradient(135deg, #161720 0%, #13141a 55%, #171520 100%);
   position: relative;
@@ -84,14 +84,18 @@ select {
   font-weight: 800;
 }
 
+.panel h2 {
+  font-size: 1.2rem;
+}
+
 .hero h1 {
-  font-size: clamp(2.6rem, 5vw, 4.1rem);
+  font-size: clamp(1.8rem, 3.2vw, 2.6rem);
   line-height: 1.08;
   letter-spacing: -0.03em;
 }
 
 .hero-footnote {
-  margin: 0 8px 18px 0;
+  margin: 0 8px 12px 0;
   text-align: right;
   color: var(--muted);
   font-size: 0.95rem;
@@ -102,7 +106,7 @@ select {
 .app-layout {
   display: grid;
   grid-template-columns: 200px 1fr;
-  gap: 18px;
+  gap: 14px;
   align-items: start;
 }
 
@@ -112,8 +116,8 @@ select {
   border: 1px solid var(--line-strong);
   background: var(--panel);
   box-shadow: var(--panel-glow);
-  border-radius: 24px;
-  padding: 12px;
+  border-radius: 18px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -125,17 +129,17 @@ select {
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  padding: 6px 12px 8px;
+  padding: 4px 10px 6px;
 }
 
 .nav-tab {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 12px 14px;
+  padding: 9px 12px;
   border: 1px solid transparent;
-  border-radius: 16px;
+  border-radius: 12px;
   background: transparent;
   color: var(--muted);
   font-weight: 700;
@@ -176,13 +180,13 @@ select {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 480px;
+  min-height: 320px;
   border: 1px solid var(--line-strong);
   background: var(--panel);
   box-shadow: var(--panel-glow);
-  border-radius: 28px;
+  border-radius: 18px;
   text-align: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .peer-empty-icon {
@@ -214,36 +218,36 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
+  min-height: 140px;
   color: var(--muted);
   font-size: 0.95rem;
 }
 
 /* ── ── */
 .group-switcher {
-  margin: 0 0 18px;
+  margin: 0 0 12px;
 }
 
 .dashboard {
   display: grid;
-  gap: 18px;
+  gap: 12px;
 }
 
 .panel {
-  border-radius: 28px;
-  padding: 18px;
+  border-radius: 18px;
+  padding: 14px;
 }
 
 .panel-heading {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 10px;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
 .panel-kicker {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   color: var(--gold);
   font-size: 11px;
   font-weight: 800;
@@ -259,7 +263,7 @@ select {
 
 .controls-grid {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .controls-grid-compact {
@@ -268,12 +272,12 @@ select {
 }
 
 .action-button {
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1.5px solid #ffffff;
   background: var(--accent);
   color: #111111;
-  min-height: 50px;
-  padding: 12px 18px;
+  min-height: 40px;
+  padding: 8px 16px;
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.18s ease, opacity 0.18s ease;
@@ -307,16 +311,16 @@ select {
   gap: 6px;
   padding: 4px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 14px;
   background: var(--field);
   flex-wrap: wrap;
 }
 
 .toggle-button {
-  min-height: 40px;
+  min-height: 32px;
   border: 0;
-  border-radius: 14px;
-  padding: 8px 14px;
+  border-radius: 10px;
+  padding: 6px 12px;
   background: transparent;
   color: var(--muted);
   font-weight: 700;
@@ -346,9 +350,9 @@ select {
 .inline-control select {
   width: 100%;
   border: 2px solid var(--line-field);
-  border-radius: 16px;
-  min-height: 50px;
-  padding: 12px 14px;
+  border-radius: 12px;
+  min-height: 40px;
+  padding: 8px 12px;
   background: var(--field);
   color: var(--text);
 }
@@ -364,7 +368,7 @@ select {
 .table-shell,
 .chart-shell {
   border: 1px solid var(--line);
-  border-radius: 22px;
+  border-radius: 16px;
   background: var(--panel-raised);
 }
 
@@ -395,7 +399,7 @@ table {
 
 th,
 td {
-  padding: 16px 14px;
+  padding: 10px 12px;
   border-bottom: 1px solid #242424;
   text-align: left;
   white-space: nowrap;
@@ -495,16 +499,16 @@ td.empty-state {
 }
 
 .overview-subsection {
-  margin-top: 18px;
+  margin-top: 12px;
 }
 
 .section-heading {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .section-heading h2 {
   margin: 0;
-  font-size: 1.75rem;
+  font-size: 1.3rem;
   font-weight: 800;
 }
 
@@ -515,46 +519,46 @@ td.empty-state {
 .split {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
-  gap: 18px;
+  gap: 12px;
 }
 
 .detail-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .detail-card {
   border: 2px solid #444444;
   background: var(--field);
-  border-radius: 18px;
-  padding: 14px;
+  border-radius: 14px;
+  padding: 12px;
 }
 
 .detail-label {
   display: block;
   color: var(--muted);
   font-size: 0.82rem;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .detail-value {
   display: block;
-  font-size: 1.28rem;
+  font-size: 1.12rem;
   font-weight: 800;
   color: var(--text);
 }
 
 .detail-meta {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   color: #c2c2c2;
   font-size: 0.9rem;
 }
 
 .chart-wrap,
 .ranking-list {
-  padding: 12px;
+  padding: 10px;
 }
 
 #trendChart {
@@ -565,17 +569,17 @@ td.empty-state {
 
 .ranking-list {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .ranking-item {
   display: grid;
-  grid-template-columns: 56px 1fr auto;
-  gap: 12px;
+  grid-template-columns: 44px 1fr auto;
+  gap: 10px;
   align-items: center;
-  padding: 14px;
+  padding: 10px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--panel-raised);
   transition: border-color 0.15s ease, background 0.15s ease;
 }
@@ -586,7 +590,7 @@ td.empty-state {
 }
 
 .rank {
-  font-size: 1.8rem;
+  font-size: 1.4rem;
   font-weight: 800;
   color: var(--gold);
   text-align: center;
@@ -610,7 +614,7 @@ td.empty-state {
 }
 
 .empty-state {
-  padding: 18px 6px;
+  padding: 12px 6px;
   color: var(--muted);
 }
 
@@ -654,21 +658,21 @@ td.empty-state {
 
   .hero,
   .panel {
-    border-radius: 20px;
+    border-radius: 14px;
   }
 
   .hero {
-    min-height: 132px;
-    padding: 18px;
+    min-height: 76px;
+    padding: 14px;
   }
 
   .panel {
-    padding: 16px 12px 12px;
+    padding: 12px 10px 10px;
   }
 
   th,
   td {
-    padding: 14px 10px;
+    padding: 9px 8px;
   }
 
   .panel-heading {
