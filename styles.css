@@ -415,16 +415,23 @@ td {
   font-size: 0.98rem;
 }
 
-/* 첫 열(ETF명·날짜)만 좌측 정렬하고, 숫자 열은 우측 정렬해 소수점을 맞춘다 */
+/* 첫 열(ETF명·날짜)만 좌측 정렬하고, 나머지 숫자 열은 헤더와 함께 가운데 정렬한다 */
 .returns-table th:not(:first-child),
 .returns-table td:not(:first-child),
 .nav-table th:not(:first-child),
 .nav-table td:not(:first-child) {
+  text-align: center;
+}
+
+/* 순자산총액은 자릿수 편차가 커서 우측 정렬로 소수점을 맞춘다 */
+.returns-table th:last-child,
+.returns-table td:last-child {
   text-align: right;
 }
 
 /* 전체 폭을 차지하는 안내 문구는 정렬 대상이 아니다 */
-td.empty-state {
+.returns-table td.empty-state,
+.nav-table td.empty-state {
   text-align: left;
 }
 
