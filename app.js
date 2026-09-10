@@ -87,10 +87,12 @@ const NAV_TABLE_LABELS = {
 };
 const ALL_TARGET_ETF_NAMES = [...new Set(Object.values(ETF_GROUPS).flatMap((group) => group.etfNames))];
 
-/* 분배락 판정 기준. 단기채 ETF의 일간 변동은 1bp 안팎이라 중앙값보다
-   15bp 넘게 빠지는 날은 금리 변동으로 설명되지 않는다. 월 분배금은
-   보통 20~30bp라 이 선에서 갈린다. */
-const EX_DATE_DROP_THRESHOLD = 0.0015;
+/* 분배락 판정 기준. 고정 폭을 쓰면 듀레이션이 긴 ETF에서 평범한 금리
+   하락일까지 분배락으로 오인한다. 그래서 각 ETF의 일간 변동폭(MAD)에
+   맞춰 임계값을 잡고, 변동이 아주 작은 ETF를 위해 하한만 둔다.
+   변동폭에 묻히는 분배금은 잡지 못한다. 그 경우 보정 없이 원본과 같아진다. */
+const EX_DATE_MIN_DROP = 0.0005;
+const EX_DATE_MAD_MULTIPLE = 8;
 
 function medianOf(values) {
   if (!values.length) {
@@ -112,11 +114,13 @@ function buildTotalReturnSeries(series) {
 
   const returns = series.slice(1).map((point, index) => point.nav / series[index].nav - 1);
   const median = medianOf(returns);
+  const deviation = medianOf(returns.map((value) => Math.abs(value - median)));
+  const cutoff = Math.max(EX_DATE_MIN_DROP, EX_DATE_MAD_MULTIPLE * deviation);
   let level = series[0].nav;
   const output = [{ ...series[0], navTr: level, isExDate: false }];
 
   series.slice(1).forEach((point, index) => {
-    const isExDate = returns[index] < median - EX_DATE_DROP_THRESHOLD;
+    const isExDate = returns[index] < median - cutoff;
     level *= 1 + (isExDate ? median : returns[index]);
     output.push({ ...point, navTr: level, isExDate });
   });
