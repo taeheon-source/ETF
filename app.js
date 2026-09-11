@@ -1667,6 +1667,7 @@ function renderGapToggle() {
    API에 값이 함께 실려 오는 곳만 채워지고, 나머지는 빈칸으로 둔다. */
 const METRIC_SOURCES = {
   "1Q 단기금융채액티브": "/api/portfolio-1q",
+  "RISE 단기국공채액티브": "/api/portfolio-rise",
   "TIGER 단기채권액티브": "/api/portfolio-tiger",
   "KODEX 단기채권": "/api/portfolio-kodex?ticker=152380",
   "KODEX 단기채권PLUS": "/api/portfolio-kodex?ticker=476050"
