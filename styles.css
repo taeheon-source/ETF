@@ -808,9 +808,15 @@ td {
   stroke-width: 1.5;
 }
 
-.gap-axis-text {
-  fill: var(--muted);
+/* 축 글씨는 두 차트가 같은 규칙을 쓴다. 어두운 배경에서 흐리지 않도록
+   본문과 같은 밝기로 둔다. */
+.chart-axis-text {
+  fill: var(--text);
   font-size: 11px;
+}
+
+#trendChart .chart-axis-text {
+  font-size: 13px;
 }
 
 .gap-crosshair {

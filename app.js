@@ -826,8 +826,9 @@ function renderChart() {
   const basePoint = series[0];
   const baseNav = basePoint.navTr ?? basePoint.nav;
   const values = series.map((point) => (((point.navTr ?? point.nav) / baseNav) - 1) * 100);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  const axis = niceAxis(Math.min(...values), Math.max(...values));
+  const min = axis.min;
+  const max = axis.max;
   const width = 700;
   const height = 320;
   const paddingLeft = 56;
@@ -864,7 +865,7 @@ function renderChart() {
       </linearGradient>
     </defs>
     <rect x="0" y="0" width="${width}" height="${height}" rx="18" fill="#111317"></rect>
-    ${buildGridLines(min, max, paddingLeft, width - paddingRight, height, paddingTop, paddingBottom, chartHeight, span)}
+    ${buildGridLines(axis, paddingLeft, width - paddingRight, height, paddingBottom, chartHeight)}
     <polygon fill="url(#chartFill)" points="${buildAreaPoints(points, height, paddingBottom)}"></polygon>
     <polyline fill="none" stroke="#019178" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" points="${points.join(" ")}"></polyline>
     <circle cx="${lastX}" cy="${lastY}" r="6" fill="#ffffff"></circle>
@@ -1006,16 +1007,54 @@ function computeAssetReturn(basePoint, referencePoint) {
   return basePoint.assetTotal - referencePoint.assetTotal;
 }
 
-function buildGridLines(min, max, xStart, xEnd, height, paddingTop, paddingBottom, chartHeight, span) {
-  let output = "";
-  for (let i = 0; i <= 4; i += 1) {
-    const ratio = i / 4;
-    const y = height - paddingBottom - ratio * chartHeight;
-    const value = min + ratio * span;
-    output += `<line x1="${xStart}" y1="${y}" x2="${xEnd}" y2="${y}" stroke="rgba(255,255,255,0.12)" stroke-dasharray="4 6"></line>`;
-    output += `<text x="14" y="${y + 5}" fill="#aeb7c4" font-size="13">${value.toFixed(1)}%</text>`;
+
+/* 눈금을 1, 2, 5의 배수로 끊어 읽기 쉬운 숫자만 남기고, 축 범위도 그
+   배수에 맞춰 넓힌다. 데이터 최대·최소를 그대로 쓰면 14.3, -6.4 같은
+   값이 눈금에 찍혀 읽기 어렵다. */
+function niceAxis(min, max, targetSteps = 6, maxLines = 9) {
+  const span = max - min || Math.abs(max) || 1;
+  const candidates = [];
+  for (let exponent = -4; exponent <= 8; exponent += 1) {
+    [1, 2, 5].forEach((base) => candidates.push(base * 10 ** exponent));
   }
-  return output;
+
+  let step = candidates.find((value) => value >= span / targetSteps) ?? candidates[candidates.length - 1];
+  let low = Math.floor(min / step) * step;
+  let high = Math.ceil(max / step) * step;
+
+  // 눈금이 너무 촘촘하면 한 단계 키운다
+  while ((high - low) / step > maxLines - 1) {
+    step = candidates.find((value) => value > step) ?? step * 2;
+    low = Math.floor(min / step) * step;
+    high = Math.ceil(max / step) * step;
+  }
+
+  // 값이 모두 같으면 범위가 0이 되어 나눗셈이 깨진다. 한 칸씩 벌려 둔다.
+  if (high <= low) {
+    low -= step;
+    high += step;
+  }
+
+  const decimals = Math.max(1, Math.ceil(-Math.log10(step)));
+  const lines = [];
+  // 부동소수점 누적 오차를 피하려고 곱셈으로 만든다
+  for (let i = 0; low + i * step <= high + step / 1000; i += 1) {
+    lines.push(low + i * step);
+  }
+  return { min: low, max: high, step, decimals, lines };
+}
+
+function buildGridLines(axis, xStart, xEnd, height, paddingBottom, chartHeight) {
+  const span = axis.max - axis.min || 1;
+  return axis.lines
+    .map((value) => {
+      const y = height - paddingBottom - ((value - axis.min) / span) * chartHeight;
+      return (
+        `<line x1="${xStart}" y1="${y.toFixed(2)}" x2="${xEnd}" y2="${y.toFixed(2)}" stroke="rgba(255,255,255,0.12)"></line>` +
+        `<text class="chart-axis-text" x="14" y="${(y + 5).toFixed(2)}">${value.toFixed(axis.decimals)}%</text>`
+      );
+    })
+    .join("");
 }
 
 function buildAreaPoints(points, height, paddingBottom) {
@@ -1030,7 +1069,7 @@ function buildXAxisLabels(series, paddingLeft, chartWidth, height, paddingBottom
   for (let i = 0; i <= steps; i += 1) {
     const pointIndex = Math.round((series.length - 1) * (i / Math.max(steps, 1)));
     const x = paddingLeft + (chartWidth * pointIndex) / Math.max(series.length - 1, 1);
-    output += `<text x="${x - 18}" y="${height - Math.max(paddingBottom - 28, 8)}" fill="#aeb7c4" font-size="13">${series[pointIndex].date.slice(5)}</text>`;
+    output += `<text class="chart-axis-text" x="${x - 18}" y="${height - Math.max(paddingBottom - 28, 8)}">${series[pointIndex].date.slice(5)}</text>`;
   }
   return output;
 }
@@ -1372,7 +1411,8 @@ const GAP_CHART = {
   height: 300,
   paddingLeft: 62,
   paddingRight: 26,
-  paddingTop: 20,
+  // 맨 위 눈금과 bp 표시가 붙지 않도록 여유를 둔다
+  paddingTop: 30,
   paddingBottom: 34
 };
 
@@ -1507,15 +1547,15 @@ function renderGapChart() {
   const values = points.map((point) => point.gap * 10000);
   let min = Math.min(...values, 0);
   let max = Math.max(...values, 0);
-  const headroom = (max - min) * 0.12 || 1;
-  min -= headroom;
-  max += headroom;
   // 격차가 거의 없는 구간에서 소수점 잡음이 화면 전체로 확대되지 않게 한다
   if (max - min < GAP_MIN_AXIS_SPAN_BP) {
     const middle = (max + min) / 2;
     min = middle - GAP_MIN_AXIS_SPAN_BP / 2;
     max = middle + GAP_MIN_AXIS_SPAN_BP / 2;
   }
+  const axis = niceAxis(min, max);
+  min = axis.min;
+  max = axis.max;
   const span = max - min;
 
   const toX = (index) => paddingLeft + (chartWidth * index) / (points.length - 1);
@@ -1549,7 +1589,7 @@ function renderGapChart() {
         <rect x="0" y="${zeroY.toFixed(2)}" width="${width}" height="${(height - zeroY).toFixed(2)}"></rect>
       </clipPath>
     </defs>
-    ${buildGapGrid(min, max, span)}
+    ${buildGapGrid(axis, span)}
     <polygon class="gap-area-up" clip-path="url(#gapClipAbove)" points="${areaPoints}"></polygon>
     <polygon class="gap-area-down" clip-path="url(#gapClipBelow)" points="${areaPoints}"></polygon>
     <line class="gap-zero" x1="${paddingLeft}" y1="${zeroY.toFixed(2)}" x2="${width - paddingRight}" y2="${zeroY.toFixed(2)}"></line>
@@ -1566,18 +1606,19 @@ function renderGapChart() {
   `;
 }
 
-function buildGapGrid(min, max, span) {
+function buildGapGrid(axis, span) {
   const { width, height, paddingLeft, paddingRight, paddingTop, paddingBottom } = GAP_CHART;
   const chartHeight = height - paddingTop - paddingBottom;
-  let output = "";
-  for (let i = 0; i <= 4; i += 1) {
-    const ratio = i / 4;
-    const y = height - paddingBottom - ratio * chartHeight;
-    const value = min + ratio * span;
-    output += `<line class="gap-grid" x1="${paddingLeft}" y1="${y.toFixed(2)}" x2="${width - paddingRight}" y2="${y.toFixed(2)}"></line>`;
-    output += `<text class="gap-axis-text" x="${paddingLeft - 10}" y="${(y + 4).toFixed(2)}" text-anchor="end">${value.toFixed(span < 5 ? 2 : 1)}</text>`;
-  }
-  output += `<text class="gap-axis-text" x="${paddingLeft - 10}" y="${paddingTop - 6}" text-anchor="end">bp</text>`;
+  let output = axis.lines
+    .map((value) => {
+      const y = height - paddingBottom - ((value - axis.min) / span) * chartHeight;
+      return (
+        `<line class="gap-grid" x1="${paddingLeft}" y1="${y.toFixed(2)}" x2="${width - paddingRight}" y2="${y.toFixed(2)}"></line>` +
+        `<text class="chart-axis-text" x="${paddingLeft - 10}" y="${(y + 4).toFixed(2)}" text-anchor="end">${value.toFixed(axis.decimals)}</text>`
+      );
+    })
+    .join("");
+  output += `<text class="chart-axis-text" x="${paddingLeft - 10}" y="${paddingTop - 6}" text-anchor="end">bp</text>`;
   return output;
 }
 
@@ -1589,7 +1630,7 @@ function buildGapXAxis(points, toX) {
   for (let i = 0; i < tickCount; i += 1) {
     const index = Math.round((i * (points.length - 1)) / Math.max(tickCount - 1, 1));
     const anchor = i === 0 ? "start" : i === tickCount - 1 ? "end" : "middle";
-    output += `<text class="gap-axis-text" x="${toX(index).toFixed(2)}" y="${y}" text-anchor="${anchor}">${points[index].date.slice(5)}</text>`;
+    output += `<text class="chart-axis-text" x="${toX(index).toFixed(2)}" y="${y}" text-anchor="${anchor}">${points[index].date.slice(5)}</text>`;
   }
   return output;
 }
