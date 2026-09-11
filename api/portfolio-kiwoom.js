@@ -65,7 +65,12 @@ module.exports = async function handler(req, res) {
       ytm: null,
     });
   } catch (e) {
+    /* "fetch failed"만으로는 DNS인지 인증서인지 차단인지 알 수 없다.
+       실제 사유는 cause에 담기므로 같이 내보낸다. */
     res.setHeader("Cache-Control", "no-store");
-    res.status(500).json({ error: e.message });
+    res.status(500).json({
+      error: e.message,
+      cause: e.cause ? { code: e.cause.code, message: e.cause.message } : null,
+    });
   }
 };
