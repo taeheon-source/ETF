@@ -1673,6 +1673,13 @@ const METRIC_SOURCES = {
   "KODEX 단기채권PLUS": "/api/portfolio-kodex?ticker=476050"
 };
 
+/* 수집이 막힌 종목은 값 대신 운용사 페이지로 가는 확인 상자를 둔다.
+   키움은 사이트가 중간 인증서를 빠뜨려 서버에서 받아올 수 없다. */
+const PRODUCT_LINKS = {
+  "KOSEF 단기자금": "https://www.kiwoometf.com/service/etf/KO02010200M?gcode=130730",
+  "히어로즈 단기채권ESG액티브": "https://www.kiwoometf.com/service/etf/KO02010200M?gcode=419890"
+};
+
 const metricEls = {
   head: document.querySelector("#metricTableHead"),
   body: document.querySelector("#metricTableBody")
@@ -1738,6 +1745,10 @@ function renderShortTermMetrics() {
           const entry = metricState.data[name];
           const value = entry?.[row.key];
           if (!Number.isFinite(value)) {
+            // 한 종목에 상자 하나면 충분하므로 YTM 행에만 둔다
+            if (!metricState.loading && row.key === "ytm" && PRODUCT_LINKS[name]) {
+              return `<td><a class="metric-check" href="${escapeHtml(PRODUCT_LINKS[name])}" target="_blank" rel="noopener noreferrer">check</a></td>`;
+            }
             return `<td class="metric empty">${metricState.loading ? "…" : "-"}</td>`;
           }
           // 기준일은 열을 늘리지 않고 셀에 담는다

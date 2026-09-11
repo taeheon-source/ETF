@@ -437,6 +437,27 @@ td {
   width: 16%;
 }
 
+/* 수집이 막힌 종목에서 운용사 페이지로 보내는 확인 상자 */
+.metric-check {
+  display: inline-block;
+  padding: 2px 10px;
+  border: 1px solid var(--line-field);
+  border-radius: 6px;
+  background: var(--field);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.metric-check:hover,
+.metric-check:focus-visible {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
 /* 지표 이름 열은 표 머리글과 같은 톤으로 둔다 */
 .metric-table tbody th {
   color: #bbbbbb;
