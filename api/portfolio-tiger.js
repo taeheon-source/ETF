@@ -4,6 +4,58 @@ const DETAIL_URL = `${BASE}/tigeretf/ko/product/search/detail/index.do?ksdFund=K
 const LIST_URL = `${BASE}/tigeretf/ko/product/search/detail/pdfListAjax.ajax`;
 
 const HEADERS = ["종목코드", "종목명", "수량(주)", "평가금액(원)", "비중(%)"];
+
+/* 상세 페이지가 지표를 HTML에 그대로 담아 내려준다. title 다음에 amount가
+   붙는 구조라 짝을 통째로 훑어 라벨로 찾아 쓴다. amount는 수익률 같은 다른
+   항목에도 쓰이므로 반드시 라벨로 골라야 한다. */
+const INFO_PAIR = /class="title[^"]*"[^>]*>([\s\S]*?)<\/div>[\s\S]{0,400}?class="amount"[^>]*>([\s\S]*?)<\/span>/gi;
+
+function stripTags(value) {
+  return value.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+}
+
+function readInfoPairs(html) {
+  const pairs = {};
+  INFO_PAIR.lastIndex = 0;
+  let match = INFO_PAIR.exec(html);
+  while (match) {
+    const label = stripTags(match[1]);
+    // 같은 라벨이 여러 번 나오면 먼저 나온 값을 쓴다
+    if (label && !(label in pairs)) {
+      pairs[label] = stripTags(match[2]);
+    }
+    match = INFO_PAIR.exec(html);
+  }
+  return pairs;
+}
+
+// 라벨 표기가 바뀔 수 있어 앞부분만 맞춰 찾는다
+function pickByPrefix(pairs, prefix) {
+  const key = Object.keys(pairs).find((name) => name.startsWith(prefix));
+  return key ? pairs[key] : null;
+}
+
+/* % 기호나 눈에 안 보이는 공백이 섞여 와도 숫자로 읽는다.
+   Number()는 그런 문자 하나에 NaN을 내고, NaN은 값 없음과 구분되지 않는다. */
+function toNumber(raw) {
+  if (raw === null || raw === undefined) {
+    return null;
+  }
+  const cleaned = String(raw).replace(/[,\s\u00a0%]/g, "");
+  if (!cleaned) {
+    return null;
+  }
+  const value = Number(cleaned);
+  return Number.isFinite(value) ? value : null;
+}
+
+function readMetrics(html) {
+  const pairs = readInfoPairs(html);
+  return {
+    duration: toNumber(pickByPrefix(pairs, "듀레이션")),
+    ytm: toNumber(pickByPrefix(pairs, "YTM")),
+  };
+}
 const PAGE_SIZE = 10;
 
 function parseRows(html) {
@@ -35,16 +87,6 @@ async function fetchPage(pageIndex, cookieStr) {
   return r.text();
 }
 
-/* 진단용. 상세 페이지 HTML에 지표가 있는지, 있다면 어떤 마크업인지
-   그대로 보기 위한 것이다. 파서를 쓴 뒤 제거한다. */
-function snippetAround(html, needle, radius = 300) {
-  const index = html.indexOf(needle);
-  if (index === -1) {
-    return null;
-  }
-  return html.slice(Math.max(0, index - radius), index + radius).replace(/\s+/g, " ");
-}
-
 module.exports = async function handler(req, res) {
   /* 값이 하루에 한 번 바뀌므로 한 시간 캐시로 운용사 사이트를 아낀다.
      다만 만료 뒤 옛날 값을 먼저 내주면 아침 첫 조회에 어제 값이 보인다.
@@ -58,15 +100,6 @@ module.exports = async function handler(req, res) {
       .split(",").map(c => c.trim().split(";")[0]).join("; ");
     const detailHtml = await seedRes.text();
 
-    if (req.query?.debug) {
-      res.setHeader("Cache-Control", "no-store");
-      return res.status(200).json({
-        status: seedRes.status,
-        htmlLength: detailHtml.length,
-        duration: snippetAround(detailHtml, "듀레이션"),
-        ytm: snippetAround(detailHtml, "YTM"),
-      });
-    }
 
     // 1페이지로 총 건수 파악
     const page1Html = await fetchPage(1, cookieStr);
@@ -89,10 +122,14 @@ module.exports = async function handler(req, res) {
         return true;
       });
 
+    const { duration, ytm } = readMetrics(detailHtml);
+
     res.status(200).json({
       name: "TIGER 단기채권액티브",
       ticker: "272580",
       updatedAt: new Date().toISOString().slice(0, 10),
+      duration,
+      ytm,
       headers: HEADERS,
       totalCount: rows.length,
       holdings: rows.map(cells => ({
