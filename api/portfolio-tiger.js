@@ -35,6 +35,16 @@ async function fetchPage(pageIndex, cookieStr) {
   return r.text();
 }
 
+/* 진단용. 상세 페이지 HTML에 지표가 있는지, 있다면 어떤 마크업인지
+   그대로 보기 위한 것이다. 파서를 쓴 뒤 제거한다. */
+function snippetAround(html, needle, radius = 300) {
+  const index = html.indexOf(needle);
+  if (index === -1) {
+    return null;
+  }
+  return html.slice(Math.max(0, index - radius), index + radius).replace(/\s+/g, " ");
+}
+
 module.exports = async function handler(req, res) {
   /* 값이 하루에 한 번 바뀌므로 한 시간 캐시로 운용사 사이트를 아낀다.
      다만 만료 뒤 옛날 값을 먼저 내주면 아침 첫 조회에 어제 값이 보인다.
@@ -46,6 +56,17 @@ module.exports = async function handler(req, res) {
     const seedRes = await fetch(DETAIL_URL, { headers: { "User-Agent": UA } });
     const cookieStr = (seedRes.headers.get("set-cookie") || "")
       .split(",").map(c => c.trim().split(";")[0]).join("; ");
+    const detailHtml = await seedRes.text();
+
+    if (req.query?.debug) {
+      res.setHeader("Cache-Control", "no-store");
+      return res.status(200).json({
+        status: seedRes.status,
+        htmlLength: detailHtml.length,
+        duration: snippetAround(detailHtml, "듀레이션"),
+        ytm: snippetAround(detailHtml, "YTM"),
+      });
+    }
 
     // 1페이지로 총 건수 파악
     const page1Html = await fetchPage(1, cookieStr);
@@ -71,7 +92,7 @@ module.exports = async function handler(req, res) {
     res.status(200).json({
       name: "TIGER 단기채권액티브",
       ticker: "272580",
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString().slice(0, 10),
       headers: HEADERS,
       totalCount: rows.length,
       holdings: rows.map(cells => ({
@@ -83,6 +104,7 @@ module.exports = async function handler(req, res) {
       })),
     });
   } catch (e) {
+    res.setHeader("Cache-Control", "no-store");
     res.status(500).json({ error: e.message });
   }
 };
