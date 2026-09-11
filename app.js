@@ -1673,12 +1673,27 @@ const METRIC_SOURCES = {
   "KODEX 단기채권PLUS": "/api/portfolio-kodex?ticker=476050"
 };
 
-/* 수집이 막힌 종목은 값 대신 운용사 페이지로 가는 확인 상자를 둔다.
+/* YTM 값에서 각 운용사 공시 페이지로 바로 건너갈 수 있게 한다.
+   수집이 막힌 종목은 값 대신 확인 상자가 같은 곳으로 연결된다.
    키움은 사이트가 중간 인증서를 빠뜨려 서버에서 받아올 수 없다. */
 const PRODUCT_LINKS = {
+  "1Q 단기금융채액티브": "https://1qetf.com/pages/ETFproducts/ETF_info.view.php?etf_no=2",
+  "RISE 단기국공채액티브": "https://www.riseetf.co.kr/prod/finderDetail/4460",
+  "KODEX 단기채권": "https://www.samsungfund.com/etf/product/view.do?id=2ETF35",
+  "KODEX 단기채권PLUS": "https://www.samsungfund.com/etf/product/view.do?id=2ETF48",
+  "TIGER 단기채권액티브":
+    "https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7272580002",
   "KOSEF 단기자금": "https://www.kiwoometf.com/service/etf/KO02010200M?gcode=130730",
   "히어로즈 단기채권ESG액티브": "https://www.kiwoometf.com/service/etf/KO02010200M?gcode=419890"
 };
+
+function productLinkOpen(name, className) {
+  const url = PRODUCT_LINKS[name];
+  if (!url) {
+    return "";
+  }
+  return `<a class="${className}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">`;
+}
 
 const metricEls = {
   head: document.querySelector("#metricTableHead"),
@@ -1745,15 +1760,19 @@ function renderShortTermMetrics() {
           const entry = metricState.data[name];
           const value = entry?.[row.key];
           if (!Number.isFinite(value)) {
-            // 한 종목에 상자 하나면 충분하므로 YTM 행에만 둔다
-            if (!metricState.loading && row.key === "ytm" && PRODUCT_LINKS[name]) {
-              return `<td><a class="metric-check" href="${escapeHtml(PRODUCT_LINKS[name])}" target="_blank" rel="noopener noreferrer">check</a></td>`;
+            // 한 종목에 링크 하나면 충분하므로 YTM 행에만 둔다
+            const open =
+              metricState.loading || row.key !== "ytm" ? "" : productLinkOpen(name, "metric-check");
+            if (open) {
+              return `<td>${open}check</a></td>`;
             }
             return `<td class="metric empty">${metricState.loading ? "…" : "-"}</td>`;
           }
           // 기준일은 열을 늘리지 않고 셀에 담는다
           const asOf = entry.updatedAt ? ` title="${escapeHtml(entry.updatedAt)} 기준"` : "";
-          return `<td class="metric"${asOf}>${value.toFixed(2)}</td>`;
+          const open = row.key === "ytm" ? productLinkOpen(name, "metric-link") : "";
+          const text = value.toFixed(2);
+          return `<td class="metric"${asOf}>${open ? `${open}${text}</a>` : text}</td>`;
         })
         .join("");
       return `<tr><th scope="row">${row.label}</th>${cells}</tr>`;
